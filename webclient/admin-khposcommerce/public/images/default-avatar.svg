@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="avatarBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F1F5F9" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+    <linearGradient id="avatarSilhouette" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.08" />
+    </filter>
+  </defs>
+  <!-- Background Circle -->
+  <rect width="256" height="256" rx="128" fill="url(#avatarBgGrad)" />
+  <circle cx="128" cy="128" r="127" stroke="#CBD5E1" stroke-width="2" />
+  
+  <!-- Silhouette Group -->
+  <g filter="url(#subtleShadow)">
+    <!-- Head -->
+    <circle cx="128" cy="100" r="44" fill="url(#avatarSilhouette)" />
+    <!-- Shoulders / Torso -->
+    <path d="M54 226 C54 176, 86 160, 128 160 C170 160, 202 176, 202 226 Z" fill="url(#avatarSilhouette)" />
+  </g>
+</svg>

@@ -1,0 +1,21 @@
+# Prometheus Metrics Scraper Configuration for KHPosCommerce
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # 1. Laravel Backend & Octane / Health Metrics
+  - job_name: 'laravel_api'
+    metrics_path: '/api/metrics'
+    static_configs:
+      - targets: ['host.docker.internal:8001']
+
+  # 2. Redis Metrics (POS Caching & Session Ledger)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # 3. PostgreSQL / MySQL Database Exporter
+  - job_name: 'database'
+    static_configs:
+      - targets: ['postgres-exporter:9187']

@@ -31,5 +31,8 @@ PostgreSQL 18 (99 Tables)
 
 ---
 *Related Docs:*
-- [Naming Conventions](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/database/01-naming-conventions.md)
-- [Atomic Row Locking](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/pos/atomic-row-locking.md)
+- [Database Performance & Indexing Guide (100k - 1M+ Records)](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/database/database-performance-and-indexing.md)
+- [🎓 Database Indexing Masterclass (Learning Guide)](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/tutorials/02-database-indexing-masterclass.md)
+- [Schema Overview](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/database/schema-overview.md)
+- [Data Dictionary](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/database/data-dictionary.md)
+- [Atomic Row Locking](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/pos-flow.md)

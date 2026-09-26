@@ -37,6 +37,19 @@ class HolidayController extends BaseApiController
     // ─── POST /holidays ───────────────────────────────────────────────────────
     public function store(Request $request): JsonResponse
     {
+        if ($request->user() && !$request->user()->hasRole('super_admin') && !$request->user()->can('holiday.create')) {
+            return $this->errorResponse('You do not have permission to create holidays', null, 403);
+        }
+
+        // Auto-fill bilingual title if only one language is provided
+        $titleEn = trim((string) $request->input('title_en'));
+        $titleKm = trim((string) $request->input('title_km'));
+        if (empty($titleEn) && !empty($titleKm)) {
+            $request->merge(['title_en' => $titleKm]);
+        } elseif (empty($titleKm) && !empty($titleEn)) {
+            $request->merge(['title_km' => $titleEn]);
+        }
+
         $validated = $request->validate([
             'title_en'     => 'required|string|max:255',
             'title_km'     => 'nullable|string|max:255',
@@ -48,7 +61,7 @@ class HolidayController extends BaseApiController
 
         $holiday = Holiday::create([
             'title_en'     => $validated['title_en'],
-            'title_km'     => $validated['title_km'] ?? null,
+            'title_km'     => $validated['title_km'] ?? $validated['title_en'],
             'date'         => $validated['date'],
             'description'  => $validated['description'] ?? null,
             'status'       => $validated['status'] ?? 'active',
@@ -68,7 +81,20 @@ class HolidayController extends BaseApiController
     // ─── PUT /holidays/{id} ───────────────────────────────────────────────────
     public function update(Request $request, int $id): JsonResponse
     {
+        if ($request->user() && !$request->user()->hasRole('super_admin') && !$request->user()->can('holiday.update')) {
+            return $this->errorResponse('You do not have permission to update holidays', null, 403);
+        }
+
         $holiday = Holiday::findOrFail($id);
+
+        // Auto-fill bilingual title fallback if one is provided
+        $titleEn = trim((string) $request->input('title_en'));
+        $titleKm = trim((string) $request->input('title_km'));
+        if (empty($titleEn) && !empty($titleKm)) {
+            $request->merge(['title_en' => $titleKm]);
+        } elseif (empty($titleKm) && !empty($titleEn)) {
+            $request->merge(['title_km' => $titleEn]);
+        }
 
         $validated = $request->validate([
             'title_en'     => 'sometimes|required|string|max:255',
@@ -85,8 +111,12 @@ class HolidayController extends BaseApiController
     }
 
     // ─── DELETE /holidays/{id} ────────────────────────────────────────────────
-    public function destroy(int $id): JsonResponse
+    public function destroy(Request $request, int $id): JsonResponse
     {
+        if ($request->user() && !$request->user()->hasRole('super_admin') && !$request->user()->can('holiday.delete')) {
+            return $this->errorResponse('You do not have permission to delete holidays', null, 403);
+        }
+
         $holiday = Holiday::findOrFail($id);
         $holiday->delete();
 
@@ -96,9 +126,13 @@ class HolidayController extends BaseApiController
     // ─── POST /holidays/bulk-delete ───────────────────────────────────────────
     public function bulkDelete(Request $request): JsonResponse
     {
+        if ($request->user() && !$request->user()->hasRole('super_admin') && !$request->user()->can('holiday.delete')) {
+            return $this->errorResponse('You do not have permission to delete holidays', null, 403);
+        }
+
         $request->validate([
             'ids'   => 'required|array|min:1',
-            'ids.*' => 'integer|exists:holidays,id',
+            'ids.*' => 'required',
         ]);
 
         $count = Holiday::whereIn('id', $request->ids)->delete();
@@ -112,6 +146,10 @@ class HolidayController extends BaseApiController
     // ─── POST /holidays/bulk-import ───────────────────────────────────────────
     public function bulkImport(Request $request): JsonResponse
     {
+        if ($request->user() && !$request->user()->hasRole('super_admin') && !$request->user()->can('holiday.create')) {
+            return $this->errorResponse('You do not have permission to import holidays', null, 403);
+        }
+
         $request->validate([
             'holidays'                  => 'required|array|min:1',
             'holidays.*.title_en'       => 'required|string|max:255',
@@ -121,13 +159,14 @@ class HolidayController extends BaseApiController
             'holidays.*.is_recurring'   => 'nullable|boolean',
         ]);
 
-        $inserted = collect($request->holidays)->map(fn($h) => Holiday::firstOrCreate(
+        $inserted = collect($request->holidays)->map(fn($h) => Holiday::withTrashed()->updateOrCreate(
             ['date' => $h['date'], 'title_en' => $h['title_en']],
             [
-                'title_km'     => $h['title_km'] ?? null,
+                'title_km'     => $h['title_km'] ?? $h['title_en'],
                 'description'  => $h['description'] ?? null,
-                'status'       => 'active',
+                'status'       => $h['status'] ?? 'active',
                 'is_recurring' => $h['is_recurring'] ?? true,
+                'deleted_at'   => null,
             ]
         ));
 

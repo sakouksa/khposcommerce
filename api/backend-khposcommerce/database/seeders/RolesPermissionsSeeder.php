@@ -65,7 +65,7 @@ class RolesPermissionsSeeder extends Seeder
             'blog_categories', 'blog_tags', 'branches', 'brands', 'carts', 'cart_items', 
             'cash_registers', 'cash_register_transactions', 'categories', 'cities', 'companies', 'countries', 
             'coupons', 'currencies', 'customers', 'customer_addresses', 'customer_groups', 
-            'departments', 'employees', 'expenses', 'expense_categories', 'faqs', 'flash_sales', 
+            'departments', 'employees', 'expenses', 'expense_categories', 'faqs', 'flash_sales', 'holidays', 
             'inventories', 'inventory_movements', 'languages', 'login_histories', 'notification_logs', 'orders', 
             'order_items', 'order_status_histories', 'pages', 'payments', 'payment_methods', 'payrolls', 'permissions', 
             'positions', 'products', 'product_images', 'product_prices', 'product_reviews', 'product_variants', 

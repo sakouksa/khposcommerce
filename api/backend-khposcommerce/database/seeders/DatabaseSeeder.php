@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             SettingsSeeder::class,
             UsersSeeder::class,
             EmployeeSeeder::class,
+            HolidaySeeder::class,
             ProductCatalogSeeder::class,
             CustomerSeeder::class,
             SupplierSeeder::class,

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Calendar, Repeat } from 'lucide-react'
+import { Calendar, Repeat, CalendarPlus, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { employeeService } from '@/services/employeeService'
 import { useToast } from '@/hooks/useToast'
@@ -112,9 +112,10 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
       qc.invalidateQueries({ queryKey: ['holidays'] })
       closeModal()
     },
-    onError: () => {
+    onError: (err: any) => {
       sound.playError()
-      toast.error(t('common.error_occurred', 'Failed to create holiday'))
+      const msg = err?.response?.data?.message || t('common.error_occurred', 'Failed to create holiday')
+      toast.error(msg)
     },
   })
 
@@ -127,9 +128,10 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
       qc.invalidateQueries({ queryKey: ['holidays'] })
       closeModal()
     },
-    onError: () => {
+    onError: (err: any) => {
       sound.playError()
-      toast.error(t('common.error_occurred', 'Failed to update holiday'))
+      const msg = err?.response?.data?.message || t('common.error_occurred', 'Failed to update holiday')
+      toast.error(msg)
     },
   })
 
@@ -141,9 +143,42 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
       qc.invalidateQueries({ queryKey: ['holidays'] })
       setDeleteTarget(null)
     },
-    onError: () => {
+    onError: (err: any) => {
       sound.playError()
-      toast.error(t('common.error_occurred', 'Failed to delete holiday'))
+      const msg = err?.response?.data?.message || t('common.error_occurred', 'Failed to delete holiday')
+      toast.error(msg)
+    },
+  })
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: (number | string)[]) => employeeService.bulkDeleteHolidays(ids),
+    onSuccess: (res: any) => {
+      sound.playTrash()
+      const count = res?.data?.deleted_count ?? selectedRows.length
+      toast.success(t('employees.holiday_deleted_success', `${count} holidays deleted successfully`))
+      setSelectedRows([])
+      setBulkDeleteConfirmOpen(false)
+      qc.invalidateQueries({ queryKey: ['holidays'] })
+    },
+    onError: (err: any) => {
+      sound.playError()
+      const msg = err?.response?.data?.message || t('common.error_occurred', 'Failed to delete selected holidays')
+      toast.error(msg)
+    },
+  })
+
+  const loadPresetMutation = useMutation({
+    mutationFn: () => employeeService.loadCambodiaHolidaysPreset(),
+    onSuccess: (res: any) => {
+      sound.playSuccess()
+      const count = res?.data?.imported_count ?? 22
+      toast.success(t('employees.cambodia_holidays_loaded', { count, defaultValue: `Imported ${count} holidays successfully!` }))
+      qc.invalidateQueries({ queryKey: ['holidays'] })
+    },
+    onError: (err: any) => {
+      sound.playError()
+      const msg = err?.response?.data?.message || t('common.error_occurred', 'Failed to load holidays preset')
+      toast.error(msg)
     },
   })
 
@@ -177,10 +212,10 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
     setEditingItem(item)
     setFormTitleEn(item.title_en || '')
     setFormTitleKm(item.title_km || '')
-    setFormDate(item.date || new Date().toISOString().split('T')[0])
+    setFormDate(item.date ? String(item.date).split('T')[0] : new Date().toISOString().split('T')[0])
     setFormDescription(item.description || '')
     setFormStatus(item.status || 'active')
-    setFormRecurring(item.is_recurring ?? true)
+    setFormRecurring(Boolean(item.is_recurring))
     setModalOpen(true)
   }
 
@@ -192,7 +227,14 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
   const handleFormSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     if (!formTitleEn.trim() && !formTitleKm.trim()) {
+      sound.playWarning()
       toast.warning(t('employees.holiday_title_required', 'Please enter a holiday title'))
+      return
+    }
+
+    if (!formDate) {
+      sound.playWarning()
+      toast.warning(t('employees.holiday_date_required', 'Please select a holiday date'))
       return
     }
 
@@ -227,13 +269,8 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
     )
   }
 
-  const handleBulkDelete = async () => {
-    await employeeService.bulkDeleteHolidays(selectedRows)
-    sound.playTrash()
-    toast.success(t('employees.holiday_deleted_success', 'Selected holidays deleted'))
-    setSelectedRows([])
-    setBulkDeleteConfirmOpen(false)
-    qc.invalidateQueries({ queryKey: ['holidays'] })
+  const handleBulkDelete = () => {
+    bulkDeleteMutation.mutate(selectedRows)
   }
 
   // Format Date & Day Name
@@ -286,6 +323,24 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
         visibleColumns={visibleColumns}
         onColumnChange={setVisibleColumns}
         columnSettingsTitle={t('employees.columns_visibility', 'Column Visibility')}
+        rightActions={
+          <button
+            type="button"
+            onClick={() => loadPresetMutation.mutate()}
+            disabled={loadPresetMutation.isPending}
+            className="h-10 px-3.5 rounded-xl border border-border/80 dark:border-slate-800 bg-background hover:bg-muted text-xs font-semibold text-foreground flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-2xs"
+            title={t('employees.load_cambodia_holidays_desc', 'Import official Cambodian public holidays for 2026')}
+          >
+            {loadPresetMutation.isPending ? (
+              <Loader2 size={14} className="animate-spin text-primary" />
+            ) : (
+              <CalendarPlus size={14} className="text-primary" />
+            )}
+            <span className="hidden sm:inline">
+              {t('employees.load_cambodia_holidays', 'Load Cambodia Holidays 2026')}
+            </span>
+          </button>
+        }
       />
 
       {/* ─── Bulk actions banner ─── */}
@@ -294,7 +349,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
         onDelete={() => setBulkDeleteConfirmOpen(true)}
         onClear={() => setSelectedRows([])}
         deleteLabel={t('employees.deleteSelected', 'Delete Selected')}
-        deleteLoading={deleteMutation.isPending}
+        deleteLoading={bulkDeleteMutation.isPending}
       />
 
       {/* ─── Main Content: Global Standard Table ─── */}
@@ -355,6 +410,8 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
                     ? t('common.tryDifferentSearch', 'Try searching for a different keyword.')
                     : t('employees.no_holidays_desc', 'Get started by creating company holidays.')
                 }
+                actionLabel={!search ? t('employees.load_cambodia_holidays', 'Load Cambodia Holidays 2026') : undefined}
+                onAction={!search ? () => loadPresetMutation.mutate() : undefined}
               />
             ) : (
               records.map((item) => {
@@ -509,11 +566,12 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
             isSubmitting={createMutation.isPending || updateMutation.isPending}
             disabled={createMutation.isPending || updateMutation.isPending}
             isEdit={!!editingItem}
+            submitButtonType="submit"
             onSubmit={() => handleFormSubmit()}
           />
         }
       >
-        <form onSubmit={handleFormSubmit} className="p-5 sm:p-6 space-y-4">
+        <form id="holiday-modal-form" onSubmit={handleFormSubmit} className="p-5 sm:p-6 space-y-4">
           {/* Holiday Title: Khmer (Primary) & English (Secondary) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <FormField
@@ -521,7 +579,6 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
               required
             >
               <EnterpriseInput
-                required
                 value={formTitleKm}
                 onChange={(e) => setFormTitleKm(e.target.value)}
                 placeholder={t('employees.holiday_title_km_placeholder', 'ឧ. ពិធីបុណ្យចូលឆ្នាំខ្មែរ ប្រពៃណីជាតិ')}
@@ -609,8 +666,8 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         title={t('employees.delete_holiday_title', 'Delete Holiday')}
         message={t('employees.delete_holiday_confirm', {
-          title: deleteTarget?.title_en || '',
-          defaultValue: `Are you sure you want to delete holiday «${deleteTarget?.title_en}»?`
+          title: deleteTarget?.title_km || deleteTarget?.title_en || '',
+          defaultValue: `Are you sure you want to delete holiday «${deleteTarget?.title_km || deleteTarget?.title_en}»?`
         })}
         confirmLabel={t('common.delete', 'Delete')}
         variant="danger"
@@ -629,6 +686,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
         })}
         confirmLabel={t('common.delete', 'Delete')}
         variant="danger"
+        loading={bulkDeleteMutation.isPending}
       />
     </div>
   )

@@ -96,6 +96,8 @@ export const INITIAL_VISIBLE_COLUMNS_MAP: Record<Tab, Record<string, boolean>> =
   holidays: {
     title: true,
     date: true,
+    day: true,
+    is_recurring: true,
     description: true,
     status: true,
   },

@@ -221,12 +221,12 @@ class HolidayController extends BaseApiController
                 $titleEn = $item['name'];
                 $desc = $titleKm !== $titleEn ? "{$titleKm} / {$titleEn}" : $titleEn;
 
-                Holiday::withTrashed()->updateOrCreate(
+                $holiday = Holiday::withTrashed()->updateOrCreate(
                     [
-                        'date'     => $item['date'],
-                        'title_en' => $titleEn,
+                        'date' => $item['date'],
                     ],
                     [
+                        'title_en'     => $titleEn,
                         'title_km'     => $titleKm,
                         'description'  => $desc,
                         'status'       => 'active',
@@ -234,6 +234,11 @@ class HolidayController extends BaseApiController
                         'deleted_at'   => null,
                     ]
                 );
+
+                // Clean up any other duplicates on the same date
+                Holiday::where('date', $item['date'])
+                    ->where('id', '!=', $holiday->id)
+                    ->delete();
 
                 $savedCount++;
             }

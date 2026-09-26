@@ -94,18 +94,18 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
     [t]
   )
 
-  // Filter by year & sync
-  const [selectedYear, setSelectedYear] = useState<number | 'all'>(2026)
+  // Current active year for HR operations
+  const currentYear = useMemo(() => new Date().getFullYear(), [])
 
-  // Fetch holidays
+  // Fetch holidays for current year
   const { data: holidaysResponse, isLoading, isFetching } = useQuery({
-    queryKey: ['holidays', page, perPage, search, selectedYear],
+    queryKey: ['holidays', page, perPage, search, currentYear],
     queryFn: () =>
       employeeService.holidays({
         page,
         per_page: perPage,
         search,
-        year: selectedYear === 'all' ? undefined : selectedYear,
+        year: currentYear,
       }),
     staleTime: 30_000,
   })
@@ -181,19 +181,16 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
     },
   })
 
-  const targetSyncYear = selectedYear === 'all' ? 2026 : selectedYear
-
   const syncLiveApiMutation = useMutation({
-    mutationFn: (year: number) => employeeService.syncLiveHolidays(year),
+    mutationFn: () => employeeService.syncLiveHolidays(currentYear),
     onSuccess: (res: any) => {
       sound.playSuccess()
       const count = res?.data?.synced_count ?? 0
-      const yr = res?.data?.year ?? targetSyncYear
       toast.success(
         t('employees.sync_live_success', {
           count,
-          year: yr,
-          defaultValue: `បានទាញយក និងរក្សាទុកថ្ងៃបុណ្យជាតិឆ្នាំ ${yr} ចំនួន ${count} ថ្ងៃពី Live API ដោយជោគជ័យ!`,
+          year: currentYear,
+          defaultValue: `បានទាញយក និងរក្សាទុកថ្ងៃបុណ្យជាតិឆ្នាំ ${currentYear} ចំនួន ${count} ថ្ងៃពី Live API ដោយជោគជ័យ!`,
         })
       )
       qc.invalidateQueries({ queryKey: ['holidays'] })
@@ -351,49 +348,22 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
         onColumnChange={setVisibleColumns}
         columnSettingsTitle={t('employees.columns_visibility', 'Column Visibility')}
         rightActions={
-          <div className="flex items-center gap-1.5">
-            {/* Year Selector & Live API Sync (Nager.Date) */}
-            <div className="flex items-center border border-border/80 dark:border-slate-800 rounded-xl bg-background shadow-2xs overflow-hidden h-10 p-0.5">
-              <select
-                value={selectedYear}
-                onChange={(e) => {
-                  const val = e.target.value === 'all' ? 'all' : Number(e.target.value)
-                  setSelectedYear(val)
-                  setPage(1)
-                }}
-                className="h-full pl-2.5 pr-1 text-xs font-bold text-foreground bg-transparent border-0 focus:outline-none focus:ring-0 cursor-pointer"
-                title={t('employees.select_year', 'Filter & Sync Year')}
-              >
-                <option value="all" className="bg-background text-foreground">
-                  {t('employees.all_years', 'ឆ្នាំទាំងអស់ (All)')}
-                </option>
-                {[2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030].map((yr) => (
-                  <option key={yr} value={yr} className="bg-background text-foreground">
-                    {yr}
-                  </option>
-                ))}
-              </select>
-
-              <div className="w-[1px] h-5 bg-border/80 dark:border-slate-800" />
-
-              <button
-                type="button"
-                onClick={() => syncLiveApiMutation.mutate(targetSyncYear)}
-                disabled={syncLiveApiMutation.isPending}
-                className="h-full px-3 rounded-lg hover:bg-muted text-xs font-semibold text-primary flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
-                title={`ទាញយកប្រតិទិនថ្ងៃបុណ្យជាតិកម្ពុជាឆ្នាំ ${targetSyncYear} ពី Nager.Date API`}
-              >
-                {syncLiveApiMutation.isPending ? (
-                  <Loader2 size={13} className="animate-spin text-primary" />
-                ) : (
-                  <Globe size={13} className="text-primary" />
-                )}
-                <span className="hidden sm:inline">
-                  {t('employees.sync_live_api', `ទាញយកពី Live API (${targetSyncYear})`)}
-                </span>
-              </button>
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={() => syncLiveApiMutation.mutate()}
+            disabled={syncLiveApiMutation.isPending}
+            className="h-10 px-3.5 rounded-xl border border-border/80 dark:border-slate-800 bg-background hover:bg-muted text-xs font-semibold text-primary flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-2xs"
+            title={`ទាញយកប្រតិទិនថ្ងៃបុណ្យជាតិកម្ពុជាឆ្នាំ ${currentYear} ពី Live API`}
+          >
+            {syncLiveApiMutation.isPending ? (
+              <Loader2 size={14} className="animate-spin text-primary" />
+            ) : (
+              <Globe size={14} className="text-primary" />
+            )}
+            <span className="hidden sm:inline">
+              {t('employees.sync_live_api', `ទាញយកបុណ្យជាតិ (${currentYear})`)}
+            </span>
+          </button>
         }
       />
 
@@ -462,10 +432,10 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
                 description={
                   search
                     ? t('common.tryDifferentSearch', 'Try searching for a different keyword.')
-                    : t('employees.no_holidays_desc', `មិនទាន់មានទិន្នន័យថ្ងៃបុណ្យសម្រាប់ឆ្នាំ ${targetSyncYear} ទេ។ ចុចប៊ូតុងខាងក្រោមដើម្បីទាញយកពី Live API`)
+                    : t('employees.no_holidays_desc', `មិនទាន់មានទិន្នន័យថ្ងៃបុណ្យជាតិសម្រាប់ឆ្នាំ ${currentYear} ទេ។ ចុចប៊ូតុងខាងក្រោមដើម្បីទាញយកពី Live API`)
                 }
-                actionLabel={!search ? t('employees.sync_live_api', `ទាញយកពី Live API (${targetSyncYear})`) : undefined}
-                onAction={!search ? () => syncLiveApiMutation.mutate(targetSyncYear) : undefined}
+                actionLabel={!search ? t('employees.sync_live_api', `ទាញយកបុណ្យជាតិ (${currentYear})`) : undefined}
+                onAction={!search ? () => syncLiveApiMutation.mutate() : undefined}
               />
             ) : (
               records.map((item) => {

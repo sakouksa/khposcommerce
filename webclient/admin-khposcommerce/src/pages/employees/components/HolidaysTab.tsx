@@ -190,7 +190,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
         t('employees.sync_live_success', {
           count,
           year: currentYear,
-          defaultValue: `បានទាញយក និងរក្សាទុកថ្ងៃបុណ្យជាតិឆ្នាំ ${currentYear} ចំនួន ${count} ថ្ងៃពី Live API ដោយជោគជ័យ!`,
+          defaultValue: `Successfully synchronized ${count} public holidays for year ${currentYear} from Live API!`,
         })
       )
       qc.invalidateQueries({ queryKey: ['holidays'] })
@@ -355,7 +355,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
             className="group h-10 min-h-[40px] px-3.5 rounded-xl border border-border/80 bg-background hover:bg-muted text-xs sm:text-[13px] font-medium text-foreground hover:text-foreground flex items-center gap-2 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] shadow-xs hover:shadow shrink-0 whitespace-nowrap"
             title={t('employees.sync_current_year_holidays_tooltip', {
               year: currentYear,
-              defaultValue: `ទាញយកប្រតិទិនថ្ងៃបុណ្យជាតិកម្ពុជាឆ្នាំ ${currentYear} ពី Live API`,
+              defaultValue: `Fetch official Cambodian public holidays for ${currentYear} from Live API`,
             })}
           >
             {syncLiveApiMutation.isPending ? (
@@ -366,7 +366,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
             <span className="hidden sm:inline">
               {t('employees.sync_current_year_holidays', {
                 year: currentYear,
-                defaultValue: `ទាញយកបុណ្យជាតិ (${currentYear})`,
+                defaultValue: `Sync Holidays (${currentYear})`,
               })}
             </span>
           </button>
@@ -440,14 +440,14 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
                     ? t('common.tryDifferentSearch', 'Try searching for a different keyword.')
                     : t('employees.no_holidays_for_year_desc', {
                         year: currentYear,
-                        defaultValue: `មិនទាន់មានទិន្នន័យថ្ងៃបុណ្យជាតិសម្រាប់ឆ្នាំ ${currentYear} ទេ។ ចុចប៊ូតុងខាងក្រោមដើម្បីទាញយកពី Live API`,
+                        defaultValue: `No public holidays recorded for year ${currentYear} yet. Click below to fetch from Live API.`,
                       })
                 }
                 actionLabel={
                   !search
                     ? t('employees.sync_current_year_holidays', {
                         year: currentYear,
-                        defaultValue: `ទាញយកបុណ្យជាតិ (${currentYear})`,
+                        defaultValue: `Sync Holidays (${currentYear})`,
                       })
                     : undefined
                 }
@@ -620,7 +620,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
               <EnterpriseInput
                 value={formTitleKm}
                 onChange={(e) => setFormTitleKm(e.target.value)}
-                placeholder={t('employees.holiday_title_km_placeholder', 'ឧ. ពិធីបុណ្យចូលឆ្នាំខ្មែរ ប្រពៃណីជាតិ')}
+                placeholder={t('employees.holiday_title_km_placeholder', 'e.g. Traditional Khmer New Year')}
               />
             </FormField>
 

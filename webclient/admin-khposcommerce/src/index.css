@@ -1,0 +1,664 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Kantumruy Pro', 'Battambang', 'Inter', system-ui, -apple-system, sans-serif;
+    --background:  0 0% 100%;
+    --foreground:  222 47% 11%;
+    --card:        0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --border:      214 32% 91%;
+    --input:       214 32% 91%;
+    --ring:        221 83% 53%;
+    --primary:     221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary:   210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted:       210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent:      210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --radius:      0.5rem;
+  }
+
+  .dark {
+    --background:  222 47% 8%;
+    --foreground:  210 40% 98%;
+    --card:        222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --border:      217 33% 17%;
+    --input:       217 33% 17%;
+    --ring:        224 71% 60%;
+    --primary:     224 71% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary:   217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted:       217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent:      217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 210 40% 98%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body, input, textarea, select, button {
+    font-family: 'Kantumruy Pro', 'Battambang', 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* High-Contrast Text Selection */
+  ::selection {
+    background-color: #2563eb;
+    color: #ffffff !important;
+    text-shadow: none !important;
+  }
+
+  ::-moz-selection {
+    background-color: #2563eb;
+    color: #ffffff !important;
+    text-shadow: none !important;
+  }
+
+  .dark ::selection,
+  html.dark ::selection,
+  body.dark ::selection {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    text-shadow: none !important;
+  }
+
+  .dark ::-moz-selection,
+  html.dark ::-moz-selection,
+  body.dark ::-moz-selection {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    text-shadow: none !important;
+  }
+
+  .font-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Kantumruy Pro', monospace;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+  .dark ::-webkit-scrollbar-thumb { @apply bg-slate-700; }
+
+  /* Date / Time Input Color Scheme and Calendar Picker styling */
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"],
+  input[type="month"] {
+    color-scheme: light;
+  }
+  .dark input[type="date"],
+  .dark input[type="datetime-local"],
+  .dark input[type="time"],
+  .dark input[type="month"],
+  html.dark input[type="date"],
+  html.dark input[type="datetime-local"],
+  html.dark input[type="time"],
+  html.dark input[type="month"] {
+    color-scheme: dark !important;
+  }
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator,
+  .dark input[type="month"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.85;
+    filter: none;
+    transition: opacity 0.15s ease;
+  }
+  .dark input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator:hover,
+  .dark input[type="month"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
+  /* AntD Switch Custom Primary Theme Integration */
+  .ant-switch.ant-switch-checked {
+    background-color: hsl(var(--primary)) !important;
+  }
+  .ant-switch.ant-switch-checked:hover:not(.ant-switch-disabled) {
+    background-color: hsl(var(--primary) / 0.85) !important;
+  }
+}
+
+@layer components {
+  /* Glassmorphism card */
+  .glass-card {
+    @apply bg-white/80 dark:bg-card/80 backdrop-blur-sm border border-white/20 dark:border-border shadow-card rounded-xl;
+  }
+
+  /* Stat card */
+  .stat-card {
+    @apply bg-card rounded-xl p-6 shadow-card border border-border hover:shadow-card-lg transition-shadow duration-200;
+  }
+
+  /* Table styles — Flutter Flatten Admin Global Standard */
+  .data-table {
+    @apply w-full border-collapse text-left text-xs;
+  }
+  .data-table thead {
+    @apply bg-[#e6f4f8] dark:bg-cyan-950/30 border-b border-cyan-100 dark:border-cyan-900/40;
+  }
+  .data-table th {
+    @apply text-[11px] font-bold text-[#0f5b78] dark:text-cyan-300 uppercase tracking-wider px-4 py-3.5 bg-[#e6f4f8] dark:bg-cyan-950/30 text-left whitespace-nowrap align-middle border-b border-cyan-100 dark:border-cyan-900/40 select-none;
+  }
+  .data-table td {
+    @apply px-4 py-3 text-xs text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/80 whitespace-nowrap align-middle transition-colors;
+  }
+  .data-table th.text-right,
+  .data-table td.text-right,
+  .data-table th.\!text-right,
+  .data-table td.\!text-right {
+    text-align: right;
+  }
+  .data-table th.text-center,
+  .data-table td.text-center,
+  .data-table th.\!text-center,
+  .data-table td.\!text-center {
+    text-align: center;
+  }
+  .data-table tbody tr {
+    @apply bg-white dark:bg-slate-900 transition-colors duration-150;
+  }
+  .data-table tbody tr:hover td {
+    @apply bg-cyan-50/40 dark:bg-cyan-950/20 text-slate-900 dark:text-white;
+  }
+  .data-table tbody tr.is-selected td,
+  .data-table tbody tr[aria-selected="true"] td {
+    @apply bg-cyan-50/80 dark:bg-cyan-950/40 text-cyan-900 dark:text-cyan-100;
+  }
+
+  /* Badge variants */
+  .badge-success { @apply inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20; }
+  .badge-warning { @apply inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20; }
+  .badge-danger  { @apply inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20; }
+  .badge-info    { @apply inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20; }
+  .badge-purple  { @apply inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-500/20; }
+  .badge-muted   { @apply inline-flex items-center justify-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-500/10 text-slate-700 dark:text-slate-300 border border-slate-500/20; }
+
+  /* Sidebar item */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sidebar-text text-sm font-medium
+           transition-all duration-150 cursor-pointer select-none whitespace-nowrap;
+  }
+  .sidebar-item:hover { @apply bg-sidebar-hover text-white; }
+  .sidebar-item.active { @apply bg-primary text-primary-foreground shadow-lg font-bold shadow-primary/30 scale-[1.01]; }
+
+  /* Form input base - global h-10 (40px) standard */
+  .form-input {
+    @apply w-full h-10 min-h-[40px] px-3.5 py-2 text-xs sm:text-[13px] bg-background text-foreground border border-border/80 rounded-lg
+           placeholder:text-muted-foreground focus:outline-none focus:ring-2
+           focus:ring-primary/20 focus:border-primary transition-all font-medium
+           dark:bg-slate-900/80 dark:border-slate-700/80 dark:text-slate-100 dark:placeholder:text-slate-500
+           dark:hover:border-slate-600 dark:focus:border-primary dark:focus:ring-primary/30
+           dark:[color-scheme:dark];
+  }
+
+  /* Form textarea base - flexible multi-line standard */
+  .form-textarea {
+    @apply w-full min-h-[100px] px-3.5 py-2.5 text-xs sm:text-[13px] bg-background text-foreground border border-border/80 rounded-lg
+           placeholder:text-muted-foreground focus:outline-none focus:ring-2
+           focus:ring-primary/20 focus:border-primary transition-all font-medium leading-relaxed
+           dark:bg-slate-900/80 dark:border-slate-700/80 dark:text-slate-100 dark:placeholder:text-slate-500
+           dark:hover:border-slate-600 dark:focus:border-primary dark:focus:ring-primary/30
+           dark:[color-scheme:dark];
+    font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+  }
+
+  /* Prevent textareas from being collapsed when given form-input or input classes */
+  textarea.form-input,
+  textarea.input {
+    height: auto;
+    min-height: 80px;
+  }
+
+  /* General Form Fields */
+  .input {
+    @apply w-full h-10 min-h-[40px] px-3.5 py-2 text-xs sm:text-[13px] bg-background text-foreground border border-border/80 rounded-lg
+           placeholder:text-muted-foreground focus:outline-none focus:ring-2
+           focus:ring-primary/20 focus:border-primary transition-all font-medium
+           dark:bg-slate-900/80 dark:border-slate-700/80 dark:text-slate-100 dark:placeholder:text-slate-500
+           dark:hover:border-slate-600 dark:focus:border-primary dark:focus:ring-primary/30
+           dark:[color-scheme:dark];
+  }
+  .form-select {
+    @apply w-full h-10 min-h-[40px] px-3.5 py-2 text-xs sm:text-[13px] bg-background text-foreground border border-border/80 rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium
+           dark:bg-slate-900/80 dark:border-slate-700/80 dark:text-slate-100
+           dark:hover:border-slate-600 dark:focus:border-primary dark:focus:ring-primary/30
+           dark:[color-scheme:dark];
+    font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+  }
+  .form-select option {
+    @apply bg-card text-foreground dark:bg-slate-900 dark:text-slate-100;
+    font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+  }
+  .label {
+    @apply block text-sm font-semibold text-foreground dark:text-slate-200 mb-1.5;
+  }
+
+  /* ── Custom Modern Checkbox with Dark Mode & Clean Aesthetics ── */
+  input[type="checkbox"],
+  .checkbox,
+  .form-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 0.375rem;
+    border: 1.5px solid hsl(var(--border) / 0.9);
+    background-color: hsl(var(--card));
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  .dark input[type="checkbox"],
+  .dark .checkbox,
+  .dark .form-checkbox {
+    border-color: rgb(71 85 105); /* slate-600 */
+    background-color: rgb(15 23 42); /* slate-900 */
+  }
+
+  input[type="checkbox"]:hover,
+  .checkbox:hover,
+  .form-checkbox:hover {
+    border-color: hsl(var(--primary));
+    transform: scale(1.04);
+  }
+
+  input[type="checkbox"]:focus-visible,
+  .checkbox:focus-visible,
+  .form-checkbox:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--primary) / 0.25);
+  }
+
+  input[type="checkbox"]:checked,
+  .checkbox:checked,
+  .form-checkbox:checked {
+    background-color: hsl(var(--primary)) !important;
+    border-color: hsl(var(--primary)) !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+  }
+
+  .dark input[type="checkbox"]:checked,
+  .dark .checkbox:checked,
+  .dark .form-checkbox:checked {
+    background-color: hsl(var(--primary)) !important;
+    border-color: hsl(var(--primary)) !important;
+  }
+
+  input[type="checkbox"]:indeterminate,
+  .checkbox:indeterminate,
+  .form-checkbox:indeterminate {
+    background-color: hsl(var(--primary)) !important;
+    border-color: hsl(var(--primary)) !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M4 8a1 1 0 011-1h6a1 1 0 110 2H5a1 1 0 01-1-1z'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+  }
+
+  /* Button Styles */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 select-none gap-2;
+  }
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm active:scale-95;
+  }
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border active:scale-95;
+  }
+  .btn-danger {
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm active:scale-95;
+  }
+  .btn-icon {
+    @apply h-9 w-9 p-0 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted active:scale-95;
+  }
+
+  /* Modal Backdrop and Content Overlay */
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4;
+  }
+  .modal-content {
+    @apply bg-card border border-border rounded-xl shadow-2xl p-6 relative flex flex-col;
+  }
+
+  /* Skeleton animation */
+  .skeleton {
+    @apply bg-muted animate-pulse rounded;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply text-primary;
+  }
+  .bg-gradient-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ── Ant Design Dark Mode & Drawer Theme Overrides ───────────────────────── */
+.dark .ant-drawer-content,
+.dark .ant-drawer-header,
+.dark .ant-drawer-body,
+.dark .ant-drawer-footer,
+.dark .ant-modal-content,
+.dark .ant-modal-header,
+.dark .ant-modal-footer {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .ant-drawer-title,
+.dark .ant-modal-title {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .ant-drawer-close,
+.dark .ant-modal-close {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.enterprise-drawer .ant-drawer-content {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--foreground)) !important;
+  font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+}
+
+.enterprise-drawer .ant-drawer-header {
+  background-color: hsl(var(--card)) !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+}
+
+.enterprise-drawer .ant-drawer-body {
+  font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+}
+
+.enterprise-drawer .ant-drawer-footer {
+  background-color: hsl(var(--card)) !important;
+  border-top: 1px solid hsl(var(--border)) !important;
+  font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+}
+
+.enterprise-drawer .ant-drawer-title,
+.enterprise-drawer .ant-drawer-title * {
+  font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+}
+
+/* Force Khmer font on ALL Ant Design components */
+.ant-drawer,
+.ant-drawer *,
+.ant-modal,
+.ant-modal *,
+.ant-select,
+.ant-select * {
+  font-family: 'Kantumruy Pro', 'Inter', system-ui, sans-serif !important;
+}
+
+.dark .ant-input,
+.dark textarea.ant-input,
+.dark .ant-input-affix-wrapper,
+.dark .ant-input-number,
+.dark .ant-select-selector {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .ant-input::placeholder,
+.dark textarea.ant-input::placeholder,
+.dark .ant-input-affix-wrapper input::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .ant-input-prefix,
+.dark .ant-input-suffix {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .ant-form-item-label > label {
+  color: hsl(var(--foreground)) !important;
+  font-weight: 600 !important;
+}
+
+.dark .ant-tabs-nav {
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .ant-tabs-tab {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.dark .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: hsl(var(--primary)) !important;
+}
+
+/* Print Styles for Enterprise A4 Vouchers & Receipts */
+@media print {
+  /* Complete isolation: Hide all non-printable UI components */
+  aside,
+  header,
+  nav,
+  footer,
+  .print\:hidden,
+  .no-print,
+  button:not(.print-keep),
+  .toast-container {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* When printing from a modal/portal print document, hide #root completely */
+  body.has-print-modal > #root,
+  body.has-print-modal #root,
+  body.has-thermal-receipt > #root,
+  body.has-thermal-receipt #root,
+  body.has-standee-print > #root,
+  body.has-standee-print #root,
+  body:has(#standee-print-portal) > #root,
+  body:has(#standee-print-portal) #root,
+  body:has(#global-print-active-canvas) > #root,
+  body:has(#global-print-active-canvas) #root {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    font-size: 10pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Default page layout for direct page printing when not using modal */
+  body:not(.has-print-modal):not(.has-standee-print):not(.has-thermal-receipt):not(:has(#global-print-active-canvas)):not(:has(#standee-print-portal)) #root,
+  body:not(.has-print-modal):not(.has-standee-print):not(.has-thermal-receipt):not(:has(#global-print-active-canvas)):not(:has(#standee-print-portal)) main,
+  .print-root {
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: none !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Active Print Canvas Modal (Multi-Page Document & Table Flow) */
+  #global-print-active-canvas,
+  #global-print-active-canvas > div,
+  .print-modal-box,
+  .print-scroll-container {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+  }
+
+  /* Multi-page Table & Print Flow Rules */
+  table {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    width: 100% !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tbody {
+    display: table-row-group !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  tfoot {
+    display: table-footer-group !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .print-break-avoid,
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Active Standee Print Portal (Isolated 1-Page Standee / Sticker) */
+  #standee-print-portal {
+    display: none !important;
+  }
+  body.has-standee-print #standee-print-portal,
+  body:has(#standee-print-portal) #standee-print-portal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.has-standee-print .print-standee-card,
+  body:has(#standee-print-portal) .print-standee-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-shadow: none !important;
+    border: 2px solid #0f172a !important;
+    border-radius: 18px !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    box-sizing: border-box !important;
+    font-family: 'Kantumruy Pro', 'Inter', system-ui, -apple-system, sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.has-standee-print .print-standee-card.print-a4,
+  body:has(#standee-print-portal) .print-standee-card.print-a4 {
+    width: 190mm !important;
+    max-width: 192mm !important;
+    min-height: 276mm !important;
+    height: 276mm !important;
+    padding: 9mm 12mm !important;
+  }
+
+  body.has-standee-print .print-standee-card.print-a5,
+  body:has(#standee-print-portal) .print-standee-card.print-a5 {
+    width: 138mm !important;
+    max-width: 140mm !important;
+    min-height: 196mm !important;
+    padding: 7mm 9mm !important;
+  }
+
+  body.has-standee-print .print-standee-card.print-sticker,
+  body:has(#standee-print-portal) .print-standee-card.print-sticker {
+    width: 110mm !important;
+    max-width: 115mm !important;
+    height: 110mm !important;
+    min-height: 110mm !important;
+    padding: 6mm 7mm !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 8mm 10mm;
+  }
+
+}
+
+

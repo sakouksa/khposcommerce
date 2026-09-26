@@ -44,12 +44,12 @@ services:
   # ─── 3. Laravel 12 Backend API (PHP 8.3-FPM + Supervisor Queues/Cron) ─────────
   backend:
     build:
-      context: ./backendkhposcommerce
+      context: ./api/backend-khposcommerce
       dockerfile: docker/Dockerfile.prod
     container_name: enterprise_pos_backend_prod
     restart: unless-stopped
     env_file:
-      - ./backendkhposcommerce/.env.production
+      - ./api/backend-khposcommerce/.env.production
     volumes:
       - backend_storage:/var/www/storage
     networks:
@@ -63,7 +63,7 @@ services:
   # ─── 4. React Admin Portal (SPA) ─────────────────────────────────────────────
   admin:
     build:
-      context: ./apps/adminkhposcommerce
+      context: ./webclient/admin-khposcommerce
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: ${ADMIN_VITE_API_URL:-https://api.example.com/api/v1}
@@ -75,7 +75,7 @@ services:
   # ─── 5. React Customer Storefront (SPA) ──────────────────────────────────────
   website:
     build:
-      context: ./apps/storefrontkhposcommerce
+      context: ./webclient/storefront-khposcommerce
       dockerfile: Dockerfile
       args:
         VITE_STORE_API_URL: ${WEBSITE_VITE_STORE_API_URL:-https://api.example.com/api/v1/store}

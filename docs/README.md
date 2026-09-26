@@ -39,10 +39,10 @@ Select your role to jump directly to the relevant documentation sections:
 | ⚙️ **Backend Developer** | Laravel 12 services, 759 REST APIs, Eloquent models, Spatie RBAC | [Backend Architecture](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/applications/backend/README.md) ➜ [API Reference](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/api/README.md) |
 | 💻 **Frontend Developer** | React 19 Admin (AntD) or Customer Storefront (Tailwind, Zustand) | [Admin Dashboard](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/applications/admin-dashboard/README.md) ➜ [Customer Website](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/applications/customer-website/README.md) |
 | 📱 **Flutter Developer** | Mobile POS cashier app, Hive offline sync, Barcode & KHQR flow | [Mobile App Docs](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/applications/mobile-app/README.md) ➜ [POS Subsystem](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/pos/README.md) |
-| 🗄️ **Database Architect** | 99 Tables schema, indexes, atomic row-locks, migrations | [Database Architecture](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/database/README.md) ➜ [Table Reference](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/database/01-naming-conventions.md) |
-| 🚢 **DevOps Engineer** | Docker Compose, Vercel SPA routing, Render backend, Redis & SSL | [DevOps Manual](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/devops/README.md) ➜ [Local Docker Dev](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/devops/local-development-docker.md) |
-| 🧪 **QA & Test Engineer** | Business workflows, edge cases, KHQR validation, rate limits | [Testing Strategy](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/team-guidelines/README.md) ➜ [Troubleshooting](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/troubleshooting/README.md) |
-| 👔 **Business / Product Owner** | Module workflows, multi-warehouse costing, Cambodian payroll | [Business Domains](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/business-domains/products/README.md) ➜ [System Status](file:///Users/macbook/Workspace/projects/showcase/Project-Enterprise-E-Commerce-POS-System/docs/project-overview/07-system-status.md) |
+| 🗄️ **Database Architect** | 99 Tables schema, indexes, atomic row-locks, migrations | [Performance Guide (1M+ Rows)](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/database/database-performance-and-indexing.md) ➜ [🎓 Indexing Masterclass](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/tutorials/02-database-indexing-masterclass.md) |
+| 🚢 **DevOps Engineer** | Docker Compose, Vercel SPA routing, Render backend, Redis & SSL | [DevOps Manual](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/deployment.md) ➜ [Hosting Architecture](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/hosting.md) |
+| 🧪 **QA & Test Engineer** | Business workflows, edge cases, KHQR validation, rate limits | [Sales & POS Flow](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/pos-flow.md) ➜ [Troubleshooting](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/troubleshooting.md) |
+| 👔 **Business / Product Owner** | Module workflows, multi-warehouse costing, Cambodian payroll | [Enterprise Architecture](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/enterprise-pos-architecture-and-teaching-guide.md) ➜ [Domains](file:///Users/macbook/Workspace/projects/showcase/khposcommerce/docs/domains.md) |
 
 ---
 
@@ -51,30 +51,20 @@ Select your role to jump directly to the relevant documentation sections:
 ```
 docs/
 ├── README.md                                # This Master Hub
-├── project-overview/                        # Vision, Scope, Status, Glossary (8 docs)
-├── architecture/                            # 6-Tier Blueprint, Auth, Data Flows (15 docs)
+├── architecture/                            # Multi-Tier Blueprint, Auth, Data Flows
 ├── applications/                            # Application-specific setup & deep dives
-│   ├── admin-dashboard/                     # React 19 + Ant Design 5 (258 Pages)
-│   ├── customer-website/                    # React 19 + Tailwind CSS + SEO (28 Pages)
-│   ├── mobile-app/                          # Flutter 3.24 + Riverpod + Hive Cache
-│   └── backend/                             # Laravel 12 on PHP 8.2 (759 REST APIs)
-├── business-domains/                        # 10 Core Enterprise Business Domains
-│   ├── products/                            # Products, Variants, SKUs, Attributes
-│   ├── inventory/                           # Warehouses, Movements, Stock Transfers
-│   ├── purchasing/                          # Suppliers, Purchase Orders, Receiving
-│   ├── sales/                               # POS Orders, Invoices, Split Payments
-│   ├── customers/                           # Groups, Loyalty Points, Credit Limits
-│   ├── employees/                           # Staff, Leave, Attendance, Tax Payroll
-│   ├── finance/                             # Accounts, Expenses, Cash Registers
-│   ├── notifications/                       # DB, Broadcast, Push Notifications
-│   └── reporting/                           # Sales, Stock, Tax, P&L Analytics
-├── pos/                                     # High-Speed POS Terminal Subsystem (8 docs)
-├── database/                                # PostgreSQL 18 (99 Tables) Schema Reference
+├── database/                                # PostgreSQL Schema & Performance Indexing Guide
+│   ├── database-performance-and-indexing.md # ⚡ Enterprise Indexing Matrix (100k - 1M+ Records)
+│   ├── schema-overview.md                   # Core ERD & Architectural Highlights
+│   ├── data-dictionary.md                   # Column Specifications & Table Standards
+│   └── README.md                            # Domain Clusters & Database Specifications
 ├── api/                                     # 759 REST APIs Reference & Endpoints
 ├── security/                                # Dual JWT, Spatie RBAC (169 Nodes), Data Isolation
 ├── devops/                                  # Docker, Vercel, Render, PostgreSQL 18, Redis 7
 ├── troubleshooting/                         # RCA, Error Codes & Common Issue Resolution
 ├── tutorials/                               # Step-by-step practical guides & walkthroughs
+│   ├── 01-developer-onboarding.md           # Local Environment & Multi-Platform Setup
+│   └── 02-database-indexing-masterclass.md  # 🎓 Database Indexing & Query Optimization Masterclass
 └── team-guidelines/                         # Coding standards, PR rules, Git branching
 ```
 

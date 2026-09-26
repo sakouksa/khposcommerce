@@ -18,6 +18,12 @@ class HolidayController extends BaseApiController
         $query = Holiday::query()
             ->search($request->get('search'))
             ->when($request->get('status'), fn($q, $s) => $q->where('status', $s))
+            ->when($request->filled('year') && $request->get('year') !== 'all', function ($q) use ($request) {
+                $year = (int) $request->get('year');
+                if ($year >= 2000 && $year <= 2100) {
+                    $q->whereYear('date', $year);
+                }
+            })
             ->orderBy('date', 'asc');
 
         $perPage   = $request->integer('per_page', 10);

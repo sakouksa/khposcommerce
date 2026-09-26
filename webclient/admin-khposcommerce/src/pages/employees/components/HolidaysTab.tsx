@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Calendar, Repeat, CalendarPlus, Loader2 } from 'lucide-react'
+import { Calendar, Repeat, CalendarPlus, Loader2, Globe } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { employeeService } from '@/services/employeeService'
 import { useToast } from '@/hooks/useToast'
@@ -172,6 +172,30 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
     },
   })
 
+  const [syncYear, setSyncYear] = useState(2026)
+
+  const syncLiveApiMutation = useMutation({
+    mutationFn: (year: number) => employeeService.syncLiveHolidays(year),
+    onSuccess: (res: any) => {
+      sound.playSuccess()
+      const count = res?.data?.synced_count ?? 0
+      const yr = res?.data?.year ?? syncYear
+      toast.success(
+        t('employees.sync_live_success', {
+          count,
+          year: yr,
+          defaultValue: `បានទាញយក និងរក្សាទុកថ្ងៃបុណ្យជាតិឆ្នាំ ${yr} ចំនួន ${count} ថ្ងៃពី Live API ដោយជោគជ័យ!`,
+        })
+      )
+      qc.invalidateQueries({ queryKey: ['holidays'] })
+    },
+    onError: (err: any) => {
+      sound.playError()
+      const msg = err?.response?.data?.message || t('common.error_occurred', 'Failed to sync live holidays API')
+      toast.error(msg)
+    },
+  })
+
   const loadPresetMutation = useMutation({
     mutationFn: () => employeeService.loadCambodiaHolidaysPreset(),
     onSuccess: (res: any) => {
@@ -332,22 +356,42 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
         onColumnChange={setVisibleColumns}
         columnSettingsTitle={t('employees.columns_visibility', 'Column Visibility')}
         rightActions={
-          <button
-            type="button"
-            onClick={() => loadPresetMutation.mutate()}
-            disabled={loadPresetMutation.isPending}
-            className="h-10 px-3.5 rounded-xl border border-border/80 dark:border-slate-800 bg-background hover:bg-muted text-xs font-semibold text-foreground flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-2xs"
-            title={t('employees.load_cambodia_holidays_desc', 'Import official Cambodian public holidays for 2026')}
-          >
-            {loadPresetMutation.isPending ? (
-              <Loader2 size={14} className="animate-spin text-primary" />
-            ) : (
-              <CalendarPlus size={14} className="text-primary" />
-            )}
-            <span className="hidden sm:inline">
-              {t('employees.load_cambodia_holidays', 'Load Cambodia Holidays 2026')}
-            </span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            {/* Year Selector & Live API Sync (Nager.Date) */}
+            <div className="flex items-center border border-border/80 dark:border-slate-800 rounded-xl bg-background shadow-2xs overflow-hidden h-10 p-0.5">
+              <select
+                value={syncYear}
+                onChange={(e) => setSyncYear(Number(e.target.value))}
+                className="h-full pl-2.5 pr-1 text-xs font-bold text-foreground bg-transparent border-0 focus:outline-none focus:ring-0 cursor-pointer"
+                title={t('employees.select_year', 'Select Year')}
+              >
+                {[2024, 2025, 2026, 2027, 2028].map((yr) => (
+                  <option key={yr} value={yr} className="bg-background text-foreground">
+                    {yr}
+                  </option>
+                ))}
+              </select>
+
+              <div className="w-[1px] h-5 bg-border/80 dark:border-slate-800" />
+
+              <button
+                type="button"
+                onClick={() => syncLiveApiMutation.mutate(syncYear)}
+                disabled={syncLiveApiMutation.isPending}
+                className="h-full px-3 rounded-lg hover:bg-muted text-xs font-semibold text-primary flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+                title={`ទាញយកប្រតិទិនថ្ងៃបុណ្យជាតិកម្ពុជាឆ្នាំ ${syncYear} ពី Nager.Date API`}
+              >
+                {syncLiveApiMutation.isPending ? (
+                  <Loader2 size={13} className="animate-spin text-primary" />
+                ) : (
+                  <Globe size={13} className="text-primary" />
+                )}
+                <span className="hidden sm:inline">
+                  {t('employees.sync_live_api', 'ទាញយកពី Live API')}
+                </span>
+              </button>
+            </div>
+          </div>
         }
       />
 
@@ -418,8 +462,8 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
                     ? t('common.tryDifferentSearch', 'Try searching for a different keyword.')
                     : t('employees.no_holidays_desc', 'Get started by creating company holidays.')
                 }
-                actionLabel={!search ? t('employees.load_cambodia_holidays', 'Load Cambodia Holidays 2026') : undefined}
-                onAction={!search ? () => loadPresetMutation.mutate() : undefined}
+                actionLabel={!search ? t('employees.sync_live_api', 'ទាញយកពី Live API (២០២៦)') : undefined}
+                onAction={!search ? () => syncLiveApiMutation.mutate(2026) : undefined}
               />
             ) : (
               records.map((item) => {

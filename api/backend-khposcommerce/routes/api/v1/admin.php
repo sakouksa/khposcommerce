@@ -544,6 +544,7 @@ Route::middleware('auth.jwt')->group(function () {
     Route::apiResource('leave-requests',       LeaveRequestController::class);
 
     // ─── Holiday Management ──────────────────────────────────────────────────
+    Route::post('holidays/sync-live-api', [HolidayController::class, 'syncLiveApi']);
     Route::post('holidays/bulk-delete',  [HolidayController::class, 'bulkDelete']);
     Route::post('holidays/bulk-import',  [HolidayController::class, 'bulkImport']);
     Route::apiResource('holidays',       HolidayController::class);

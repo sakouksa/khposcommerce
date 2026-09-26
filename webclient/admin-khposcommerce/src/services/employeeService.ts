@@ -221,6 +221,11 @@ export const employeeService = {
     return res.data
   },
 
+  syncLiveHolidays: async (year: number = new Date().getFullYear()) => {
+    const res = await api.post('/holidays/sync-live-api', { year })
+    return res.data
+  },
+
   getItemsByTab: (tab: string, params: any = {}) => {
     if (tab === 'leaves') {
       return api.get('/leave-requests', { params }).then((r) => r.data)

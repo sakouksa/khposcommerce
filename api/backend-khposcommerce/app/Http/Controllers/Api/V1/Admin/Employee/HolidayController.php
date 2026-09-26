@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\BaseApiController;
 use App\Models\Employee\Holiday;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class HolidayController extends BaseApiController
@@ -175,5 +177,72 @@ class HolidayController extends BaseApiController
             "Imported {$inserted->count()} holidays successfully",
             201
         );
+    }
+
+    // ─── POST /holidays/sync-live-api ─────────────────────────────────────────
+    public function syncLiveApi(Request $request): JsonResponse
+    {
+        if ($request->user() && !$request->user()->hasRole('super_admin') && !$request->user()->can('holiday.create')) {
+            return $this->errorResponse('You do not have permission to sync holidays', null, 403);
+        }
+
+        $request->validate([
+            'year' => 'nullable|integer|min:2000|max:2100',
+        ]);
+
+        $year = (int) ($request->input('year') ?: date('Y'));
+        $apiUrl = "https://date.nager.at/api/v3/PublicHolidays/{$year}/KH";
+
+        try {
+            $response = Http::timeout(12)->get($apiUrl);
+
+            if (!$response->successful()) {
+                return $this->errorResponse("Nager.Date API returned HTTP status: " . $response->status(), null, 502);
+            }
+
+            $items = $response->json();
+            if (!is_array($items) || empty($items)) {
+                return $this->errorResponse("No holidays found for year {$year}", null, 404);
+            }
+
+            $savedCount = 0;
+            foreach ($items as $item) {
+                if (empty($item['date']) || empty($item['name'])) {
+                    continue;
+                }
+
+                $titleKm = !empty($item['localName']) ? $item['localName'] : $item['name'];
+                $titleEn = $item['name'];
+                $desc = $titleKm !== $titleEn ? "{$titleKm} / {$titleEn}" : $titleEn;
+
+                Holiday::withTrashed()->updateOrCreate(
+                    [
+                        'date'     => $item['date'],
+                        'title_en' => $titleEn,
+                    ],
+                    [
+                        'title_km'     => $titleKm,
+                        'description'  => $desc,
+                        'status'       => 'active',
+                        'is_recurring' => (bool) ($item['fixed'] ?? false),
+                        'deleted_at'   => null,
+                    ]
+                );
+
+                $savedCount++;
+            }
+
+            return $this->successResponse(
+                [
+                    'year'         => $year,
+                    'synced_count' => $savedCount,
+                ],
+                "Successfully synchronized {$savedCount} Cambodian holidays for year {$year} from Nager.Date API",
+                200
+            );
+        } catch (\Throwable $e) {
+            Log::error("Failed to sync Cambodia holidays for year {$year}: " . $e->getMessage());
+            return $this->errorResponse("Failed to connect to Nager.Date API: " . $e->getMessage(), null, 500);
+        }
     }
 }

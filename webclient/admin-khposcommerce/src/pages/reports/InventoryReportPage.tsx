@@ -34,8 +34,8 @@ export const InventoryReportPage: React.FC = () => {
   const toast = useToast()
   const { hasPermission } = useAuthStore()
 
-  const canView = hasPermission('reports.inventory.view') || hasPermission('reports.view') || true
-  const canExport = hasPermission('reports.inventory.export') || hasPermission('reports.export') || true
+  const canView = hasPermission(['report.view', 'inventory.view'])
+  const canExport = hasPermission(['report.export', 'inventory.export'])
 
   const [filters, setFilters] = useState<InventoryFilterState>({
     date_from: thirtyDaysAgo,

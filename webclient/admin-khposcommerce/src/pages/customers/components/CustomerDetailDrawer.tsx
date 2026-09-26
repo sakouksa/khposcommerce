@@ -37,6 +37,7 @@ interface CustomerDetailDrawerProps {
   customer: Customer | null
   onClose: () => void
   openEditModal: (cust: Customer) => void
+  canEdit?: boolean
 }
 
 type TabKey = 
@@ -55,6 +56,7 @@ export const CustomerDetailDrawer: React.FC<CustomerDetailDrawerProps> = ({
   customer,
   onClose,
   openEditModal,
+  canEdit = true,
 }) => {
   const navigate = useNavigate()
   const { t } = useTranslation(['customers', 'common'])
@@ -1250,13 +1252,15 @@ export const CustomerDetailDrawer: React.FC<CustomerDetailDrawerProps> = ({
               >
                 {t('customers.fullDetailPage', 'Open Full Page')}
               </ActionButton>
-              <ActionButton
-                variant="primary"
-                icon={<Edit3 size={15} />}
-                onClick={() => openEditModal(cust)}
-              >
-                {t('customers.editProfile', 'Edit Customer Profile')}
-              </ActionButton>
+              {canEdit && (
+                <ActionButton
+                  variant="primary"
+                  icon={<Edit3 size={15} />}
+                  onClick={() => openEditModal(cust)}
+                >
+                  {t('customers.editProfile', 'Edit Customer Profile')}
+                </ActionButton>
+              )}
             </div>
           }
         />

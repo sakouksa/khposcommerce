@@ -1,5 +1,5 @@
-import React from 'react'
 import {
+  Calendar,
   Phone,
   Briefcase,
   Users,
@@ -24,6 +24,7 @@ import TableWrapper from '@/components/shared/TableWrapper'
 import StatusBadge from '@/components/common/StatusBadge'
 import { EmptyState } from '@/components/common'
 import { formatCurrency, GlobalFormat } from '@/utils/formatters'
+import { useAuthStore } from '@/stores/authStore'
 import type { Tab } from '../types/employee.types'
 
 interface EmployeeTableSectionProps {
@@ -70,6 +71,23 @@ export const EmployeeTableSection: React.FC<EmployeeTableSectionProps> = ({
   onOpenPayslip,
 }) => {
   const { t } = useTranslation(['employees', 'common'])
+  const { hasPermission } = useAuthStore()
+
+  const canEditTab =
+    activeTab === 'employees' ? hasPermission('employee.update') :
+    activeTab === 'departments' ? hasPermission('department.update') :
+    activeTab === 'positions' ? hasPermission('position.update') :
+    activeTab === 'payrolls' ? hasPermission('payroll.update') :
+    activeTab === 'attendance' ? hasPermission('attendance.update') :
+    true
+
+  const canDeleteTab =
+    activeTab === 'employees' ? hasPermission('employee.delete') :
+    activeTab === 'departments' ? hasPermission('department.delete') :
+    activeTab === 'positions' ? hasPermission('position.delete') :
+    activeTab === 'payrolls' ? hasPermission('payroll.delete') :
+    activeTab === 'attendance' ? hasPermission('attendance.delete') :
+    true
 
   const renderSortIcon = (field: string) => {
     if (sortBy !== field) return null
@@ -241,21 +259,27 @@ export const EmployeeTableSection: React.FC<EmployeeTableSectionProps> = ({
                       </th>
                     )}
                     {visibleColumns.employee !== false && (
-                      <th>{t('employees.employee', 'Employee')}</th>
+                      <th className="min-w-[200px]">{t('employees.employee', 'Employee')}</th>
                     )}
                     {visibleColumns.basic_salary !== false && (
-                      <th>{t('employees.basic_salary', 'Basic Salary')}</th>
+                      <th className="cursor-pointer select-none text-right" onClick={() => handleSort('basic_salary')}>
+                        {t('employees.basic_salary', 'Basic Salary')} {renderSortIcon('basic_salary')}
+                      </th>
                     )}
-                    <th>{t('employees.allowances', 'Allowances / Commission')}</th>
-                    <th>{t('employees.deductions', 'NSSF / Tax Deductions')}</th>
+                    {visibleColumns.overtime_and_commission !== false && (
+                      <th className="text-right">{t('employees.allowances', 'Allowances / Commission')}</th>
+                    )}
+                    {visibleColumns.deductions_and_tax !== false && (
+                      <th className="text-right">{t('employees.deductions', 'NSSF / Tax Deductions')}</th>
+                    )}
                     {visibleColumns.net_salary !== false && (
-                      <th className="cursor-pointer select-none" onClick={() => handleSort('net_salary')}>
+                      <th className="cursor-pointer select-none text-right" onClick={() => handleSort('net_salary')}>
                         {t('employees.net_salary', 'Net Salary')} {renderSortIcon('net_salary')}
                       </th>
                     )}
                     {visibleColumns.status !== false && (
-                      <th className="cursor-pointer select-none" onClick={() => handleSort('status')}>
-                        {t('employees.status', 'Status')} {renderSortIcon('status')}
+                      <th className="cursor-pointer select-none text-center" onClick={() => handleSort('status')}>
+                        {t('common.status', 'Status')} {renderSortIcon('status')}
                       </th>
                     )}
                   </>
@@ -425,7 +449,11 @@ export const EmployeeTableSection: React.FC<EmployeeTableSectionProps> = ({
                       )}
                       {activeTab === 'attendance' && (
                         <>
-                          {visibleColumns.date !== false && <td className="font-semibold text-xs font-mono">{r.attendance_date ?? (r.date ? new Date(r.date).toLocaleDateString() : t('common.none', 'N/A'))}</td>}
+                          {visibleColumns.date !== false && (
+                            <td className="font-semibold text-xs whitespace-nowrap">
+                              {GlobalFormat.displayDate(r.attendance_date || r.date)}
+                            </td>
+                          )}
                           {visibleColumns.employee !== false && (
                             <td>
                               <div className="flex items-center gap-2">
@@ -456,70 +484,125 @@ export const EmployeeTableSection: React.FC<EmployeeTableSectionProps> = ({
                       )}
                       {activeTab === 'payrolls' && (
                         <>
-                          {visibleColumns.period_month !== false && <td className="font-semibold font-mono">{r.period_month}</td>}
+                          {visibleColumns.period_month !== false && (
+                            <td className="whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/60 text-foreground font-semibold text-xs border border-border/50">
+                                <Calendar size={12} className="text-muted-foreground shrink-0" />
+                                <span>{GlobalFormat.month(r.period_month)}</span>
+                              </span>
+                            </td>
+                          )}
                           {visibleColumns.employee !== false && (
                             <td>
-                              <div>
-                                <p className="font-semibold text-foreground text-xs">{r.employee?.name ?? t('common.none', 'N/A')}</p>
-                                <p className="font-mono text-[11px] text-muted-foreground">{r.employee?.employee_number}</p>
+                              <div className="flex items-center gap-2.5">
+                                <EmployeeAvatar
+                                  photo={r.employee?.photo}
+                                  name={r.employee?.name}
+                                  id={r.employee?.id}
+                                  size="sm"
+                                  getPhotoUrl={getPhotoUrl}
+                                />
+                                <div className="min-w-0">
+                                  <span
+                                    className="font-bold text-xs sm:text-[13px] text-foreground hover:text-primary cursor-pointer transition-colors block truncate"
+                                    onClick={() => onOpenPayslip ? onOpenPayslip(r.id) : openEditModal(r)}
+                                    title={r.employee?.name}
+                                  >
+                                    {r.employee?.name ?? t('common.none', 'N/A')}
+                                  </span>
+                                  <span className="inline-block font-mono text-[10.5px] font-medium text-muted-foreground">
+                                    {r.employee?.employee_number || `EMP-${String(r.employee_id || r.id).padStart(4, '0')}`}
+                                  </span>
+                                </div>
                               </div>
                             </td>
                           )}
                           {visibleColumns.basic_salary !== false && (
-                            <td className="font-mono text-xs font-semibold">
+                            <td className="text-right text-xs font-semibold text-foreground whitespace-nowrap">
                               {formatCurrency(r.basic_salary, 'USD')}
                             </td>
                           )}
-                          <td>
-                            <div className="text-xs">
-                              <p className="font-medium text-foreground">
-                                +{formatCurrency(Number(r.allowances || 0) + Number(r.overtime_pay || 0) + Number(r.sales_commission || 0), 'USD')}
-                              </p>
-                              {r.sales_commission > 0 && (
-                                <p className="text-[11px] text-amber-600 dark:text-amber-400">
-                                  {t('employees.comm_short', 'Comm')}: {formatCurrency(r.sales_commission, 'USD')}
-                                </p>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="text-xs">
-                              <p className="font-medium text-rose-600 dark:text-rose-400">
-                                -{formatCurrency(Number(r.deductions || 0) + Number(r.nssf_deduction || 0) + Number(r.tax_deduction || 0), 'USD')}
-                              </p>
-                              <p className="text-[11px] text-muted-foreground">
-                                {t('employees.nssf_short', 'NSSF')}: {formatCurrency(r.nssf_deduction || 0, 'USD')} | {t('employees.tax_short', 'Tax')}: {formatCurrency(r.tax_deduction || 0, 'USD')}
-                              </p>
-                            </div>
-                          </td>
+                          {visibleColumns.overtime_and_commission !== false && (
+                            <td className="text-right whitespace-nowrap">
+                              {(() => {
+                                const totalAdd = Number(r.allowances || 0) + Number(r.overtime_pay || 0) + Number(r.sales_commission || 0)
+                                if (totalAdd === 0) {
+                                  return <span className="text-muted-foreground/40 text-xs font-medium">—</span>
+                                }
+                                return (
+                                  <div>
+                                    <span className="font-semibold text-xs text-emerald-600 dark:text-emerald-400">
+                                      +{formatCurrency(totalAdd, 'USD')}
+                                    </span>
+                                    {r.sales_commission > 0 && (
+                                      <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                                        {t('employees.comm_short', 'Comm')}: {formatCurrency(r.sales_commission, 'USD')}
+                                      </p>
+                                    )}
+                                  </div>
+                                )
+                              })()}
+                            </td>
+                          )}
+                          {visibleColumns.deductions_and_tax !== false && (
+                            <td className="text-right whitespace-nowrap">
+                              {(() => {
+                                const nssf = Number(r.nssf_deduction || 0)
+                                const tax = Number(r.tax_deduction || 0)
+                                const totalDed = Number(r.deductions || 0) + nssf + tax
+                                if (totalDed === 0) {
+                                  return <span className="text-muted-foreground/40 text-xs font-medium">—</span>
+                                }
+                                return (
+                                  <div>
+                                    <span className="font-semibold text-xs text-rose-600 dark:text-rose-400">
+                                      -{formatCurrency(totalDed, 'USD')}
+                                    </span>
+                                    {(nssf > 0 || tax > 0) && (
+                                      <div className="text-[10.5px] text-muted-foreground/80 flex items-center justify-end gap-1.5 mt-0.5">
+                                        {nssf > 0 && (
+                                          <span>{t('employees.nssf_short', 'NSSF')}: {formatCurrency(nssf, 'USD')}</span>
+                                        )}
+                                        {nssf > 0 && tax > 0 && <span>•</span>}
+                                        {tax > 0 && (
+                                          <span>{t('employees.tax_short', 'Tax')}: {formatCurrency(tax, 'USD')}</span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })()}
+                            </td>
+                          )}
                           {visibleColumns.net_salary !== false && (
-                            <td className="font-bold text-primary font-mono text-sm">
-                              {formatCurrency(r.net_salary, 'USD')}
+                            <td className="text-right whitespace-nowrap">
+                              <span className="text-sm font-bold text-foreground">
+                                {formatCurrency(r.net_salary, 'USD')}
+                              </span>
                             </td>
                           )}
                           {visibleColumns.status !== false && (
-                            <td>
+                            <td className="text-center">
                               <StatusBadge status={r.status} />
                             </td>
                           )}
                         </>
                       )}
                       <td className="print:hidden !text-right pr-6" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1.5">
                           {activeTab === 'payrolls' && onOpenPayslip && (
                             <button
                               type="button"
                               onClick={() => onOpenPayslip(r.id)}
-                              className="px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold inline-flex items-center gap-1 transition-colors cursor-pointer mr-1"
-                              title="View Official Payslip"
+                              className="h-7 w-7 rounded-lg border border-primary/20 bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-all shadow-2xs active:scale-95 cursor-pointer shrink-0"
+                              title={t('employees.view_payslip', 'View Payslip')}
+                              aria-label={t('employees.view_payslip', 'View Payslip')}
                             >
-                              <FileText size={12} />
-                              <span>{t('employees.view_payslip', 'Payslip')}</span>
+                              <FileText size={13} />
                             </button>
                           )}
                           <TableActionMenu
-                            variant="hybrid"
-                            maxInline={2}
+                            variant="inline"
                             buttonSize="sm"
                             align="right"
                             onView={
@@ -529,8 +612,8 @@ export const EmployeeTableSection: React.FC<EmployeeTableSectionProps> = ({
                                 ? () => setSelectedAttendanceDetail(r)
                                 : undefined
                             }
-                            onEdit={() => openEditModal(r)}
-                            onDelete={() => confirmDelete(r, false)}
+                            onEdit={canEditTab ? () => openEditModal(r) : undefined}
+                            onDelete={canDeleteTab ? () => confirmDelete(r, false) : undefined}
                           />
                         </div>
                       </td>

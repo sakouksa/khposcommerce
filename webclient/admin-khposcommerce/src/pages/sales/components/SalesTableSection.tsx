@@ -27,6 +27,8 @@ interface SalesTableSectionProps {
   onView: (sale: Sale) => void
   onPrintReceipt: (sale: Sale) => void
   onRefund: (sale: Sale) => void
+  canRefund?: boolean
+  canPrint?: boolean
 }
 
 
@@ -41,6 +43,8 @@ export const SalesTableSection: React.FC<SalesTableSectionProps> = ({
   onView,
   onPrintReceipt,
   onRefund,
+  canRefund = true,
+  canPrint = true,
 }) => {
   const { language } = useThemeStore()
   const { t } = useTranslation(['sales', 'common'])
@@ -580,10 +584,10 @@ export const SalesTableSection: React.FC<SalesTableSectionProps> = ({
                           buttonSize="md"
                           onView={() => onView(sale)}
                           viewLabel={t('common.view', 'View Order Details')}
-                          onPrint={() => onPrintReceipt(sale)}
+                          onPrint={canPrint ? () => onPrintReceipt(sale) : undefined}
                           printLabel={t('printReceipt', 'Print Receipt')}
                           items={
-                            sale.status !== 'refunded' && sale.status !== 'cancelled'
+                            canRefund && sale.status !== 'refunded' && sale.status !== 'cancelled'
                               ? [
                                   {
                                     label: t('refund', 'Refund Order'),

@@ -112,6 +112,7 @@ interface SalesDetailDrawerProps {
   onRefund: () => void
   onPrintReceipt?: (sale: Sale) => void
   isRefunding: boolean
+  canRefund?: boolean
 }
 
 export const SalesDetailDrawer: React.FC<SalesDetailDrawerProps> = ({
@@ -121,6 +122,7 @@ export const SalesDetailDrawer: React.FC<SalesDetailDrawerProps> = ({
   onRefund,
   onPrintReceipt,
   isRefunding,
+  canRefund = true,
 }) => {
   const { language } = useThemeStore()
   const { t } = useTranslation(['sales', 'common'])
@@ -592,7 +594,7 @@ export const SalesDetailDrawer: React.FC<SalesDetailDrawerProps> = ({
               )}
             </div>
 
-            {sale?.status !== 'refunded' && sale?.status !== 'cancelled' && (
+            {canRefund && sale?.status !== 'refunded' && sale?.status !== 'cancelled' && (
               <ActionButton
                 variant="danger"
                 size="sm"

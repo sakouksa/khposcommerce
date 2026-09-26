@@ -32,6 +32,9 @@ export const roleService = {
   permissions: (params: Record<string, any> = {}) =>
     api.get('/permissions', { params }).then((r) => r.data),
 
+  getRolePermissions: (roleId: number | string) =>
+    api.get(`/roles/${roleId}/permissions`).then((r) => r.data.data ?? r.data),
+
   assignPermissions: (roleId: number | string, permissions: (number | string)[]) =>
     api.post(`/roles/${roleId}/permissions`, { permissions }).then((r) => r.data),
 }

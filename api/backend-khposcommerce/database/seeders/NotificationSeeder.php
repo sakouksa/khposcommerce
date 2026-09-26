@@ -32,11 +32,10 @@ class NotificationSeeder extends Seeder
 
         foreach ($permissions as $perm) {
             Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'api']);
-            Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'web']);
         }
 
         // Give Super Admin role all permissions
-        $superAdmin = Role::where('name', 'Super Admin')->first();
+        $superAdmin = Role::where('name', 'super_admin')->where('guard_name', 'api')->first();
         if ($superAdmin) {
             $superAdmin->givePermissionTo($permissions);
         }

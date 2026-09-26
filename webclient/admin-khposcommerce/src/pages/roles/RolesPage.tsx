@@ -9,6 +9,14 @@ import {
   Users, Copy, Check, ShieldAlert, Award, FileText, Layers, RefreshCcw
 } from 'lucide-react'
 import { roleService } from '@/services/roleService'
+import { permissionService } from '@/services/permissionService'
+import { usePermission } from '@/hooks/usePermission'
+import {
+  getPermissionModule,
+  getPermissionAction,
+  getPermissionRiskLevel,
+  formatPermissionLabel,
+} from '@/utils/permissionUtils'
 import { useToast } from '@/hooks/useToast'
 import { focusFirstInvalidField } from '@/utils/formValidation'
 import Pagination from '@/components/shared/Pagination'
@@ -154,9 +162,18 @@ const RolesPage: React.FC = () => {
   const [cloneRoleTarget, setCloneRoleTarget] = useState<Role | null>(null)
   const [importModalOpen, setImportModalOpen] = useState(false)
 
+  // RBAC Permission Access Checks
+  const { hasPermission } = usePermission()
+  const canCreate = hasPermission('role.create')
+  const canEdit = hasPermission('role.update')
+  const canDelete = hasPermission('role.delete')
+  const canExport = hasPermission('role.export')
+
   // Dedicated Manage Role Permissions Drawer State
   const [permDrawerRole, setPermDrawerRole] = useState<Role | null>(null)
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
+  const [permDrawerSearch, setPermDrawerSearch] = useState<string>('')
+  const [permDrawerModule, setPermDrawerModule] = useState<string>('all')
 
   // CSV Import States
   const [importFile, setImportFile] = useState<File | null>(null)
@@ -211,10 +228,90 @@ const RolesPage: React.FC = () => {
     staleTime: 30000,
   })
 
-  const { data: allPermissions } = useQuery({
+  const { data: allPermissionsData, isLoading: isLoadingAllPerms } = useQuery({
     queryKey: ['all-permissions-list'],
-    queryFn: () => roleService.permissions().then(r => r.data ?? []),
+    queryFn: () => roleService.permissions({ per_page: 'all' }).then(r => r.data ?? []),
   })
+  const allPermissions: any[] = useMemo(() => allPermissionsData ?? [], [allPermissionsData])
+
+  // Query permissions assigned to the current role in drawer
+  const { data: rolePermsData, isLoading: isLoadingRolePerms } = useQuery({
+    queryKey: ['role-permissions', permDrawerRole?.id],
+    queryFn: () => roleService.getRolePermissions(permDrawerRole!.id),
+    enabled: !!permDrawerRole?.id,
+  })
+
+  useEffect(() => {
+    if (rolePermsData?.permissions) {
+      setSelectedPermissions(rolePermsData.permissions)
+    }
+  }, [rolePermsData])
+
+  // Unique modules extracted from all permissions
+  const permissionModules = useMemo(() => {
+    const modulesSet = new Set<string>()
+    allPermissions.forEach((p: any) => {
+      const mod = p.module || getPermissionModule(p.name)
+      if (mod) modulesSet.add(mod)
+    })
+    return Array.from(modulesSet).sort()
+  }, [allPermissions])
+
+  // Permissions filtered inside the drawer by search and module
+  const drawerFilteredPermissions = useMemo(() => {
+    return allPermissions.filter((p: any) => {
+      const pName = (p.name || '').toLowerCase()
+      const mod = (p.module || getPermissionModule(p.name)).toLowerCase()
+      if (permDrawerModule !== 'all' && mod !== permDrawerModule.toLowerCase()) {
+        return false
+      }
+      if (permDrawerSearch.trim()) {
+        const query = permDrawerSearch.trim().toLowerCase()
+        if (!pName.includes(query) && !mod.includes(query)) {
+          return false
+        }
+      }
+      return true
+    })
+  }, [allPermissions, permDrawerModule, permDrawerSearch])
+
+  // Group filtered drawer permissions by module
+  const groupedDrawerPermissions = useMemo(() => {
+    const map: Record<string, any[]> = {}
+    drawerFilteredPermissions.forEach((p: any) => {
+      const mod = p.module || getPermissionModule(p.name)
+      if (!map[mod]) map[mod] = []
+      map[mod].push(p)
+    })
+    return map
+  }, [drawerFilteredPermissions])
+
+  const handleSelectAll = () => {
+    const names = drawerFilteredPermissions.map((p: any) => p.name)
+    setSelectedPermissions(prev => Array.from(new Set([...prev, ...names])))
+  }
+
+  const handleDeselectAll = () => {
+    const namesSet = new Set(drawerFilteredPermissions.map((p: any) => p.name))
+    setSelectedPermissions(prev => prev.filter(name => !namesSet.has(name)))
+  }
+
+  const toggleModuleAll = (modPerms: any[]) => {
+    const modNames = modPerms.map(p => p.name)
+    const allSelected = modNames.every(n => selectedPermissions.includes(n))
+    if (allSelected) {
+      const modSet = new Set(modNames)
+      setSelectedPermissions(prev => prev.filter(n => !modSet.has(n)))
+    } else {
+      setSelectedPermissions(prev => Array.from(new Set([...prev, ...modNames])))
+    }
+  }
+
+  const togglePermission = (name: string) => {
+    setSelectedPermissions(prev =>
+      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+    )
+  }
 
   const rolesRaw: Role[] = data?.data ?? []
   const pagination = data?.pagination ?? { total: rolesRaw.length, current_page: 1, last_page: 1 }
@@ -357,6 +454,23 @@ const RolesPage: React.FC = () => {
     },
   })
 
+  const assignPermissionsMutation = useMutation({
+    mutationFn: ({ roleId, permissions }: { roleId: number; permissions: string[] }) =>
+      roleService.assignPermissions(roleId, permissions),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['roles'] })
+      qc.invalidateQueries({ queryKey: ['roles-dashboard-stats'] })
+      if (permDrawerRole) {
+        qc.invalidateQueries({ queryKey: ['role-permissions', permDrawerRole.id] })
+      }
+      toast.success(`Updated permissions for role ${permDrawerRole?.name?.toUpperCase()}`)
+      setPermDrawerRole(null)
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message ?? 'Failed to update permissions.')
+    },
+  })
+
   // ── Modal & Drawer Handlers ────────────────────────────────────────────────
   const openCreateModal = () => {
     setEditingRole(null)
@@ -378,7 +492,9 @@ const RolesPage: React.FC = () => {
 
   const openPermissionDrawer = (role: Role) => {
     setPermDrawerRole(role)
-    setSelectedPermissions(['dashboard.view', 'products.manage', 'orders.manage'])
+    setSelectedPermissions([])
+    setPermDrawerSearch('')
+    setPermDrawerModule('all')
   }
 
   const handleCloneRole = (role: Role) => {
@@ -520,27 +636,33 @@ const RolesPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto xl:justify-end shrink-0 z-10">
-          <button
-            onClick={() => setImportModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
-          >
-            <Upload size={15} />
-            <span>Import CSV</span>
-          </button>
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
-          >
-            <Download size={15} />
-            <span>Export CSV</span>
-          </button>
-          <button
-            onClick={openCreateModal}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer"
-          >
-            <Plus size={16} />
-            <span>Create Role</span>
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => setImportModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
+            >
+              <Upload size={15} />
+              <span>Import CSV</span>
+            </button>
+          )}
+          {canExport && (
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
+            >
+              <Download size={15} />
+              <span>Export CSV</span>
+            </button>
+          )}
+          {canCreate && (
+            <button
+              onClick={openCreateModal}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              <Plus size={16} />
+              <span>Create Role</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -993,21 +1115,21 @@ const RolesPage: React.FC = () => {
                             variant="hybrid"
                             maxInline={2}
                             onView={() => setViewRole(r)}
-                            onEdit={() => openEditModal(r)}
-                            onDelete={() => setDeleteTarget(r)}
+                            onEdit={canEdit ? () => openEditModal(r) : undefined}
+                            onDelete={canDelete && !r.is_system && r.name !== 'super_admin' ? () => setDeleteTarget(r) : undefined}
                             items={[
-                              {
+                              ...(canEdit ? [{
                                 label: t('roles.permissions', 'Manage Permissions'),
                                 icon: Shield,
                                 onClick: () => openPermissionDrawer(r),
-                                variant: 'default',
-                              },
-                              {
+                                variant: 'default' as const,
+                              }] : []),
+                              ...(canCreate ? [{
                                 label: t('roles.clone', 'Clone Role'),
                                 icon: Copy,
                                 onClick: () => handleCloneRole(r),
-                                variant: 'default',
-                              },
+                                variant: 'default' as const,
+                              }] : []),
                             ]}
                           />
                         </td>
@@ -1249,20 +1371,22 @@ const RolesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 border-t border-border bg-muted/20 flex gap-2">
-                <button
-                  onClick={() => { setViewRole(null); openEditModal(viewRole) }}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
-                >
-                  <Edit2 size={14} /> Edit Role
-                </button>
-                <button
-                  onClick={() => { setViewRole(null); openPermissionDrawer(viewRole) }}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/10 rounded-xl transition-colors cursor-pointer"
-                >
-                  <Shield size={14} /> Permissions
-                </button>
-              </div>
+              {canEdit && (
+                <div className="p-4 border-t border-border bg-muted/20 flex gap-2">
+                  <button
+                    onClick={() => { setViewRole(null); openEditModal(viewRole) }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
+                  >
+                    <Edit2 size={14} /> Edit Role
+                  </button>
+                  <button
+                    onClick={() => { setViewRole(null); openPermissionDrawer(viewRole) }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold border border-primary/30 text-primary hover:bg-primary/10 rounded-xl transition-colors cursor-pointer"
+                  >
+                    <Shield size={14} /> Permissions
+                  </button>
+                </div>
+              )}
             </motion.div>
           </div>
         )}
@@ -1362,6 +1486,7 @@ const RolesPage: React.FC = () => {
       </AnimatePresence>
 
       {/* ── 10. MANAGE PERMISSIONS DRAWER (SLIDE FROM RIGHT) ─────────────────── */}
+      {/* ── 10. MANAGE PERMISSIONS DRAWER (SLIDE FROM RIGHT) ─────────────────── */}
       <AnimatePresence>
         {permDrawerRole && (
           <div className="fixed inset-0 z-50 overflow-hidden print:hidden">
@@ -1378,14 +1503,24 @@ const RolesPage: React.FC = () => {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="w-screen max-w-md sm:max-w-lg bg-card border-l border-border shadow-2xl flex flex-col justify-between"
+                className="w-screen max-w-xl sm:max-w-2xl bg-card border-l border-border shadow-2xl flex flex-col justify-between"
               >
+                {/* Drawer Header */}
                 <div className="px-6 py-5 border-b border-border flex items-center justify-between bg-muted/30">
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-primary animate-pulse" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                      <Shield className="h-5 w-5" />
+                    </div>
                     <div>
-                      <h2 className="text-base font-bold text-foreground">Role Permissions Assignment</h2>
-                      <p className="text-[11px] text-muted-foreground">Configure access privileges for {permDrawerRole.name.toUpperCase()}</p>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-base font-bold text-foreground">Role Permissions Assignment</h2>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary uppercase">
+                          {permDrawerRole.name}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Guard: <span className="font-mono text-foreground font-semibold">{permDrawerRole.guard_name || 'api'}</span> • {selectedPermissions.length} / {allPermissions.length} permissions granted
+                      </p>
                     </div>
                   </div>
                   <button
@@ -1396,90 +1531,188 @@ const RolesPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="p-6 space-y-6 overflow-y-auto flex-1">
-                  <div className="p-4 rounded-2xl bg-muted/30 border border-border/70 flex items-center gap-3 shadow-2xs">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                      <ShieldAlert size={20} />
+                {/* Drawer Body */}
+                <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                  {/* Search & Filter Toolbar */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
+                      <input
+                        type="text"
+                        value={permDrawerSearch}
+                        onChange={(e) => setPermDrawerSearch(e.target.value)}
+                        placeholder="Search permissions or modules..."
+                        className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      {permDrawerSearch && (
+                        <button
+                          onClick={() => setPermDrawerSearch('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
                     </div>
-                    <div>
-                      <div className="font-bold text-foreground text-sm">{permDrawerRole.name.toUpperCase()}</div>
-                      <div className="text-xs text-muted-foreground font-mono">Guard: {permDrawerRole.guard_name}</div>
+                    <select
+                      value={permDrawerModule}
+                      onChange={(e) => setPermDrawerModule(e.target.value)}
+                      className="px-3 py-2 text-xs rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                    >
+                      <option value="all">All Modules ({permissionModules.length})</option>
+                      {permissionModules.map((m) => (
+                        <option key={m} value={m}>
+                          {m.toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Quick Action Buttons */}
+                  <div className="flex items-center justify-between py-1 border-b border-border/50 text-xs">
+                    <span className="font-medium text-muted-foreground">
+                      Showing {drawerFilteredPermissions.length} permissions
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSelectAll}
+                        className="px-2.5 py-1 rounded-lg text-primary hover:bg-primary/10 font-semibold transition-colors cursor-pointer"
+                      >
+                        Select All Visible
+                      </button>
+                      <span className="text-muted-foreground/40">|</span>
+                      <button
+                        type="button"
+                        onClick={handleDeselectAll}
+                        className="px-2.5 py-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted font-semibold transition-colors cursor-pointer"
+                      >
+                        Deselect All Visible
+                      </button>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                        Available Permission Matrix
-                      </label>
+                  {/* Loading State */}
+                  {(isLoadingRolePerms || isLoadingAllPerms) ? (
+                    <div className="py-16 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 size={24} className="animate-spin text-primary" />
+                      <span className="text-xs font-medium">Loading permissions matrix...</span>
                     </div>
-                    <div className="space-y-2">
-                      {[
-                        { id: 'dashboard.view', label: 'View Dashboard & Analytics', group: 'Dashboard' },
-                        { id: 'products.manage', label: 'Manage Products & Inventory Items', group: 'Catalog' },
-                        { id: 'orders.manage', label: 'Manage POS Orders & Transactions', group: 'Sales POS' },
-                        { id: 'customers.manage', label: 'Manage Customer Directory & CRM', group: 'Customers' },
-                        { id: 'finance.manage', label: 'Manage Finance, Expenses & Accounting', group: 'Finance' },
-                        { id: 'marketing.manage', label: 'Manage Coupons, Flash Sales & Banners', group: 'Marketing' },
-                        { id: 'shipping.manage', label: 'Manage Shipping & Carrier Rates', group: 'Shipping' },
-                        { id: 'company.manage', label: 'Manage Companies, Branches & Warehouses', group: 'Company' },
-                        { id: 'users.manage', label: 'Manage Users, Roles & Security Access', group: 'Administration' },
-                        { id: 'settings.manage', label: 'Manage Store & System Settings', group: 'Settings' },
-                      ].map((p) => {
-                        const isChecked = selectedPermissions.includes(p.id)
+                  ) : Object.keys(groupedDrawerPermissions).length === 0 ? (
+                    <div className="py-16 text-center text-xs text-muted-foreground">
+                      No permissions match your search or filter criteria.
+                    </div>
+                  ) : (
+                    /* Module Groups Accordion / Cards */
+                    <div className="space-y-4">
+                      {Object.entries(groupedDrawerPermissions).map(([mod, perms]) => {
+                        const modPermNames = perms.map((p: any) => p.name)
+                        const selectedInMod = modPermNames.filter((n: string) => selectedPermissions.includes(n)).length
+                        const isAllModSelected = selectedInMod === modPermNames.length && modPermNames.length > 0
+
                         return (
                           <div
-                            key={p.id}
-                            onClick={() => {
-                              if (isChecked) {
-                                setSelectedPermissions(selectedPermissions.filter(id => id !== p.id))
-                              } else {
-                                setSelectedPermissions([...selectedPermissions, p.id])
-                              }
-                            }}
-                            className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                              isChecked ? 'bg-primary/5 border-primary/40 shadow-2xs' : 'bg-card border-border hover:bg-muted/40'
-                            }`}
+                            key={mod}
+                            className="rounded-2xl border border-border bg-card/60 overflow-hidden shadow-2xs"
                           >
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-xl transition-colors ${isChecked ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
-                                <ShieldCheck size={16} />
+                            {/* Module Header */}
+                            <div className="px-4 py-3 bg-muted/40 border-b border-border/70 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-xs uppercase tracking-wider text-foreground">
+                                  {mod.replace(/_/g, ' ')}
+                                </span>
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+                                  {selectedInMod} / {modPermNames.length}
+                                </span>
                               </div>
-                              <div>
-                                <div className="text-xs font-bold text-foreground">{p.label}</div>
-                                <div className="text-[10px] text-muted-foreground mt-0.5">{p.group} Access Scope</div>
-                              </div>
+                              <button
+                                type="button"
+                                onClick={() => toggleModuleAll(perms)}
+                                className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                              >
+                                {isAllModSelected ? 'Deselect Module' : 'Select All Module'}
+                              </button>
                             </div>
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => {}}
-                              className="rounded text-primary focus:ring-primary h-4 w-4 pointer-events-none"
-                            />
+
+                            {/* Module Permissions Grid */}
+                            <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {perms.map((p: any) => {
+                                const isChecked = selectedPermissions.includes(p.name)
+                                const risk = p.risk_level || getPermissionRiskLevel(p.name)
+                                const action = p.action_type || getPermissionAction(p.name)
+
+                                return (
+                                  <div
+                                    key={p.name}
+                                    onClick={() => togglePermission(p.name)}
+                                    className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 select-none ${
+                                      isChecked
+                                        ? 'bg-primary/5 border-primary/40 shadow-2xs'
+                                        : 'bg-card border-border/60 hover:bg-muted/40'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => {}}
+                                        className="rounded text-primary focus:ring-primary h-3.5 w-3.5 pointer-events-none"
+                                      />
+                                      <div className="min-w-0">
+                                        <div className="text-xs font-semibold text-foreground truncate">
+                                          {p.name}
+                                        </div>
+                                        <div className="text-[10px] text-muted-foreground capitalize">
+                                          {action.replace(/_/g, ' ')}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span
+                                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider shrink-0 ${
+                                        risk === 'high'
+                                          ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20'
+                                          : risk === 'medium'
+                                          ? 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
+                                          : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+                                      }`}
+                                    >
+                                      {risk}
+                                    </span>
+                                  </div>
+                                )
+                              })}
+                            </div>
                           </div>
                         )
                       })}
                     </div>
-                  </div>
+                  )}
                 </div>
 
+                {/* Drawer Footer */}
                 <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-between gap-3">
                   <button
                     type="button"
                     onClick={() => setPermDrawerRole(null)}
-                    className="flex-1 py-2.5 px-4 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                    disabled={assignPermissionsMutation.isPending}
+                    className="flex-1 py-2.5 px-4 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
+                    disabled={assignPermissionsMutation.isPending || isLoadingRolePerms}
                     onClick={() => {
-                      toast.success(`Updated permissions for role ${permDrawerRole.name.toUpperCase()}`)
-                      setPermDrawerRole(null)
+                      if (permDrawerRole) {
+                        assignPermissionsMutation.mutate({
+                          roleId: permDrawerRole.id,
+                          permissions: selectedPermissions,
+                        })
+                      }
                     }}
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-white text-xs font-semibold hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-primary text-white text-xs font-semibold hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
                   >
-                    Save Permissions
+                    {assignPermissionsMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+                    <span>{assignPermissionsMutation.isPending ? 'Saving Permissions...' : 'Save Permissions'}</span>
                   </button>
                 </div>
               </motion.div>

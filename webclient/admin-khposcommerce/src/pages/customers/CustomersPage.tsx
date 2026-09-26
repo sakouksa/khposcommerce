@@ -24,6 +24,7 @@ import type { ImportResult } from '@/components/shared/CsvImportModal'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
 import { downloadCsv } from '@/utils/export'
+import { usePermission } from '@/hooks/usePermission'
 
 import CustomerGroupsPage from './CustomerGroupsPage'
 import CustomerAddressesPage from './CustomerAddressesPage'
@@ -46,6 +47,14 @@ const CustomersPage: React.FC = () => {
   const qc = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+
+  const { hasPermission } = usePermission()
+  const canCreateCustomer = hasPermission('customer.create')
+  const canEditCustomer = hasPermission('customer.update')
+  const canDeleteCustomer = hasPermission('customer.delete')
+  const canExportCustomer = hasPermission('customer.export')
+  const canViewGroups = hasPermission('customer_group.view')
+  const canCreateGroup = hasPermission('customer_group.create')
 
   const [activeTab, setActiveTab] = usePageTab<string>({
     storageKey: 'customers_active_tab',
@@ -498,36 +507,44 @@ const CustomersPage: React.FC = () => {
         <HeaderActionsGroup>
           {activeTab === 'customers' && (
             <>
-              <ImportButton
-                onClick={() => {
-                  setImportFile(null)
-                  setImportResult(null)
-                  setImportModalOpen(true)
-                }}
-                label={t('customers.importCsv', 'Import CSV')}
-              />
-              <ExportButton
-                onClick={handleExport}
-                label={t('customers.exportCsv', 'Export CSV')}
-              />
+              {canCreateCustomer && (
+                <ImportButton
+                  onClick={() => {
+                    setImportFile(null)
+                    setImportResult(null)
+                    setImportModalOpen(true)
+                  }}
+                  label={t('customers.importCsv', 'Import CSV')}
+                />
+              )}
+              {canExportCustomer && (
+                <ExportButton
+                  onClick={handleExport}
+                  label={t('customers.exportCsv', 'Export CSV')}
+                />
+              )}
             </>
           )}
-          <AddButton
-            onClick={
-              activeTab === 'customers'
-                ? openCreateModal
-                : activeTab === 'groups'
-                ? () => groupsActions?.openAdd?.()
-                : () => addressesActions?.openAdd?.()
-            }
-            label={
-              activeTab === 'customers'
-                ? t('customers.addCustomer', 'Add Customer')
-                : activeTab === 'groups'
-                ? t('customers.addGroup', 'Add Customer Group')
-                : t('customers.addAddress', 'Add Address')
-            }
-          />
+          {((activeTab === 'customers' && canCreateCustomer) ||
+            (activeTab === 'groups' && canCreateGroup) ||
+            (activeTab === 'addresses' && canCreateCustomer)) && (
+            <AddButton
+              onClick={
+                activeTab === 'customers'
+                  ? openCreateModal
+                  : activeTab === 'groups'
+                  ? () => groupsActions?.openAdd?.()
+                  : () => addressesActions?.openAdd?.()
+              }
+              label={
+                activeTab === 'customers'
+                  ? t('customers.addCustomer', 'Add Customer')
+                  : activeTab === 'groups'
+                  ? t('customers.addGroup', 'Add Customer Group')
+                  : t('customers.addAddress', 'Add Address')
+              }
+            />
+          )}
         </HeaderActionsGroup>
       </div>
 
@@ -535,7 +552,7 @@ const CustomersPage: React.FC = () => {
       <WorkspaceTabs
         tabs={[
           { id: 'customers', label: t('customers.tab_allCustomers', 'All Customers'), icon: Users },
-          { id: 'groups', label: t('customers.tab_groups', 'Customer Groups'), icon: UsersRound },
+          ...(canViewGroups ? [{ id: 'groups', label: t('customers.tab_groups', 'Customer Groups'), icon: UsersRound }] : []),
           { id: 'addresses', label: t('customers.tab_addresses', 'Delivery Addresses'), icon: MapPin },
         ]}
         activeTab={activeTab}
@@ -560,65 +577,67 @@ const CustomersPage: React.FC = () => {
           {/* Bulk actions panel */}
           <BulkSelectionBanner
             selectedCount={selectedRows.length}
-            onDelete={() => setBulkDeleteConfirmOpen(true)}
+            onDelete={canDeleteCustomer ? () => setBulkDeleteConfirmOpen(true) : undefined}
             onClear={() => setSelectedRows([])}
             deleteLabel={t('customers.deleteSelected', t('common.deleteSelected', 'Delete Selected'))}
             deleteLoading={bulkDeleteMutation.isPending}
             extraActions={
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Dynamic Status: Only show Activate if there are inactive selected */}
-                {hasInactive && (
-                  <button
-                    type="button"
-                    onClick={() => bulkActivateMutation.mutate(selectedRows)}
-                    disabled={bulkActivateMutation.isPending}
-                    className="h-8 px-3 text-xs font-semibold rounded-xl bg-emerald-600/90 text-white hover:bg-emerald-600 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs active:scale-[0.98]"
-                    title={t('common.activate', 'Activate')}
-                  >
-                    <CheckCircle2 size={13} />
-                    <span>{t('common.activate', 'Activate')}</span>
-                  </button>
-                )}
+              canEditCustomer ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Dynamic Status: Only show Activate if there are inactive selected */}
+                  {hasInactive && (
+                    <button
+                      type="button"
+                      onClick={() => bulkActivateMutation.mutate(selectedRows)}
+                      disabled={bulkActivateMutation.isPending}
+                      className="h-8 px-3 text-xs font-semibold rounded-xl bg-emerald-600/90 text-white hover:bg-emerald-600 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs active:scale-[0.98]"
+                      title={t('common.activate', 'Activate')}
+                    >
+                      <CheckCircle2 size={13} />
+                      <span>{t('common.activate', 'Activate')}</span>
+                    </button>
+                  )}
 
-                {/* Dynamic Status: Only show Deactivate if there are active selected */}
-                {hasActive && (
-                  <button
-                    type="button"
-                    onClick={() => bulkDeactivateMutation.mutate(selectedRows)}
-                    disabled={bulkDeactivateMutation.isPending}
-                    className="h-8 px-3 text-xs font-semibold rounded-xl bg-amber-600/90 text-white hover:bg-amber-600 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs active:scale-[0.98]"
-                    title={t('common.deactivate', 'Deactivate')}
-                  >
-                    <UserX size={13} />
-                    <span>{t('common.deactivate', 'Deactivate')}</span>
-                  </button>
-                )}
+                  {/* Dynamic Status: Only show Deactivate if there are active selected */}
+                  {hasActive && (
+                    <button
+                      type="button"
+                      onClick={() => bulkDeactivateMutation.mutate(selectedRows)}
+                      disabled={bulkDeactivateMutation.isPending}
+                      className="h-8 px-3 text-xs font-semibold rounded-xl bg-amber-600/90 text-white hover:bg-amber-600 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs active:scale-[0.98]"
+                      title={t('common.deactivate', 'Deactivate')}
+                    >
+                      <UserX size={13} />
+                      <span>{t('common.deactivate', 'Deactivate')}</span>
+                    </button>
+                  )}
 
-                {/* Dynamic Credit Hold: Toggle between Unlock Credit and Lock Credit */}
-                {allCreditHold ? (
-                  <button
-                    type="button"
-                    onClick={() => bulkToggleCreditHoldMutation.mutate({ ids: selectedRows, isHold: false })}
-                    disabled={bulkToggleCreditHoldMutation.isPending}
-                    className="h-8 px-3 text-xs font-semibold rounded-xl bg-teal-600/90 text-white hover:bg-teal-600 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs active:scale-[0.98]"
-                    title={t('customers.unlockCredit', 'Unlock Credit')}
-                  >
-                    <ShieldCheck size={13} />
-                    <span>{t('customers.unlockCredit', 'Unlock Credit')}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => bulkToggleCreditHoldMutation.mutate({ ids: selectedRows, isHold: true })}
-                    disabled={bulkToggleCreditHoldMutation.isPending}
-                    className="h-8 px-3 text-xs font-semibold rounded-xl bg-rose-600/90 text-white hover:bg-rose-600 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs active:scale-[0.98]"
-                    title={t('customers.lockCredit', 'Lock Credit')}
-                  >
-                    <ShieldAlert size={13} />
-                    <span>{t('customers.lockCredit', 'Credit Hold')}</span>
-                  </button>
-                )}
-              </div>
+                  {/* Dynamic Credit Hold: Toggle between Unlock Credit and Lock Credit */}
+                  {allCreditHold ? (
+                    <button
+                      type="button"
+                      onClick={() => bulkToggleCreditHoldMutation.mutate({ ids: selectedRows, isHold: false })}
+                      disabled={bulkToggleCreditHoldMutation.isPending}
+                      className="h-8 px-3 text-xs font-semibold rounded-xl bg-teal-600/90 text-white hover:bg-teal-600 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs active:scale-[0.98]"
+                      title={t('customers.unlockCredit', 'Unlock Credit')}
+                    >
+                      <ShieldCheck size={13} />
+                      <span>{t('customers.unlockCredit', 'Unlock Credit')}</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => bulkToggleCreditHoldMutation.mutate({ ids: selectedRows, isHold: true })}
+                      disabled={bulkToggleCreditHoldMutation.isPending}
+                      className="h-8 px-3 text-xs font-semibold rounded-xl bg-rose-600/90 text-white hover:bg-rose-600 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs active:scale-[0.98]"
+                      title={t('customers.lockCredit', 'Lock Credit')}
+                    >
+                      <ShieldAlert size={13} />
+                      <span>{t('customers.lockCredit', 'Credit Hold')}</span>
+                    </button>
+                  )}
+                </div>
+              ) : undefined
             }
           />
 
@@ -708,6 +727,8 @@ const CustomersPage: React.FC = () => {
             setDeleteTarget={setDeleteTarget}
             onSettleDebt={(c) => setDebtCustomer(c)}
             onPrintStatement={(c) => setStatementCustomer(c)}
+            canEdit={canEditCustomer}
+            canDelete={canDeleteCustomer}
           />
 
           <Pagination
@@ -724,6 +745,7 @@ const CustomersPage: React.FC = () => {
             customer={viewCustomer}
             onClose={() => setViewCustomer(null)}
             openEditModal={openEditModal}
+            canEdit={canEditCustomer}
           />
 
           {/* Form Modal */}

@@ -17,6 +17,8 @@ interface UserDetailDrawerProps {
   getAvatarUrl?: (avatar?: string | null) => string | null
   openResetPasswordModal: (user: User) => void
   openPermissionModal: (user: User) => void
+  canEdit?: boolean
+  canManageRole?: boolean
 }
 
 export const UserDetailDrawer: React.FC<UserDetailDrawerProps> = ({
@@ -24,6 +26,8 @@ export const UserDetailDrawer: React.FC<UserDetailDrawerProps> = ({
   onClose,
   openResetPasswordModal,
   openPermissionModal,
+  canEdit = true,
+  canManageRole = true,
 }) => {
   if (!user) return null
 
@@ -111,20 +115,24 @@ export const UserDetailDrawer: React.FC<UserDetailDrawerProps> = ({
               label="Close"
               onClick={onClose}
             />
-            <ActionButton
-              variant="outline"
-              size="sm"
-              icon={<Key size={14} className="text-amber-500" />}
-              label="Reset Password"
-              onClick={() => openResetPasswordModal(user)}
-            />
-            <ActionButton
-              variant="primary"
-              size="sm"
-              icon={<Lock size={14} />}
-              label="Permissions"
-              onClick={() => openPermissionModal(user)}
-            />
+            {canEdit && (
+              <ActionButton
+                variant="outline"
+                size="sm"
+                icon={<Key size={14} className="text-amber-500" />}
+                label="Reset Password"
+                onClick={() => openResetPasswordModal(user)}
+              />
+            )}
+            {canManageRole && (
+              <ActionButton
+                variant="primary"
+                size="sm"
+                icon={<Lock size={14} />}
+                label="Permissions"
+                onClick={() => openPermissionModal(user)}
+              />
+            )}
           </div>
         }
       />

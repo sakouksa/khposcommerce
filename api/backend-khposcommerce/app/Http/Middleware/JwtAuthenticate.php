@@ -58,6 +58,7 @@ class JwtAuthenticate
         }
 
         Auth::setUser($user);
+        Auth::guard('api')->setUser($user);
         $request->setUserResolver(fn () => $user);
 
         return $next($request);

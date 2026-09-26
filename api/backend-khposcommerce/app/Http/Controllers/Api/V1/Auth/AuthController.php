@@ -44,7 +44,7 @@ class AuthController extends BaseApiController
         $user = $result['user']->load(['roles', 'permissions', 'company', 'branch', 'employee']);
 
         $roles = $user->getRoleNames()->toArray();
-        $permissions = $user->getAllPermissions()->pluck('name')->toArray();
+        $permissions = $this->getUserPermissions($user);
 
         return $this->successResponse([
             'user'          => new UserResource($user),
@@ -93,7 +93,7 @@ class AuthController extends BaseApiController
         return $this->successResponse([
             'user'          => new UserResource($user),
             'roles'         => $user->getRoleNames()->toArray(),
-            'permissions'   => $user->getAllPermissions()->pluck('name')->toArray(),
+            'permissions'   => $this->getUserPermissions($user),
             'company'       => $user->company,
             'branch'        => $user->branch,
             'access_token'  => $result['access_token'],
@@ -138,7 +138,7 @@ class AuthController extends BaseApiController
         return $this->successResponse([
             'user'        => new UserResource($user),
             'roles'       => $user->getRoleNames()->toArray(),
-            'permissions' => $user->getAllPermissions()->pluck('name')->toArray(),
+            'permissions' => $this->getUserPermissions($user),
             'company'     => $user->company,
             'branch'      => $user->branch,
         ]);
@@ -219,27 +219,35 @@ class AuthController extends BaseApiController
         return $this->successResponse($result, $result['message']);
     }
 
+    protected function getUserPermissions($user): array
+    {
+        if ($user->hasRole('super_admin')) {
+            return \Spatie\Permission\Models\Permission::where('guard_name', 'api')->pluck('name')->toArray();
+        }
+        return $user->getAllPermissions()->pluck('name')->toArray();
+    }
+
     private function getAvailableMenus(array $roles, array $permissions): array
     {
         $allMenus = [
-            ['key' => 'dashboard', 'title' => 'Dashboard', 'path' => '/dashboard', 'permission' => null],
-            ['key' => 'products', 'title' => 'Products', 'path' => '/products', 'permission' => 'products.view'],
-            ['key' => 'categories', 'title' => 'Categories', 'path' => '/categories', 'permission' => 'categories.view'],
-            ['key' => 'inventory', 'title' => 'Inventory', 'path' => '/inventory', 'permission' => 'inventory.view'],
-            ['key' => 'pos', 'title' => 'POS', 'path' => '/pos', 'permission' => 'pos.access'],
-            ['key' => 'sales', 'title' => 'Sales', 'path' => '/sales', 'permission' => 'sales.view'],
-            ['key' => 'orders', 'title' => 'Orders', 'path' => '/orders', 'permission' => 'orders.view'],
-            ['key' => 'purchases', 'title' => 'Purchases', 'path' => '/purchases', 'permission' => 'purchases.view'],
-            ['key' => 'suppliers', 'title' => 'Suppliers', 'path' => '/suppliers', 'permission' => 'suppliers.view'],
-            ['key' => 'customers', 'title' => 'Customers', 'path' => '/customers', 'permission' => 'customers.view'],
-            ['key' => 'employees', 'title' => 'Employees', 'path' => '/employees', 'permission' => 'employees.view'],
-            ['key' => 'reports', 'title' => 'Reports', 'path' => '/reports', 'permission' => 'reports.view'],
-            ['key' => 'users', 'title' => 'Users', 'path' => '/users', 'permission' => 'users.view'],
-            ['key' => 'roles', 'title' => 'Roles', 'path' => '/roles', 'permission' => 'roles.view'],
-            ['key' => 'settings', 'title' => 'Settings', 'path' => '/settings', 'permission' => 'settings.view'],
+            ['key' => 'dashboard',  'title' => 'Dashboard',  'path' => '/dashboard',  'permission' => null],
+            ['key' => 'products',   'title' => 'Products',   'path' => '/products',   'permission' => 'product.view'],
+            ['key' => 'categories', 'title' => 'Categories', 'path' => '/categories', 'permission' => 'category.view'],
+            ['key' => 'inventory',  'title' => 'Inventory',  'path' => '/inventory',  'permission' => 'inventory.view'],
+            ['key' => 'pos',        'title' => 'POS',        'path' => '/pos',        'permission' => 'sale.create'],
+            ['key' => 'sales',      'title' => 'Sales',      'path' => '/sales',      'permission' => 'sale.view'],
+            ['key' => 'orders',     'title' => 'Orders',     'path' => '/orders',     'permission' => 'order.view'],
+            ['key' => 'purchases',  'title' => 'Purchases',  'path' => '/purchases',  'permission' => 'purchase.view'],
+            ['key' => 'suppliers',  'title' => 'Suppliers',  'path' => '/suppliers',  'permission' => 'supplier.view'],
+            ['key' => 'customers',  'title' => 'Customers',  'path' => '/customers',  'permission' => 'customer.view'],
+            ['key' => 'employees',  'title' => 'Employees',  'path' => '/employees',  'permission' => 'user.view'],
+            ['key' => 'reports',    'title' => 'Reports',    'path' => '/reports',    'permission' => 'report.view'],
+            ['key' => 'users',      'title' => 'Users',      'path' => '/users',      'permission' => 'user.view'],
+            ['key' => 'roles',      'title' => 'Roles',      'path' => '/roles',      'permission' => 'role.view'],
+            ['key' => 'settings',   'title' => 'Settings',   'path' => '/settings',   'permission' => 'setting.view'],
         ];
 
-        if (in_array('super_admin', $roles) || in_array('admin', $roles)) {
+        if (in_array('super_admin', $roles)) {
             return $allMenus;
         }
 

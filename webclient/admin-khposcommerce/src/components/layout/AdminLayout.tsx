@@ -156,14 +156,14 @@ const NAV_GROUPS: NavGroup[] = [
       {
         labelKey: 'nav.employeeManagement',
         icon: <Briefcase size={17} />,
-        permission: ['employee.view', 'employees.view'],
+        permission: 'employee.view',
         children: [
-          { labelKey: 'nav.employeeDirectory',    path: '/employees?tab=employees', permission: ['employee.view', 'employees.view'], icon: <Users size={13.5} /> },
-          { labelKey: 'nav.attendanceManagement', path: '/employees?tab=attendance', permission: ['employee.view', 'employees.view'], icon: <Clock size={13.5} /> },
-          { labelKey: 'nav.leaveManagement',      path: '/employees?tab=leaves', permission: ['employee.view', 'employees.view'], icon: <CalendarCheck size={13.5} /> },
-          { labelKey: 'nav.holidays',             path: '/employees?tab=holidays', permission: ['employee.view', 'employees.view'], icon: <Calendar size={13.5} /> },
-          { labelKey: 'nav.payrollManagement',    path: '/employees?tab=payrolls', permission: ['employee.view', 'employees.view', 'payroll.view'], icon: <DollarSign size={13.5} /> },
-          { labelKey: 'nav.orgStructure',         path: '/employees?tab=org', permission: ['employee.view', 'employees.view', 'department.view'], icon: <Building2 size={13.5} /> },
+          { labelKey: 'nav.employeeDirectory',    path: '/employees?tab=employees', permission: 'employee.view', icon: <Users size={13.5} /> },
+          { labelKey: 'nav.attendanceManagement', path: '/employees?tab=attendance', permission: 'attendance.view', icon: <Clock size={13.5} /> },
+          { labelKey: 'nav.leaveManagement',      path: '/employees?tab=leaves', permission: 'employee.view', icon: <CalendarCheck size={13.5} /> },
+          { labelKey: 'nav.holidays',             path: '/employees?tab=holidays', permission: 'holiday.view', icon: <Calendar size={13.5} /> },
+          { labelKey: 'nav.payrollManagement',    path: '/employees?tab=payrolls', permission: 'payroll.view', icon: <DollarSign size={13.5} /> },
+          { labelKey: 'nav.orgStructure',         path: '/employees?tab=org', permission: 'department.view', icon: <Building2 size={13.5} /> },
         ],
       },
     ],
@@ -175,8 +175,8 @@ const NAV_GROUPS: NavGroup[] = [
       {
         labelKey: 'nav.financeManagement',
         icon: <DollarSign size={17} />,
-        path: '/expenses',
-        permission: 'finance.view',
+        path: '/finance',
+        permission: ['expense.view', 'transaction.view'],
       },
     ],
   },
@@ -188,7 +188,7 @@ const NAV_GROUPS: NavGroup[] = [
         labelKey: 'nav.contentManagement',
         icon: <FileText size={17} />,
         path: '/cms',
-        permission: 'cms.view',
+        permission: ['blog.view', 'page.view'],
       },
     ],
   },
@@ -199,12 +199,12 @@ const NAV_GROUPS: NavGroup[] = [
       {
         labelKey: 'nav.marketing',
         icon: <Zap size={17} />,
-        permission: 'promotions.view',
+        permission: 'promotion.view',
         children: [
-          { labelKey: 'nav.promotions', path: '/marketing/promotions', permission: 'promotions.view', icon: <Tag size={13.5} /> },
-          { labelKey: 'nav.coupons',    path: '/marketing/coupons', permission: 'coupons.view', icon: <Ticket size={13.5} /> },
-          { labelKey: 'nav.flashSales', path: '/marketing/flash-sales', permission: 'flash_sales.view', icon: <Zap size={13.5} /> },
-          { labelKey: 'nav.banners',    path: '/marketing/banners', permission: 'banners.view', icon: <Image size={13.5} /> },
+          { labelKey: 'nav.promotions', path: '/marketing/promotions', permission: 'promotion.view', icon: <Tag size={13.5} /> },
+          { labelKey: 'nav.coupons',    path: '/marketing/coupons', permission: 'coupon.view', icon: <Ticket size={13.5} /> },
+          { labelKey: 'nav.flashSales', path: '/marketing/flash-sales', permission: 'flash_sale.view', icon: <Zap size={13.5} /> },
+          { labelKey: 'nav.banners',    path: '/marketing/banners', permission: 'banner.view', icon: <Image size={13.5} /> },
         ],
       },
     ],
@@ -217,7 +217,7 @@ const NAV_GROUPS: NavGroup[] = [
         labelKey: 'nav.shippingManagement',
         icon: <Truck size={17} />,
         path: '/shipping',
-        permission: 'shipping.view',
+        permission: ['shipment.view', 'shipping_method.view'],
       },
     ],
   },
@@ -231,9 +231,9 @@ const NAV_GROUPS: NavGroup[] = [
         permission: 'company.view',
         children: [
           { labelKey: 'nav.companyInfo', path: '/company', permission: 'company.view', icon: <Building2 size={13.5} /> },
-          { labelKey: 'nav.branches',    path: '/branches', permission: 'company.view', icon: <GitBranch size={13.5} /> },
-          { labelKey: 'nav.stores',      path: '/stores', permission: 'company.view', icon: <Store size={13.5} /> },
-          { labelKey: 'nav.warehouses',  path: '/warehouses', permission: 'inventory.view', icon: <Warehouse size={13.5} /> },
+          { labelKey: 'nav.branches',    path: '/branches', permission: 'branch.view', icon: <GitBranch size={13.5} /> },
+          { labelKey: 'nav.stores',      path: '/stores', permission: 'store.view', icon: <Store size={13.5} /> },
+          { labelKey: 'nav.warehouses',  path: '/warehouses', permission: 'warehouse.view', icon: <Warehouse size={13.5} /> },
         ],
       },
     ],
@@ -871,14 +871,14 @@ const SidebarGroup: React.FC<{
   const { sidebar: sidebarConfig } = useThemeStore()
 
   const visibleItems = group.items.filter(item => {
-    if (item.permission && !hasPermission(item.permission)) return false
-
-    if (item.children) {
+    if (item.children && item.children.length > 0) {
       const visibleChildren = item.children.filter(child =>
         !child.permission || hasPermission(child.permission)
       )
       return visibleChildren.length > 0
     }
+
+    if (item.permission && !hasPermission(item.permission)) return false
 
     return true
   })

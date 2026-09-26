@@ -28,6 +28,8 @@ interface CustomerTableSectionProps {
   setDeleteTarget: (cust: Customer) => void
   onSettleDebt?: (cust: Customer) => void
   onPrintStatement?: (cust: Customer) => void
+  canEdit?: boolean
+  canDelete?: boolean
 }
 
 export const CustomerTableSection: React.FC<CustomerTableSectionProps> = ({
@@ -43,6 +45,8 @@ export const CustomerTableSection: React.FC<CustomerTableSectionProps> = ({
   setDeleteTarget,
   onSettleDebt,
   onPrintStatement,
+  canEdit = true,
+  canDelete = true,
 }) => {
   const navigate = useNavigate()
   const { language } = useThemeStore()
@@ -289,11 +293,11 @@ export const CustomerTableSection: React.FC<CustomerTableSectionProps> = ({
                         <td className="text-right pr-4" onClick={(e) => e.stopPropagation()}>
                           <TableActionMenu
                             onView={() => navigate(`/customers/${cust.id}`)}
-                            onEdit={() => openEditModal(cust)}
-                            onDelete={() => setDeleteTarget(cust)}
+                            onEdit={canEdit ? () => openEditModal(cust) : undefined}
+                            onDelete={canDelete ? () => setDeleteTarget(cust) : undefined}
                             onPrint={onPrintStatement ? () => onPrintStatement(cust) : undefined}
                             printLabel={t('customers.printStatement', 'Print Statement (SOA)')}
-                            items={onSettleDebt && Number(cust.outstanding_balance || 0) > 0 ? [{
+                            items={canEdit && onSettleDebt && Number(cust.outstanding_balance || 0) > 0 ? [{
                               label: t('customers.settleDebt', 'Settle Debt'),
                               icon: Banknote,
                               onClick: () => onSettleDebt(cust),

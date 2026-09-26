@@ -24,6 +24,7 @@ import SearchInput from '@/components/shared/SearchInput'
 import ResetButton from '@/components/shared/ResetButton'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
+import { usePermission } from '@/hooks/usePermission'
 
 // Modular Components
 import { InventoryOverviewCards } from './components/InventoryOverviewCards'
@@ -52,6 +53,17 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
   const [searchParams] = useSearchParams()
   const qc = useQueryClient()
   const toast = useToast()
+
+  const { hasPermission, hasAnyPermission } = usePermission()
+  const canAdjust = hasAnyPermission(['stock_adjustment.adjust', 'stock_adjustment.create'])
+  const canTransfer = hasAnyPermission(['stock_transfer.transfer', 'stock_transfer.create'])
+  const canOpname = hasAnyPermission(['stock_opname.opname', 'stock_opname.create'])
+  const canEditAdjust = hasPermission('stock_adjustment.update')
+  const canDeleteAdjust = hasPermission('stock_adjustment.delete')
+  const canEditTransfer = hasPermission('stock_transfer.update')
+  const canDeleteTransfer = hasPermission('stock_transfer.delete')
+  const canEditOpname = hasPermission('stock_opname.update')
+  const canDeleteOpname = hasPermission('stock_opname.delete')
 
   const [currentTab, setCurrentTab] = useState<string>(() => {
     const urlTab = searchParams.get('tab')
@@ -537,20 +549,26 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
         </div>
 
         <HeaderActionsGroup>
-          <ActionButton
-            onClick={() => openCreateForm('opname')}
-            icon={<CheckCircle2 size={15} className="text-emerald-500" />}
-            label={t('create_opname', 'New Stock Opname')}
-          />
-          <ActionButton
-            onClick={() => openCreateForm('transfer')}
-            icon={<ArrowLeftRight size={15} className="text-blue-500" />}
-            label={t('newTransfer', 'Stock Transfer')}
-          />
-          <AddButton
-            onClick={() => openCreateForm('adjustment')}
-            label={t('newAdjustment', 'Stock Adjustment')}
-          />
+          {canOpname && (
+            <ActionButton
+              onClick={() => openCreateForm('opname')}
+              icon={<CheckCircle2 size={15} className="text-emerald-500" />}
+              label={t('create_opname', 'New Stock Opname')}
+            />
+          )}
+          {canTransfer && (
+            <ActionButton
+              onClick={() => openCreateForm('transfer')}
+              icon={<ArrowLeftRight size={15} className="text-blue-500" />}
+              label={t('newTransfer', 'Stock Transfer')}
+            />
+          )}
+          {canAdjust && (
+            <AddButton
+              onClick={() => openCreateForm('adjustment')}
+              label={t('newAdjustment', 'Stock Adjustment')}
+            />
+          )}
         </HeaderActionsGroup>
       </div>
 
@@ -643,8 +661,8 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
           setPage={setPage}
           setPerPage={setPerPage}
           onViewItem={(id) => setSelectedTransferId(id)}
-          onEditItem={(id) => openEditForm('transfer', id)}
-          onDeleteItem={(id) => setDeleteTarget({ type: 'transfer', id })}
+          onEditItem={canEditTransfer ? (id) => openEditForm('transfer', id) : undefined}
+          onDeleteItem={canDeleteTransfer ? (id) => setDeleteTarget({ type: 'transfer', id }) : undefined}
           visibleColumns={transfersVisibleColumns}
           onResetFilters={handleResetFilters}
         />
@@ -660,8 +678,8 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
           setPage={setPage}
           setPerPage={setPerPage}
           onViewItem={(id) => setSelectedAdjustmentId(id)}
-          onEditItem={(id) => openEditForm('adjustment', id)}
-          onDeleteItem={(id) => setDeleteTarget({ type: 'adjustment', id })}
+          onEditItem={canEditAdjust ? (id) => openEditForm('adjustment', id) : undefined}
+          onDeleteItem={canDeleteAdjust ? (id) => setDeleteTarget({ type: 'adjustment', id }) : undefined}
           visibleColumns={adjustmentsVisibleColumns}
           onResetFilters={handleResetFilters}
         />
@@ -677,8 +695,8 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
           setPage={setPage}
           setPerPage={setPerPage}
           onViewItem={(id) => setSelectedOpnameId(id)}
-          onEditItem={(id) => openEditForm('opname', id)}
-          onDeleteItem={(id) => setDeleteTarget({ type: 'opname', id })}
+          onEditItem={canEditOpname ? (id) => openEditForm('opname', id) : undefined}
+          onDeleteItem={canDeleteOpname ? (id) => setDeleteTarget({ type: 'opname', id }) : undefined}
           visibleColumns={opnamesVisibleColumns}
           onResetFilters={handleResetFilters}
         />

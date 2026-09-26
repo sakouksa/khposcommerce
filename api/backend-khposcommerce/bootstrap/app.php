@@ -21,7 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'auth.jwt' => \App\Http\Middleware\JwtAuthenticate::class,
+            'auth.jwt'           => \App\Http\Middleware\JwtAuthenticate::class,
+            'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
         $middleware->api(prepend: [
             \App\Http\Middleware\LocalizationMiddleware::class,
@@ -46,10 +49,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     ], 422);
                 }
 
-                if ($e instanceof AccessDeniedHttpException) {
+                if ($e instanceof AccessDeniedHttpException || $e instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'You do not have permission.',
+                        'message' => 'You do not have permission to perform this action.',
                         'error'   => 'FORBIDDEN',
                     ], 403);
                 }

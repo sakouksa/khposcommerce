@@ -67,6 +67,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Super Admin bypass for Laravel Gate and Spatie Permissions
+        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
+            return $user->hasRole('super_admin') ? true : null;
+        });
+
         // Enforce HTTPS in production and when behind cloud reverse proxies (Render / Cloudflare)
         if ($this->app->environment('production') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') || request()->header('X-Forwarded-Proto') === 'https') {
             \Illuminate\Support\Facades\URL::forceScheme('https');

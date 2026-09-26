@@ -28,6 +28,9 @@ export const permissionService = {
 
   getStats: () =>
     api.get('/permissions/stats').then((r) => r.data.data ?? r.data),
+
+  getModules: () =>
+    api.get('/permissions/modules').then((r) => r.data.data ?? r.data),
 }
 
 export default permissionService

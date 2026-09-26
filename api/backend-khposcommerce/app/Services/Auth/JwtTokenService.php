@@ -49,7 +49,9 @@ class JwtTokenService
         $expiresAt = $now + ($this->accessTtlMinutes * 60);
 
         $roles = $user->roles->pluck('name')->toArray();
-        $permissions = $user->getAllPermissions()->pluck('name')->toArray();
+        $permissions = $user->hasRole('super_admin')
+            ? \Spatie\Permission\Models\Permission::where('guard_name', 'api')->pluck('name')->toArray()
+            : $user->getAllPermissions()->pluck('name')->toArray();
 
         $payload = [
             'iss'        => config('app.url', 'http://127.0.0.1:8001'),

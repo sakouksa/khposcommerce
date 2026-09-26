@@ -24,18 +24,43 @@ import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
 import { downloadCsv } from '@/utils/export'
 import TableActionMenu from '@/components/shared/TableActionMenu'
+import { usePermission } from '@/hooks/usePermission'
+import {
+  getPermissionModule,
+  getPermissionAction,
+  getPermissionRiskLevel,
+  formatPermissionLabel,
+} from '@/utils/permissionUtils'
 
 interface PermissionItem {
   id:           number
   name:         string
   guard_name:   string
   module?:      string
-  action_type?: 'view' | 'create' | 'update' | 'delete' | 'approve'
+  action_type?: string
   risk_level?:  'low' | 'medium' | 'high'
   is_active?:   boolean
   roles_count?: number
+  roles?:       string[]
   created_at?:  string
 }
+
+const STANDARD_ACTIONS = [
+  { id: 'all', label: 'All Actions' },
+  { id: 'view', label: 'View (.view)' },
+  { id: 'create', label: 'Create (.create)' },
+  { id: 'update', label: 'Update (.update)' },
+  { id: 'delete', label: 'Delete (.delete)' },
+  { id: 'approve', label: 'Approve (.approve)' },
+  { id: 'export', label: 'Export (.export)' },
+  { id: 'manage', label: 'Manage (.manage)' },
+  { id: 'process', label: 'Process (.process)' },
+  { id: 'refund', label: 'Refund (.refund)' },
+  { id: 'return', label: 'Return (.return)' },
+  { id: 'adjust', label: 'Adjust (.adjust)' },
+  { id: 'transfer', label: 'Transfer (.transfer)' },
+  { id: 'opname', label: 'Opname (.opname)' },
+]
 
 // ── Sub-component: Animated Counter ──────────────────────────────────────────
 const AnimatedCounter: React.FC<{ value: number; prefix?: string; suffix?: string; decimals?: number }> = ({
@@ -169,6 +194,13 @@ const PermissionsPage: React.FC = () => {
     actions: true,
   })
 
+  // RBAC Permission Access Checks
+  const { hasPermission } = usePermission()
+  const canCreate = hasPermission('permission.create')
+  const canEdit = hasPermission('permission.update')
+  const canDelete = hasPermission('permission.delete')
+  const canExport = hasPermission('permission.export')
+
   // Advanced Filter Drawer States
   const [filterModule, setFilterModule] = useState<string>('all')
   const [filterActionType, setFilterActionType] = useState<string>('all')
@@ -182,15 +214,28 @@ const PermissionsPage: React.FC = () => {
   const [name, setName] = useState('')
   const [guardName, setGuardName] = useState('api')
   const [module, setModule] = useState('General')
-  const [actionType, setActionType] = useState<'view' | 'create' | 'update' | 'delete' | 'approve'>('view')
+  const [actionType, setActionType] = useState<string>('view')
   const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>('low')
 
   // ── Queries ────────────────────────────────────────────────────────────────
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ['permissions', page, debouncedSearch, perPage],
-    queryFn: () => permissionService.list({ page, search: debouncedSearch, per_page: perPage }),
+    queryKey: ['permissions', page, debouncedSearch, perPage, filterModule, filterActionType],
+    queryFn: () => permissionService.list({
+      page,
+      search: debouncedSearch,
+      per_page: perPage,
+      module: filterModule !== 'all' ? filterModule : undefined,
+      action: filterActionType !== 'all' ? filterActionType : undefined,
+    }),
     placeholderData: (prev) => prev,
   })
+
+  const { data: serverModulesData } = useQuery({
+    queryKey: ['permissions-modules-list'],
+    queryFn: () => permissionService.getModules().then(r => r.data ?? r ?? []),
+    staleTime: 60000,
+  })
+  const serverModules: string[] = useMemo(() => serverModulesData ?? [], [serverModulesData])
 
   const { data: statsData } = useQuery({
     queryKey: ['permissions-dashboard-stats'],
@@ -216,17 +261,17 @@ const PermissionsPage: React.FC = () => {
       }
 
       if (filterModule !== 'all') {
-        const modName = p.name.includes('.') ? p.name.split('.')[0] : (p.module || 'general')
+        const modName = p.module || getPermissionModule(p.name)
         if (modName.toLowerCase() !== filterModule.toLowerCase()) return false
       }
 
       if (filterActionType !== 'all') {
-        const actName = p.name.includes('.') ? p.name.split('.')[1] : (p.action_type || 'view')
-        if (!actName.toLowerCase().includes(filterActionType.toLowerCase())) return false
+        const actName = p.action_type || getPermissionAction(p.name)
+        if (actName.toLowerCase() !== filterActionType.toLowerCase()) return false
       }
 
       if (filterRiskLevel !== 'all') {
-        const rLvl = p.risk_level || (p.name.includes('delete') ? 'high' : 'low')
+        const rLvl = p.risk_level || getPermissionRiskLevel(p.name)
         if (rLvl !== filterRiskLevel) return false
       }
 
@@ -464,27 +509,33 @@ const PermissionsPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto xl:justify-end shrink-0 z-10">
-          <button
-            onClick={() => setImportModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
-          >
-            <Upload size={15} />
-            <span>Import CSV</span>
-          </button>
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
-          >
-            <Download size={15} />
-            <span>Export CSV</span>
-          </button>
-          <button
-            onClick={openCreateModal}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer"
-          >
-            <Plus size={16} />
-            <span>Create Permission</span>
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => setImportModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
+            >
+              <Upload size={15} />
+              <span>Import CSV</span>
+            </button>
+          )}
+          {canExport && (
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
+            >
+              <Download size={15} />
+              <span>Export CSV</span>
+            </button>
+          )}
+          {canCreate && (
+            <button
+              onClick={openCreateModal}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              <Plus size={16} />
+              <span>Create Permission</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -845,8 +896,9 @@ const PermissionsPage: React.FC = () => {
                 </tr>
               ) : (
                 permissions.map((p) => {
-                  const modName = p.name.includes('.') ? p.name.split('.')[0] : (p.module || 'General')
-                  const isHighRisk = p.name.includes('delete') || p.name.includes('destroy') || p.risk_level === 'high'
+                  const modName = p.module || getPermissionModule(p.name)
+                  const actName = p.action_type || getPermissionAction(p.name)
+                  const riskLevel = p.risk_level || getPermissionRiskLevel(p.name)
 
                   let riskBadge = (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -854,14 +906,14 @@ const PermissionsPage: React.FC = () => {
                     </span>
                   )
 
-                  if (isHighRisk) {
+                  if (riskLevel === 'high') {
                     riskBadge = (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                         <AlertTriangle size={10} />
                         High Risk
                       </span>
                     )
-                  } else if (p.name.includes('update') || p.name.includes('edit')) {
+                  } else if (riskLevel === 'medium') {
                     riskBadge = (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                         Medium Risk
@@ -893,7 +945,7 @@ const PermissionsPage: React.FC = () => {
                         <td className="p-4 pl-6 font-semibold text-foreground">
                           <div className="flex items-center gap-3">
                             <div className={`p-2.5 rounded-2xl transition-transform group-hover:scale-105 ${
-                              isHighRisk ? 'bg-rose-500/10 text-rose-500' : 'bg-primary/10 text-primary'
+                              riskLevel === 'high' ? 'bg-rose-500/10 text-rose-500' : 'bg-primary/10 text-primary'
                             }`}>
                               <Lock size={16} />
                             </div>
@@ -921,7 +973,7 @@ const PermissionsPage: React.FC = () => {
                         <td className="p-4 text-xs font-semibold text-foreground capitalize">
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-muted/60 border border-border/80">
                             <Zap size={11} className="text-primary" />
-                            <span>{p.name.includes('.') ? p.name.split('.')[1] : (p.action_type || 'view')}</span>
+                            <span>{actName}</span>
                           </span>
                         </td>
                       )}
@@ -936,8 +988,8 @@ const PermissionsPage: React.FC = () => {
                             variant="hybrid"
                             maxInline={2}
                             onView={() => setViewPermission(p)}
-                            onEdit={() => openEditModal(p)}
-                            onDelete={() => setDeleteTarget(p)}
+                            onEdit={canEdit ? () => openEditModal(p) : undefined}
+                            onDelete={canDelete ? () => setDeleteTarget(p) : undefined}
                             items={[
                               {
                                 label: t('permissions.assignToRoles', 'Assign to Roles'),
@@ -1008,34 +1060,22 @@ const PermissionsPage: React.FC = () => {
                     <select
                       value={filterModule}
                       onChange={(e) => setFilterModule(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-border bg-card text-foreground text-xs font-medium"
+                      className="w-full p-2.5 rounded-xl border border-border bg-card text-foreground text-xs font-medium cursor-pointer"
                     >
-                      <option value="all">All Modules</option>
-                      <option value="dashboard">Dashboard</option>
-                      <option value="products">Products & Inventory</option>
-                      <option value="orders">Sales & POS</option>
-                      <option value="customers">Customers & CRM</option>
-                      <option value="finance">Finance & Accounting</option>
-                      <option value="marketing">Marketing & Promotions</option>
-                      <option value="shipping">Shipping & Logistics</option>
-                      <option value="company">Company & Branches</option>
-                      <option value="users">Users & Roles</option>
-                      <option value="settings">System Settings</option>
+                      <option value="all">All Modules ({serverModules.length})</option>
+                      {serverModules.map((mod) => (
+                        <option key={mod} value={mod}>
+                          {mod.toUpperCase().replace(/_/g, ' ')}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
                   {/* Permission Action Type */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Permission Action Type</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { id: 'all', label: 'All Actions' },
-                        { id: 'view', label: 'View' },
-                        { id: 'create', label: 'Create' },
-                        { id: 'update', label: 'Update' },
-                        { id: 'delete', label: 'Delete' },
-                        { id: 'approve', label: 'Approve' },
-                      ].map((act) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {STANDARD_ACTIONS.map((act) => (
                         <button
                           key={act.id}
                           type="button"
@@ -1055,10 +1095,11 @@ const PermissionsPage: React.FC = () => {
                   {/* Risk Level */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Security Risk Level</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {[
                         { id: 'all', label: 'All Risks' },
                         { id: 'low', label: 'Low Risk' },
+                        { id: 'medium', label: 'Medium Risk' },
                         { id: 'high', label: 'High Risk' },
                       ].map((rk) => (
                         <button
@@ -1187,10 +1228,10 @@ const PermissionsPage: React.FC = () => {
                 <div className="space-y-3 text-xs">
                   {[
                     { label: 'Permission Key', value: viewPermission.name },
-                    { label: 'Module Scope', value: viewPermission.name.includes('.') ? viewPermission.name.split('.')[0].toUpperCase() : 'GENERAL' },
-                    { label: 'Action Scope', value: viewPermission.name.includes('.') ? viewPermission.name.split('.')[1].toUpperCase() : 'VIEW' },
+                    { label: 'Module Scope', value: (viewPermission.module || getPermissionModule(viewPermission.name)).toUpperCase() },
+                    { label: 'Action Scope', value: (viewPermission.action_type || getPermissionAction(viewPermission.name)).toUpperCase() },
                     { label: 'Guard Scope', value: viewPermission.guard_name || 'api' },
-                    { label: 'Security Risk Level', value: viewPermission.name.includes('delete') ? 'High Risk' : 'Low Risk' },
+                    { label: 'Security Risk Level', value: (viewPermission.risk_level || getPermissionRiskLevel(viewPermission.name)).toUpperCase() },
                     { label: 'Authorization Rule', value: 'Strict Enforced' },
                   ].map((row) => (
                     <div key={row.label} className="flex items-center justify-between py-2.5 border-b border-border/60">
@@ -1201,14 +1242,16 @@ const PermissionsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 border-t border-border bg-muted/20 flex gap-2">
-                <button
-                  onClick={() => { setViewPermission(null); openEditModal(viewPermission) }}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
-                >
-                  <Edit2 size={14} /> Edit Permission
-                </button>
-              </div>
+              {canEdit && (
+                <div className="p-4 border-t border-border bg-muted/20 flex gap-2">
+                  <button
+                    onClick={() => { setViewPermission(null); openEditModal(viewPermission) }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold bg-primary text-white rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
+                  >
+                    <Edit2 size={14} /> Edit Permission
+                  </button>
+                </div>
+              )}
             </motion.div>
           </div>
         )}

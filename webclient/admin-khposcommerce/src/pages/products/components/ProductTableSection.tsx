@@ -22,8 +22,8 @@ interface ProductTableSectionProps {
   sortOrder?: 'asc' | 'desc'
   onSort?: (column: string) => void
   onView: (product: Product) => void
-  onEdit: (product: Product) => void
-  onDelete: (product: Product) => void
+  onEdit?: (product: Product) => void
+  onDelete?: (product: Product) => void
   onDuplicate?: (product: Product) => void
   onPrintBarcode?: (product: Product) => void
   onQuickStockAdjust?: (product: Product) => void
@@ -257,8 +257,8 @@ export const ProductTableSection: React.FC<ProductTableSectionProps> = ({
                       <td className="text-right" onClick={(e) => e.stopPropagation()}>
                         <TableActionMenu
                           onView={() => onView(p)}
-                          onEdit={() => onEdit(p)}
-                          onDelete={() => onDelete(p)}
+                          onEdit={onEdit ? () => onEdit(p) : undefined}
+                          onDelete={onDelete ? () => onDelete(p) : undefined}
                           onPrint={onPrintBarcode ? () => onPrintBarcode(p) : undefined}
                           printLabel={t('printBarcode', 'Print Barcode')}
                           items={[

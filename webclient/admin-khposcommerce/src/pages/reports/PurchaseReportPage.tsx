@@ -14,10 +14,12 @@ import {
   FileSpreadsheet,
   ChevronDown,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  ShieldAlert
 } from 'lucide-react'
 import { reportService } from '@/services/reportService'
 import { useToast } from '@/hooks/useToast'
+import { useAuthStore } from '@/stores/authStore'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import { downloadBlob } from '@/utils/export'
 
@@ -38,6 +40,10 @@ import PurchaseReturnTable from './components/purchase/PurchaseReturnTable'
 export const PurchaseReportPage: React.FC = () => {
   const { t } = useTranslation('reports')
   const toast = useToast()
+  const { hasPermission } = useAuthStore()
+
+  const canView = hasPermission(['report.view', 'purchase.view'])
+  const canExport = hasPermission(['report.export', 'purchase.export'])
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const todayStr = new Date().toISOString().split('T')[0]
@@ -117,6 +123,10 @@ export const PurchaseReportPage: React.FC = () => {
 
   // Handle Export Excel
   const handleExport = async (presetRange?: string) => {
+    if (!canExport) {
+      toast.error('Permission denied. You do not have permission to export purchase reports.')
+      return
+    }
     try {
       setExporting(true)
       setShowExcelMenu(false)
@@ -187,6 +197,22 @@ export const PurchaseReportPage: React.FC = () => {
   const topSuppliers = overviewData?.top_suppliers ?? []
   const topProducts = overviewData?.top_products ?? []
 
+  if (!canView) {
+    return (
+      <div className="p-6 max-w-[1600px] mx-auto min-h-screen flex items-center justify-center">
+        <div className="bg-card border border-border/80 p-8 rounded-3xl text-center max-w-md shadow-lg space-y-4">
+          <div className="p-4 rounded-full bg-rose-500/10 text-rose-500 w-16 h-16 mx-auto flex items-center justify-center">
+            <ShieldAlert size={32} />
+          </div>
+          <h2 className="text-xl font-bold text-foreground">Permission Denied</h2>
+          <p className="text-sm text-muted-foreground">
+            You don't have permission to access Purchase Reports. Please contact your system administrator.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6 max-w-[1600px] mx-auto min-h-screen">
       {/* ── 1. BREADCRUMB ────────────────────────────────────────────────────── */}
@@ -209,17 +235,18 @@ export const PurchaseReportPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto xl:justify-end shrink-0 z-10">
-          <div ref={excelMenuRef} className="relative">
-            <button
-              type="button"
-              onClick={() => setShowExcelMenu(!showExcelMenu)}
-              disabled={exporting}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
-            >
-              {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileSpreadsheet size={16} />}
-              <span>{t('purchase.exportExcel', 'Export Excel')}</span>
-              <ChevronDown size={14} className={`transition-transform duration-200 ${showExcelMenu ? 'rotate-180' : ''}`} />
-            </button>
+          {canExport && (
+            <div ref={excelMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setShowExcelMenu(!showExcelMenu)}
+                disabled={exporting}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+              >
+                {exporting ? <Loader2 size={16} className="animate-spin" /> : <FileSpreadsheet size={16} />}
+                <span>{t('purchase.exportExcel', 'Export Excel')}</span>
+                <ChevronDown size={14} className={`transition-transform duration-200 ${showExcelMenu ? 'rotate-180' : ''}`} />
+              </button>
 
             {showExcelMenu && (
               <div className="absolute right-0 mt-2 w-56 bg-card border border-border/80 rounded-2xl shadow-2xl z-[120] p-1.5 space-y-1 animate-in fade-in zoom-in-95 ring-1 ring-black/5 dark:ring-white/10">
@@ -267,7 +294,8 @@ export const PurchaseReportPage: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+        )}
+      </div>
       </div>
 
       {/* Filters Bar */}

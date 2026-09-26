@@ -46,7 +46,11 @@ class ProfileRepository extends BaseRepository implements ProfileRepositoryInter
         
         $roles = $user->getRoleNames()->toArray();
         
-        $permissions = $user->getAllPermissions()->map(function ($perm) {
+        $permQuery = $user->hasRole('super_admin')
+            ? \Spatie\Permission\Models\Permission::where('guard_name', 'api')->get()
+            : $user->getAllPermissions();
+
+        $permissions = $permQuery->map(function ($perm) {
             $parts = explode('.', $perm->name);
             return [
                 'name'       => $perm->name,

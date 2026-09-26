@@ -23,7 +23,7 @@ import {
   Building2,
   Briefcase,
 } from 'lucide-react'
-import { formatDateTime } from '@/utils/formatters'
+import { formatDateTime, GlobalFormat } from '@/utils/formatters'
 
 interface LeaveDetailDrawerProps {
   isOpen: boolean
@@ -42,35 +42,14 @@ export const LeaveDetailDrawer: React.FC<LeaveDetailDrawerProps> = ({
   onReject,
   isApproving = false,
 }) => {
-  const { t, i18n } = useTranslation(['employees', 'common'])
-  const isKm = i18n.language === 'km' || i18n.language?.startsWith('km')
+  const { t } = useTranslation(['employees', 'common'])
 
   if (!record) return null
 
   const daysUnit = t('employees.days_unit', 'days')
   const totalDays = record.total_days ?? 1
 
-  const formatDateDisplay = (dateStr?: string) => {
-    if (!dateStr) return '—'
-    try {
-      const d = new Date(dateStr)
-      if (isNaN(d.getTime())) return dateStr.split('T')[0] || '—'
-      if (isKm) {
-        const monthsKm = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ']
-        const day = d.getDate()
-        const month = monthsKm[d.getMonth()]
-        const year = d.getFullYear()
-        return `${day} ${month} ${year}`
-      }
-      return d.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    } catch {
-      return dateStr.split('T')[0]
-    }
-  }
+  const formatDateDisplay = (dateStr?: string) => GlobalFormat.displayDate(dateStr)
 
   const getLeaveTypeLabel = (type: string) => {
     switch (type) {

@@ -237,8 +237,17 @@ export const formatShortDateTime = (
   return `${map.year}-${map.month}-${map.day} ${map.hour}:${map.minute}`
 }
 
+export const getCurrentLocale = (): string => {
+  try {
+    const lang = (typeof window !== 'undefined' && (localStorage.getItem('enterprise-pos-lang') || localStorage.getItem('i18nextLng'))) || 'km'
+    return lang.startsWith('km') ? 'km-KH' : 'en-US'
+  } catch {
+    return 'km-KH'
+  }
+}
+
 /**
- * Formats a date for display (e.g. Sep 15, 2026 or Sep 15, 2026, 02:30 PM) in Cambodia timezone.
+ * Formats a date for display (e.g. 15 Sep 2026 or 15 កញ្ញា 2026) in Cambodia timezone.
  */
 export const formatDisplayDate = (
   d?: string | Date | null,
@@ -249,7 +258,7 @@ export const formatDisplayDate = (
   const date = typeof d === 'string' ? new Date(d) : d
   if (isNaN(date.getTime())) return fallback
 
-  const locale = options?.locale || 'en-US'
+  const locale = options?.locale || getCurrentLocale()
   const timeZone = options?.timeZone || CAMBODIA_TIMEZONE
   const dateOpts: Intl.DateTimeFormatOptions = {
     timeZone,
@@ -260,6 +269,56 @@ export const formatDisplayDate = (
   }
 
   return date.toLocaleDateString(locale, dateOpts)
+}
+
+/**
+ * Formats a month or period (e.g. "2026-09" -> "កញ្ញា 2026" or "Sep 2026") in Cambodia timezone.
+ */
+export const formatMonth = (
+  d?: string | Date | null,
+  options?: FormatDateOptions
+): string => {
+  const fallback = options?.fallback ?? '—'
+  if (!d) return fallback
+  let date: Date
+  if (typeof d === 'string') {
+    if (/^\d{4}-\d{2}$/.test(d.trim())) {
+      date = new Date(`${d.trim()}-01T00:00:00`)
+    } else {
+      date = new Date(d)
+    }
+  } else {
+    date = d
+  }
+  if (isNaN(date.getTime())) return fallback
+
+  const locale = options?.locale || getCurrentLocale()
+  const timeZone = options?.timeZone || CAMBODIA_TIMEZONE
+  return date.toLocaleDateString(locale, {
+    timeZone,
+    year: 'numeric',
+    month: 'short',
+  })
+}
+
+/**
+ * Formats the day of week (e.g. "Wednesday" or "ថ្ងៃពុធ") in Cambodia timezone.
+ */
+export const formatDayOfWeek = (
+  d?: string | Date | null,
+  options?: FormatDateOptions
+): string => {
+  const fallback = options?.fallback ?? ''
+  if (!d) return fallback
+  const date = typeof d === 'string' ? new Date(d) : d
+  if (isNaN(date.getTime())) return fallback
+
+  const locale = options?.locale || getCurrentLocale()
+  const timeZone = options?.timeZone || CAMBODIA_TIMEZONE
+  return date.toLocaleDateString(locale, {
+    timeZone,
+    weekday: 'long',
+  })
 }
 
 /**

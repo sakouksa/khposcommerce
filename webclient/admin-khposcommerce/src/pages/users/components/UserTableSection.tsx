@@ -23,6 +23,9 @@ interface UserTableSectionProps {
   openResetPasswordModal: (user: User) => void
   setDeleteTarget: (user: User) => void
   toggleActiveMutation: any
+  canEdit?: boolean
+  canDelete?: boolean
+  canManageRole?: boolean
 }
 
 export const UserTableSection: React.FC<UserTableSectionProps> = ({
@@ -37,6 +40,9 @@ export const UserTableSection: React.FC<UserTableSectionProps> = ({
   openResetPasswordModal,
   setDeleteTarget,
   toggleActiveMutation,
+  canEdit = true,
+  canDelete = true,
+  canManageRole = true,
 }) => {
   const { t } = useTranslation()
 
@@ -99,8 +105,10 @@ export const UserTableSection: React.FC<UserTableSectionProps> = ({
                       <td>
                         <button
                           type="button"
-                          onClick={() => toggleActiveMutation.mutate({ id: u.id, is_active: !u.is_active })}
-                          className="cursor-pointer hover:opacity-80 transition-opacity"
+                          disabled={!canEdit}
+                          onClick={() => canEdit && toggleActiveMutation.mutate({ id: u.id, is_active: !u.is_active })}
+                          className={`transition-opacity ${canEdit ? 'cursor-pointer hover:opacity-80' : 'cursor-not-allowed opacity-90'}`}
+                          title={canEdit ? 'Click to toggle status' : 'Permission required to update status'}
                         >
                           <StatusBadge status={u.is_active} />
                         </button>
@@ -110,19 +118,19 @@ export const UserTableSection: React.FC<UserTableSectionProps> = ({
                       <td className="text-right" onClick={(e) => e.stopPropagation()}>
                         <TableActionMenu
                           onView={() => setViewUser(u)}
-                          onEdit={() => openEditModal(u)}
-                          onDelete={() => setDeleteTarget(u)}
+                          onEdit={canEdit ? () => openEditModal(u) : undefined}
+                          onDelete={canDelete ? () => setDeleteTarget(u) : undefined}
                           items={[
-                            {
+                            ...(canManageRole ? [{
                               label: 'Manage Permissions',
                               icon: Key,
                               onClick: () => openPermissionModal(u),
-                            },
-                            {
+                            }] : []),
+                            ...(canEdit ? [{
                               label: 'Reset Password',
                               icon: Lock,
                               onClick: () => openResetPasswordModal(u),
-                            },
+                            }] : []),
                           ]}
                         />
                       </td>

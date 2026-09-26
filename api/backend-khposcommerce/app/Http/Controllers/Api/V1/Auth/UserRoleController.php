@@ -14,7 +14,8 @@ class UserRoleController extends BaseApiController
         $request->validate(['role' => 'required|string|exists:roles,name']);
         $user = User::findOrFail($id);
         $user->assignRole($request->role);
-        return $this->successResponse($user, 'Role assigned successfully');
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        return $this->successResponse($user->load('roles'), 'Role assigned successfully');
     }
 
     public function remove(Request $request, int $id): JsonResponse
@@ -22,6 +23,7 @@ class UserRoleController extends BaseApiController
         $request->validate(['role' => 'required|string|exists:roles,name']);
         $user = User::findOrFail($id);
         $user->removeRole($request->role);
-        return $this->successResponse($user, 'Role removed successfully');
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        return $this->successResponse($user->load('roles'), 'Role removed successfully');
     }
 }

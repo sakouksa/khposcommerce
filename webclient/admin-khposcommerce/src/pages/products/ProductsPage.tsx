@@ -24,6 +24,7 @@ import {
   ImportButton,
   TableToolbar,
 } from '@/components/common'
+import { usePermission } from '@/hooks/usePermission'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
 import { formatCurrency } from '@/utils/formatters'
@@ -53,6 +54,14 @@ const ProductsPage: React.FC = () => {
   const toast = useToast()
   const locale = i18n.language === 'km' ? 'km-KH' : 'en-US'
   const formatMoney = (amount: number) => formatCurrency(amount, { locale })
+
+  // RBAC Permission checks
+  const { hasPermission } = usePermission()
+  const canCreate = hasPermission('product.create')
+  const canEdit = hasPermission('product.update')
+  const canDelete = hasPermission('product.delete')
+  const canExport = hasPermission('product.export')
+  const canAdjust = hasPermission('stock_adjustment.adjust') || hasPermission('inventory.update')
 
   const [activeWorkspaceTab, setActiveWorkspaceTab] = usePageTab<string>({
     storageKey: 'products_active_tab',
@@ -356,6 +365,27 @@ const ProductsPage: React.FC = () => {
     reset()
   }
 
+  const canAddInCurrentTab = useMemo(() => {
+    switch (activeWorkspaceTab) {
+      case 'products': return canCreate
+      case 'categories': return hasPermission('category.create')
+      case 'brands': return hasPermission('brand.create')
+      case 'units': return hasPermission('unit.create')
+      case 'attributes': return hasPermission('attribute.create')
+      case 'taxes': return hasPermission('tax.create')
+      default: return false
+    }
+  }, [activeWorkspaceTab, canCreate, hasPermission])
+
+  const accessibleWorkspaceTabs = useMemo(() => [
+    { id: 'products', label: t('tabProducts', 'All Products'), icon: Package },
+    ...(hasPermission('category.view') ? [{ id: 'categories', label: t('tabCategories', 'Categories'), icon: FolderTree }] : []),
+    ...(hasPermission('brand.view') ? [{ id: 'brands', label: t('tabBrands', 'Brands'), icon: Sparkles }] : []),
+    ...(hasPermission('unit.view') ? [{ id: 'units', label: t('tabUnits', 'Units'), icon: Scale }] : []),
+    ...(hasPermission('attribute.view') ? [{ id: 'attributes', label: t('tabAttributes', 'Attributes'), icon: SlidersHorizontal }] : []),
+    ...(hasPermission('tax.view') ? [{ id: 'taxes', label: t('tabTaxes', 'Tax Rates'), icon: Receipt }] : []),
+  ], [hasPermission, t])
+
   return (
     <div className="space-y-5 print:p-0">
       <Breadcrumb items={[{ label: t('products', 'Products') }]} />
@@ -372,47 +402,46 @@ const ProductsPage: React.FC = () => {
         </div>
 
         <HeaderActionsGroup>
-          <ImportButton
-            onClick={() => setImportOpen(true)}
-            label={t('importCSV', 'Import CSV')}
-          />
-          <ExportButton
-            onClick={() => handleExport(false)}
-            label={
-              selectedRows.length > 0
-                ? `${t('exportSelectedCSV', 'Export Selected')} (${selectedRows.length})`
-                : t('exportCSV', 'Export CSV')
-            }
-          />
-          <AddButton
-            onClick={handleSubTabAddClick}
-            label={
-              activeWorkspaceTab === 'products'
-                ? t('addProduct', 'Add Product')
-                : activeWorkspaceTab === 'categories'
-                ? t('addCategory', 'Add Category')
-                : activeWorkspaceTab === 'brands'
-                ? t('addBrand', 'Add Brand')
-                : activeWorkspaceTab === 'units'
-                ? t('addUnit', 'Add Unit')
-                : activeWorkspaceTab === 'attributes'
-                ? t('addAttribute', 'Add Attribute')
-                : t('addTaxRule', 'Add Tax Rule')
-            }
-          />
+          {canCreate && (
+            <ImportButton
+              onClick={() => setImportOpen(true)}
+              label={t('importCSV', 'Import CSV')}
+            />
+          )}
+          {canExport && (
+            <ExportButton
+              onClick={() => handleExport(false)}
+              label={
+                selectedRows.length > 0
+                  ? `${t('exportSelectedCSV', 'Export Selected')} (${selectedRows.length})`
+                  : t('exportCSV', 'Export CSV')
+              }
+            />
+          )}
+          {canAddInCurrentTab && (
+            <AddButton
+              onClick={handleSubTabAddClick}
+              label={
+                activeWorkspaceTab === 'products'
+                  ? t('addProduct', 'Add Product')
+                  : activeWorkspaceTab === 'categories'
+                  ? t('addCategory', 'Add Category')
+                  : activeWorkspaceTab === 'brands'
+                  ? t('addBrand', 'Add Brand')
+                  : activeWorkspaceTab === 'units'
+                  ? t('addUnit', 'Add Unit')
+                  : activeWorkspaceTab === 'attributes'
+                  ? t('addAttribute', 'Add Attribute')
+                  : t('addTaxRule', 'Add Tax Rule')
+              }
+            />
+          )}
         </HeaderActionsGroup>
       </div>
 
       {/* Workspace Tabs Navigation */}
       <WorkspaceTabs
-        tabs={[
-          { id: 'products', label: t('tabProducts', 'All Products'), icon: Package },
-          { id: 'categories', label: t('tabCategories', 'Categories'), icon: FolderTree },
-          { id: 'brands', label: t('tabBrands', 'Brands'), icon: Sparkles },
-          { id: 'units', label: t('tabUnits', 'Units'), icon: Scale },
-          { id: 'attributes', label: t('tabAttributes', 'Attributes'), icon: SlidersHorizontal },
-          { id: 'taxes', label: t('tabTaxes', 'Tax Rates'), icon: Receipt },
-        ]}
+        tabs={accessibleWorkspaceTabs}
         activeTab={activeWorkspaceTab}
         onChange={setActiveWorkspaceTab}
       />
@@ -504,11 +533,11 @@ const ProductsPage: React.FC = () => {
             sortOrder={sortOrder}
             onSort={handleSort}
             onView={(p) => navigate(`/products/${p.id}`)}
-            onEdit={(p) => navigate(`/products/${p.id}/edit`)}
-            onDelete={(p) => setDeleteConfirm({ open: true, id: p.id, force: false, name: p.name })}
-            onDuplicate={(p) => duplicateMutation.mutate(p)}
+            onEdit={canEdit ? (p) => navigate(`/products/${p.id}/edit`) : undefined}
+            onDelete={canDelete ? (p) => setDeleteConfirm({ open: true, id: p.id, force: false, name: p.name }) : undefined}
+            onDuplicate={canCreate ? (p) => duplicateMutation.mutate(p) : undefined}
             onPrintBarcode={(p) => setBarcodePrintProduct(p)}
-            onQuickStockAdjust={(p) => setQuickAdjustProduct(p)}
+            onQuickStockAdjust={canAdjust ? (p) => setQuickAdjustProduct(p) : undefined}
             onRestore={() => {}}
             onForceDelete={() => {}}
             formatCurrency={formatMoney}
@@ -527,9 +556,9 @@ const ProductsPage: React.FC = () => {
           <ProductDetailDrawer
             product={viewProduct}
             onClose={() => setViewProduct(null)}
-            onEdit={(p) => navigate(`/products/${p.id}/edit`)}
-            onDuplicate={(p) => duplicateMutation.mutate(p)}
-            onQuickStockAdjust={(p) => setQuickAdjustProduct(p)}
+            onEdit={canEdit ? (p) => navigate(`/products/${p.id}/edit`) : undefined}
+            onDuplicate={canCreate ? (p) => duplicateMutation.mutate(p) : undefined}
+            onQuickStockAdjust={canAdjust ? (p) => setQuickAdjustProduct(p) : undefined}
             onPrintBarcode={(p) => setBarcodePrintProduct(p)}
             formatCurrency={formatMoney}
           />

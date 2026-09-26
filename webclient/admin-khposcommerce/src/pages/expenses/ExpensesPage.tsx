@@ -19,6 +19,7 @@ import EmptyState from '@/components/shared/EmptyState'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { FieldError, getFieldClass, TableToolbar, EnterpriseDatePicker } from '@/components/common'
+import { useAuthStore } from '@/stores/authStore'
 
 interface Expense {
   id:          number
@@ -43,6 +44,12 @@ const DEFAULT_CATEGORIES = [
 const ExpensesPage: React.FC = () => {
   const qc    = useQueryClient()
   const toast = useToast()
+  const { hasPermission } = useAuthStore()
+
+  const canCreate = hasPermission('expense.create')
+  const canUpdate = hasPermission('expense.update')
+  const canDelete = hasPermission('expense.delete')
+  const canApprove = hasPermission(['expense.approve', 'expense.update'])
 
     const {
     page,
@@ -202,14 +209,16 @@ const ExpensesPage: React.FC = () => {
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">Expenses</h1>
           <p className="text-xs sm:text-sm text-muted-foreground">{pagination.total} expenses total</p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white
-                     bg-gradient-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
-        >
-          <Plus size={16} />
-          Record Expense
-        </button>
+        {canCreate && (
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white
+                       bg-gradient-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+          >
+            <Plus size={16} />
+            Record Expense
+          </button>
+        )}
       </div>
 
       {/* Global Standard Table Toolbar */}
@@ -260,8 +269,8 @@ const ExpensesPage: React.FC = () => {
                       </td>
                       <td className="text-right" onClick={(e) => e.stopPropagation()}>
                         <TableActionMenu
-                          onEdit={() => openEditModal(exp)}
-                          onDelete={() => setDeleteTarget(exp)}
+                          onEdit={canUpdate ? () => openEditModal(exp) : undefined}
+                          onDelete={canDelete ? () => setDeleteTarget(exp) : undefined}
                         />
                       </td>
                     </tr>

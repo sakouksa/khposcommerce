@@ -13,53 +13,47 @@ class RolesPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $permissions = [
-            // Company
-            'company.view', 'company.create', 'company.update', 'company.delete',
-            'branch.view', 'branch.create', 'branch.update', 'branch.delete',
-            'store.view', 'store.create', 'store.update', 'store.delete',
-            'warehouse.view', 'warehouse.create', 'warehouse.update', 'warehouse.delete',
+        // ─── 1. Specialized & Core Domain Permissions ─────────────────────────
+        $specialPermissions = [
+            // Dashboard & Navigation
+            'dashboard.view',
+            'pos.access',
 
-            // Products
-            'product.view', 'product.create', 'product.update', 'product.delete',
-            'category.view', 'category.create', 'category.update', 'category.delete',
-            'brand.view', 'brand.create', 'brand.update', 'brand.delete',
+            // Special Inventory Actions
+            'inventory.view', 'inventory.create', 'inventory.update', 'inventory.delete',
+            'inventory.adjust', 'inventory.transfer', 'inventory.opname', 'inventory.export',
+            'stock_adjustment.adjust', 'stock_adjustment.export',
+            'stock_transfer.transfer', 'stock_transfer.export',
+            'stock_opname.opname', 'stock_opname.export',
+            'inventory_movement.export',
 
-            // Inventory
-            'inventory.view', 'inventory.adjust', 'inventory.transfer', 'inventory.opname',
+            // Purchase Special Actions
+            'purchase.approve', 'purchase.export',
+            'supplier.export',
 
-            // Purchase
-            'purchase.view', 'purchase.create', 'purchase.update', 'purchase.delete', 'purchase.approve',
-            'supplier.view', 'supplier.create', 'supplier.update', 'supplier.delete',
+            // Sales & POS Special Actions
+            'sale.return', 'sale.refund', 'sale.export',
+            'order.manage', 'order.refund', 'order.return',
+            'cash_register.manage',
+            'payment.process', 'payment.refund',
 
-            // Sales / POS
-            'sale.view', 'sale.create', 'sale.return',
-            'cash_register.view', 'cash_register.manage',
+            // Customer Special Actions
+            'customer.export',
 
-            // Orders
-            'order.view', 'order.manage', 'order.refund',
-
-            // Customers
-            'customer.view', 'customer.create', 'customer.update', 'customer.delete',
-
-            // Payments
-            'payment.view', 'payment.process',
-
-            // Reports
+            // Reports & Analytics
             'report.view', 'report.export',
             'reports.sales.view', 'reports.sales.export', 'reports.sales.detail',
 
-            // Settings
-            'setting.view', 'setting.update',
+            // Finance & Expenses
+            'expense.approve', 'expense.export',
+            'transaction.export',
 
-            // Users / Roles
-            'user.view', 'user.create', 'user.update', 'user.delete',
-            'role.view', 'role.create', 'role.update', 'role.delete',
-
-            // Expenses
-            'expense.view', 'expense.create', 'expense.update', 'expense.delete', 'expense.approve',
+            // Settings & Audit
+            'setting.manage',
+            'audit_log.export',
         ];
 
+        // ─── 2. Standard CRUD Modules ─────────────────────────────────────────
         $tables = [
             'activity_log', 'attendance', 'attributes', 'attribute_values', 'audit_logs', 'banners', 'blogs', 
             'blog_categories', 'blog_tags', 'branches', 'brands', 'carts', 'cart_items', 
@@ -74,8 +68,10 @@ class RolesPermissionsSeeder extends Seeder
             'sale_return_items', 'settings', 'shipments', 'shipping_methods', 'shipping_rates', 'shipping_zones', 
             'stock_adjustments', 'stock_adjustment_items', 'stock_opnames', 'stock_opname_items', 'stock_transfers', 
             'stock_transfer_items', 'stores', 'suppliers', 'supplier_contacts', 'taxes', 'transactions', 'units', 
-            'users', 'warehouses', 'wishlists'
+            'users', 'warehouses', 'wishlists', 'shifts', 'leave_requests', 'notification_templates', 'notifications'
         ];
+
+        $permissions = $specialPermissions;
 
         foreach ($tables as $table) {
             $singular = \Illuminate\Support\Str::singular($table);
@@ -87,59 +83,129 @@ class RolesPermissionsSeeder extends Seeder
             }
         }
 
-        $permissions = array_unique($permissions);
+        $permissions = array_values(array_unique($permissions));
 
         foreach ($permissions as $perm) {
             Permission::firstOrCreate(['name' => $perm, 'guard_name' => 'api']);
         }
 
-        // ─── Super Admin ──────────────────────────────────────────────────────
+        // ─── Super Admin (Full Access to All API Permissions) ─────────────────
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'api']);
-        $superAdmin->givePermissionTo(Permission::where('guard_name', 'api')->get());
+        $allApiPermissions = Permission::where('guard_name', 'api')->get();
+        $superAdmin->syncPermissions($allApiPermissions);
 
-        // ─── Admin ────────────────────────────────────────────────────────────
+        // ─── Admin (Full Access Except Intentionally Restricted High-Risk) ─────
         $admin = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'api']);
-        $admin->givePermissionTo(Permission::where('guard_name', 'api')->whereNotIn('name', [
-            'company.delete', 'role.delete', 'user.delete',
-        ])->get());
+        $adminPermissions = Permission::where('guard_name', 'api')
+            ->whereNotIn('name', [
+                'company.delete',
+                'role.delete',
+                'user.delete',
+            ])
+            ->get();
+        $admin->syncPermissions($adminPermissions);
 
-        // ─── Manager ──────────────────────────────────────────────────────────
+        // ─── Manager (Operational Management) ─────────────────────────────────
         $manager = Role::firstOrCreate(['name' => 'manager', 'guard_name' => 'api']);
-        $manager->givePermissionTo([
-            'product.view', 'product.create', 'product.update',
-            'inventory.view', 'inventory.adjust', 'inventory.transfer',
-            'purchase.view', 'purchase.create', 'purchase.update',
-            'supplier.view', 'supplier.create',
-            'sale.view', 'sale.create', 'sale.return',
-            'order.view', 'order.manage',
-            'customer.view', 'customer.create', 'customer.update',
+        $managerPermissions = [
+            'dashboard.view',
+            'pos.access',
+            // Products & Catalog
+            'product.view', 'product.create', 'product.update', 'product.export',
+            'category.view', 'category.create', 'category.update',
+            'brand.view', 'brand.create', 'brand.update',
+            'unit.view', 'unit.create', 'unit.update',
+            'tax.view', 'tax.create', 'tax.update',
+            'attribute.view', 'attribute.create', 'attribute.update',
+            // Inventory & Warehouses
+            'inventory.view', 'inventory.adjust', 'inventory.transfer', 'inventory.opname', 'inventory.export',
+            'stock_adjustment.view', 'stock_adjustment.create', 'stock_adjustment.update', 'stock_adjustment.adjust', 'stock_adjustment.export',
+            'stock_transfer.view', 'stock_transfer.create', 'stock_transfer.update', 'stock_transfer.transfer', 'stock_transfer.export',
+            'stock_opname.view', 'stock_opname.create', 'stock_opname.update', 'stock_opname.opname', 'stock_opname.export',
+            'inventory_movement.view', 'warehouse.view',
+            // Purchases & Suppliers
+            'purchase.view', 'purchase.create', 'purchase.update', 'purchase.approve', 'purchase.export',
+            'supplier.view', 'supplier.create', 'supplier.update', 'supplier.export',
+            'purchase_return.view', 'purchase_return.create', 'purchase_return.update',
+            // Sales, POS & Orders
+            'sale.view', 'sale.create', 'sale.update', 'sale.return', 'sale.refund', 'sale.export',
+            'order.view', 'order.create', 'order.update', 'order.manage', 'order.refund', 'order.return',
+            'cash_register.view', 'cash_register.manage', 'cash_register_transaction.view',
+            'payment.view', 'payment.process', 'payment.refund',
+            // Customers
+            'customer.view', 'customer.create', 'customer.update', 'customer.export',
+            'customer_group.view', 'customer_group.create', 'customer_group.update',
+            'customer_address.view',
+            // Reports & Analytics
             'report.view', 'report.export',
-            'expense.view', 'expense.create',
-        ]);
+            'reports.sales.view', 'reports.sales.export', 'reports.sales.detail',
+            // Expenses & Finance
+            'expense.view', 'expense.create', 'expense.update', 'expense.approve', 'expense.export',
+            'expense_category.view', 'transaction.view', 'transaction.export',
+            // Marketing
+            'coupon.view', 'coupon.create', 'coupon.update',
+            'promotion.view', 'promotion.create', 'promotion.update',
+            'flash_sale.view', 'banner.view',
+            // Company & Employees
+            'branch.view', 'store.view', 'shipment.view',
+            'employee.view', 'attendance.view', 'holiday.view', 'department.view', 'position.view',
+        ];
+        $manager->syncPermissions(
+            Permission::where('guard_name', 'api')->whereIn('name', $managerPermissions)->get()
+        );
 
         // ─── Cashier ──────────────────────────────────────────────────────────
         $cashier = Role::firstOrCreate(['name' => 'cashier', 'guard_name' => 'api']);
-        $cashier->givePermissionTo([
+        $cashierPermissions = [
+            'dashboard.view',
+            'pos.access',
             'product.view',
+            'category.view',
+            'brand.view',
+            'unit.view',
             'inventory.view',
             'sale.view', 'sale.create', 'sale.return',
-            'order.view',
+            'order.view', 'order.create', 'order.update', 'order.manage',
             'customer.view', 'customer.create',
-            'cash_register.view', 'cash_register.manage',
+            'cash_register.view', 'cash_register.manage', 'cash_register_transaction.view',
             'payment.view', 'payment.process',
-        ]);
+        ];
+        $cashier->syncPermissions(
+            Permission::where('guard_name', 'api')->whereIn('name', $cashierPermissions)->get()
+        );
 
         // ─── Warehouse Staff ──────────────────────────────────────────────────
         $warehouse = Role::firstOrCreate(['name' => 'warehouse_staff', 'guard_name' => 'api']);
-        $warehouse->givePermissionTo([
-            'product.view',
+        $warehousePermissions = [
+            'dashboard.view',
+            'product.view', 'category.view', 'brand.view', 'unit.view',
             'inventory.view', 'inventory.adjust', 'inventory.transfer', 'inventory.opname',
-            'purchase.view',
-        ]);
+            'stock_adjustment.view', 'stock_adjustment.create', 'stock_adjustment.update', 'stock_adjustment.adjust',
+            'stock_transfer.view', 'stock_transfer.create', 'stock_transfer.update', 'stock_transfer.transfer',
+            'stock_opname.view', 'stock_opname.create', 'stock_opname.update', 'stock_opname.opname',
+            'inventory_movement.view',
+            'warehouse.view',
+            'purchase.view', 'purchase_return.view', 'supplier.view', 'shipment.view',
+        ];
+        $warehouse->syncPermissions(
+            Permission::where('guard_name', 'api')->whereIn('name', $warehousePermissions)->get()
+        );
 
-        // ─── Customer ─────────────────────────────────────────────────────────
-        Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'api']);
+        // ─── Customer (Storefront Only) ───────────────────────────────────────
+        $customer = Role::firstOrCreate(['name' => 'customer', 'guard_name' => 'api']);
+        $customerPermissions = [
+            'cart.view', 'cart.create', 'cart.update', 'cart.delete',
+            'wishlist.view', 'wishlist.create', 'wishlist.delete',
+            'customer_address.view', 'customer_address.create', 'customer_address.update', 'customer_address.delete',
+            'product_review.create',
+        ];
+        $customer->syncPermissions(
+            Permission::where('guard_name', 'api')->whereIn('name', $customerPermissions)->get()
+        );
 
-        $this->command->info('Roles and permissions seeded successfully.');
+        // Final cache clear
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        $this->command->info('Roles and permissions standardized and seeded successfully.');
     }
 }

@@ -283,7 +283,7 @@ export const EmployeeDetailDrawer: React.FC<EmployeeDetailDrawerProps> = ({
                 <div>
                   <p className="text-muted-foreground text-[11px] font-medium">{t('employees.gender', 'Gender / Birth Date')}</p>
                   <p className="font-semibold capitalize text-foreground mt-0.5">
-                    {selectedItem.gender ? t(`employees.${selectedItem.gender}`, selectedItem.gender) : '-'} {selectedItem.birth_date ? `• ${new Date(selectedItem.birth_date).toLocaleDateString()}` : ''}
+                    {selectedItem.gender ? t(`employees.${selectedItem.gender}`, selectedItem.gender) : '-'} {selectedItem.birth_date ? `• ${GlobalFormat.displayDate(selectedItem.birth_date)}` : ''}
                   </p>
                 </div>
                 <div>
@@ -534,7 +534,7 @@ export const EmployeeDetailDrawer: React.FC<EmployeeDetailDrawerProps> = ({
                     <div key={log.id} className="p-3 hover:bg-muted/30 transition-colors flex items-center justify-between gap-3">
                       <div>
                         <p className="font-bold text-foreground">
-                          {log.date ? new Date(log.date).toLocaleDateString() : '-'}
+                          {log.date ? GlobalFormat.displayDate(log.date) : '-'}
                         </p>
                         <div className="flex items-center gap-2 text-muted-foreground text-[11px] mt-0.5">
                           <span className="inline-flex items-center gap-1 font-mono">

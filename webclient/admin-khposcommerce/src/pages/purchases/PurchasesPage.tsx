@@ -19,6 +19,7 @@ import { productService } from '@/services/productService'
 import { reportService } from '@/services/reportService'
 import { userService } from '@/services/userService'
 import { useToast } from '@/hooks/useToast'
+import { usePermission } from '@/hooks/usePermission'
 import { focusFirstInvalidField } from '@/utils/formValidation'
 import Pagination from '@/components/shared/Pagination'
 import { useServerPagination } from '@/hooks/useServerPagination'
@@ -55,6 +56,17 @@ const PurchasesPage: React.FC = () => {
   const params = useParams<{ id?: string }>()
   const qc = useQueryClient()
   const toast = useToast()
+
+  // RBAC Permission checks
+  const { hasPermission } = usePermission()
+  const canView = hasPermission('purchase.view')
+  const canCreate = hasPermission('purchase.create')
+  const canEdit = hasPermission('purchase.update')
+  const canDelete = hasPermission('purchase.delete')
+  const canExport = hasPermission('purchase.export')
+  const canApprove = hasPermission('purchase.approve') || hasPermission('purchase.update')
+  const canPay = hasPermission('payment.process') || hasPermission('purchase.update')
+  const canReturn = hasPermission('purchase.return') || hasPermission('purchase.update')
 
   const [activeWorkspaceTab, setActiveWorkspaceTab] = useState<'list' | 'create' | 'edit'>('list')
   const [printPurchase, setPrintPurchase] = useState<Purchase | null>(null)
@@ -910,15 +922,19 @@ const PurchasesPage: React.FC = () => {
             </div>
             
             <HeaderActionsGroup>
-              <ExportButton
-                onExportRange={(range) => handleExportData(false, range)}
-                loading={isExporting}
-                label={t('common.exportCsv')}
-              />
-              <AddButton
-                onClick={() => switchToTab('create')}
-                label={t('purchases.createPO', 'Add Purchase')}
-              />
+              {canExport && (
+                <ExportButton
+                  onExportRange={(range) => handleExportData(false, range)}
+                  loading={isExporting}
+                  label={t('common.exportCsv')}
+                />
+              )}
+              {canCreate && (
+                <AddButton
+                  onClick={() => switchToTab('create')}
+                  label={t('purchases.createPO', 'Add Purchase')}
+                />
+              )}
             </HeaderActionsGroup>
           </div>
 
@@ -937,23 +953,27 @@ const PurchasesPage: React.FC = () => {
             onClear={() => setSelectedRows([])}
             extraActions={
               <>
-                <button
-                  type="button"
-                  disabled={isExporting}
-                  onClick={() => handleExportData(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-card border border-primary/30 text-primary hover:bg-primary/10 transition-all cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isExporting ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-                  <span>{t('purchases.bulkExport', 'នាំចេញដែលបានជ្រើស')}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleBulkCancelClick}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-card border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-all cursor-pointer shadow-xs"
-                >
-                  <Ban size={13} />
-                  <span>{t('purchases.bulkCancel', 'Cancel Selected')}</span>
-                </button>
+                {canExport && (
+                  <button
+                    type="button"
+                    disabled={isExporting}
+                    onClick={() => handleExportData(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-card border border-primary/30 text-primary hover:bg-primary/10 transition-all cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isExporting ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                    <span>{t('purchases.bulkExport', 'Export Selected')}</span>
+                  </button>
+                )}
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={handleBulkCancelClick}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-card border border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-all cursor-pointer shadow-xs"
+                  >
+                    <Ban size={13} />
+                    <span>{t('purchases.bulkCancel', 'Cancel Selected')}</span>
+                  </button>
+                )}
               </>
             }
           />
@@ -1101,48 +1121,49 @@ const PurchasesPage: React.FC = () => {
                           icon: Edit2,
                           onClick: () => switchToTab('edit', purchase),
                           variant: 'default',
-                          hidden: !isDraft && !isOrdered,
+                          hidden: (!isDraft && !isOrdered) || !canEdit,
                         },
                         {
                           label: t('purchases.receiveShipment', 'Receive Shipment (GRN)'),
                           icon: PackageCheck,
                           onClick: () => openReceiveModal(purchase),
                           variant: 'success',
-                          hidden: isReceived || isCancelled,
+                          hidden: isReceived || isCancelled || !canApprove,
                         },
                         {
                           label: t('purchases.recordPayment', 'Record Payment'),
                           icon: DollarSign,
                           onClick: () => setPaymentTarget(purchase),
                           variant: 'success',
-                          hidden: isPaid || isCancelled,
+                          hidden: isPaid || isCancelled || !canPay,
                         },
                         {
                           label: t('purchases.returnToSupplier', 'Return to Supplier'),
                           icon: RotateCcw,
                           onClick: () => navigate(`/purchases/returns?purchase_id=${purchase.id}`),
                           variant: 'warning',
-                          hidden: !isReceived && !isPartial,
+                          hidden: (!isReceived && !isPartial) || !canReturn,
                         },
                         {
                           label: t('purchases.duplicatePO', 'Duplicate / Re-order'),
                           icon: Copy,
                           onClick: () => handleDuplicatePO(purchase),
                           variant: 'default',
+                          hidden: !canCreate,
                         },
                         {
                           label: t('purchases.cancelPO', 'Cancel Order'),
                           icon: Ban,
                           onClick: () => setCancelTarget(purchase),
                           variant: 'danger',
-                          hidden: isReceived || isCancelled || isPartial,
+                          hidden: isReceived || isCancelled || isPartial || !canEdit,
                         },
                         {
                           label: t('common.delete', 'Delete Order'),
                           icon: Trash2,
                           onClick: () => setDeleteTarget(purchase),
                           variant: 'danger',
-                          hidden: !isDraft,
+                          hidden: !isDraft || !canDelete,
                         }
                       ]
 

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { reportService } from '@/services/reportService'
 import { useToast } from '@/hooks/useToast'
+import { useAuthStore } from '@/stores/authStore'
 import SalesReportPage from './SalesReportPage'
 import PurchaseReportPage from './PurchaseReportPage'
 import InventoryReportPage from './InventoryReportPage'
@@ -113,6 +114,9 @@ const ReportsPage: React.FC<{ type?: string }> = ({ type = 'sales' }) => {
     currentType === 'inventory'                                 ? 'Inventory Valuation Report'  :
                                                                   'Profit & Loss Report'
 
+  const hasPermission = useAuthStore((s) => s.hasPermission)
+  const canExport = hasPermission('report.export')
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -122,15 +126,17 @@ const ReportsPage: React.FC<{ type?: string }> = ({ type = 'sales' }) => {
           <p className="text-xs sm:text-sm text-muted-foreground">Analyze store metrics and export results</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleExcelExport}
-            disabled={exporting}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground border border-border
-                       rounded-lg hover:bg-muted transition-colors font-medium disabled:opacity-60"
-          >
-            {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-            Excel Export
-          </button>
+          {canExport && (
+            <button
+              onClick={handleExcelExport}
+              disabled={exporting}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground border border-border
+                         rounded-lg hover:bg-muted transition-colors font-medium disabled:opacity-60"
+            >
+              {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              Excel Export
+            </button>
+          )}
           <button
             onClick={() => refetch()}
             className="flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground border border-border

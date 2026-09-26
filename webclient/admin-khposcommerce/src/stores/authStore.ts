@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { useThemeStore } from './themeStore'
+import { normalizePermission } from '@/utils/permissionUtils'
 
 export interface UserCompany {
   id: number
@@ -56,6 +57,8 @@ interface AuthState {
   toggleDark:   () => void
   hasRole:      (role: string | string[]) => boolean
   hasPermission:(permission: string | string[]) => boolean
+  hasAnyPermission: (permissions: string[]) => boolean
+  hasAllPermissions: (permissions: string[]) => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -69,8 +72,13 @@ export const useAuthStore = create<AuthState>()(
       darkMode:     false,
 
       setAuth: (user, accessToken, refreshToken = null) => {
+        const sanitizedUser: User = {
+          ...user,
+          roles: Array.isArray(user?.roles) ? user.roles : [],
+          permissions: Array.isArray(user?.permissions) ? user.permissions : [],
+        }
         set({
-          user,
+          user: sanitizedUser,
           token: accessToken,
           accessToken,
           refreshToken: refreshToken || get().refreshToken,
@@ -88,7 +96,12 @@ export const useAuthStore = create<AuthState>()(
 
       updateUser: (data) => {
         set((state) => ({
-          user: state.user ? { ...state.user, ...data } : null,
+          user: state.user ? {
+            ...state.user,
+            ...data,
+            roles: Array.isArray(data.roles) ? data.roles : (state.user.roles ?? []),
+            permissions: Array.isArray(data.permissions) ? data.permissions : (state.user.permissions ?? []),
+          } : null,
         }))
       },
 
@@ -123,13 +136,44 @@ export const useAuthStore = create<AuthState>()(
       hasPermission: (permission) => {
         const user = get().user
         if (!user) return false
-        if (user.roles?.includes('super_admin') || user.roles?.includes('admin')) return true
-        
+        // Super admin has full bypass
+        if (user.roles?.includes('super_admin')) return true
+
         const userPermissions = user.permissions ?? []
         if (Array.isArray(permission)) {
-          return permission.some((p) => userPermissions.includes(p))
+          return permission.some((p) => {
+            const norm = normalizePermission(p)
+            return userPermissions.includes(norm) || userPermissions.includes(p)
+          })
         }
-        return userPermissions.includes(permission)
+        const norm = normalizePermission(permission)
+        return userPermissions.includes(norm) || userPermissions.includes(permission)
+      },
+
+      hasAnyPermission: (permissions) => {
+        const user = get().user
+        if (!user) return false
+        if (user.roles?.includes('super_admin')) return true
+        if (!Array.isArray(permissions) || permissions.length === 0) return true
+
+        const userPermissions = user.permissions ?? []
+        return permissions.some((p) => {
+          const norm = normalizePermission(p)
+          return userPermissions.includes(norm) || userPermissions.includes(p)
+        })
+      },
+
+      hasAllPermissions: (permissions) => {
+        const user = get().user
+        if (!user) return false
+        if (user.roles?.includes('super_admin')) return true
+        if (!Array.isArray(permissions) || permissions.length === 0) return true
+
+        const userPermissions = user.permissions ?? []
+        return permissions.every((p) => {
+          const norm = normalizePermission(p)
+          return userPermissions.includes(norm) || userPermissions.includes(p)
+        })
       },
     }),
     {

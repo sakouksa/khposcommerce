@@ -23,6 +23,7 @@ import Breadcrumb from '@/components/common/Breadcrumb'
 import StatusBadge from '@/components/common/StatusBadge'
 import ColumnSettingsPopover from '@/components/shared/ColumnSettingsPopover'
 import BulkSelectionBanner from '@/components/shared/BulkSelectionBanner'
+import { useAuthStore } from '@/stores/authStore'
 import {
   HeaderActionsGroup,
   AddButton,
@@ -46,6 +47,14 @@ const SuppliersPage: React.FC = () => {
   const navigate = useNavigate()
   const qc    = useQueryClient()
   const toast = useToast()
+  const { hasPermission } = useAuthStore()
+
+  const canCreate = hasPermission('supplier.create')
+  const canUpdate = hasPermission('supplier.update')
+  const canDelete = hasPermission('supplier.delete')
+  const canExport = hasPermission(['supplier.export', 'supplier.view'])
+  const canView = hasPermission('supplier.view')
+  const canCreatePO = hasPermission('purchase.create')
 
   const {
     page,
@@ -266,14 +275,18 @@ const SuppliersPage: React.FC = () => {
             </p>
           </div>
           <HeaderActionsGroup>
-            <ExportButton
-              onClick={handleExportCSV}
-              label={t('common.exportCsv', 'Export CSV')}
-            />
-            <AddButton
-              onClick={() => navigate('/suppliers/create')}
-              label={t('suppliers.addSupplier', 'Add Supplier')}
-            />
+            {canExport && (
+              <ExportButton
+                onClick={handleExportCSV}
+                label={t('common.exportCsv', 'Export CSV')}
+              />
+            )}
+            {canCreate && (
+              <AddButton
+                onClick={() => navigate('/suppliers/create')}
+                label={t('suppliers.addSupplier', 'Add Supplier')}
+              />
+            )}
           </HeaderActionsGroup>
         </div>
       </div>
@@ -286,12 +299,14 @@ const SuppliersPage: React.FC = () => {
       />
 
       {/* Bulk Selection Action Banner */}
-      <BulkSelectionBanner
-        selectedCount={selectedRows.length}
-        onClear={() => setSelectedRows([])}
-        onDelete={() => setBulkDeleteConfirmOpen(true)}
-        deleteLabel={t('suppliers.deleteSelected', 'Delete Selected')}
-      />
+      {canDelete && (
+        <BulkSelectionBanner
+          selectedCount={selectedRows.length}
+          onClear={() => setSelectedRows([])}
+          onDelete={() => setBulkDeleteConfirmOpen(true)}
+          deleteLabel={t('suppliers.deleteSelected', 'Delete Selected')}
+        />
+      )}
 
       {/* Global Standard Table Toolbar */}
       <TableToolbar
@@ -513,10 +528,12 @@ const SuppliersPage: React.FC = () => {
                   return (
                     <tr
                       key={supplier.id}
-                      className={`hover:bg-muted/40 dark:hover:bg-muted/20 transition-colors group cursor-pointer ${
+                      className={`hover:bg-muted/40 dark:hover:bg-muted/20 transition-colors group ${
+                        canView ? 'cursor-pointer' : ''
+                      } ${
                         isSelected ? 'bg-primary/10 dark:bg-primary/15' : ''
                       }`}
-                      onClick={() => navigate(`/suppliers/${supplier.id}`)}
+                      onClick={canView ? () => navigate(`/suppliers/${supplier.id}`) : undefined}
                     >
                       <td className="w-10 px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <input
@@ -658,17 +675,17 @@ const SuppliersPage: React.FC = () => {
                       )}
                       <td className={`sticky right-0 z-10 ${isSelected ? 'bg-primary/10 dark:bg-primary/15' : 'bg-card group-hover:bg-muted/40 dark:group-hover:bg-muted/20'} transition-colors border-l border-border py-3 px-4 text-center whitespace-nowrap min-w-[96px]`} onClick={(e) => e.stopPropagation()}>
                         <TableActionMenu
-                          items={[
+                          items={canCreatePO ? [
                             {
                               label: t('suppliers.createPO', 'Create Purchase Order'),
                               icon: ShoppingCart,
                               onClick: () => navigate(`/purchases/create?supplier_id=${supplier.id}`),
                               variant: 'success',
                             },
-                          ]}
-                          onView={() => navigate(`/suppliers/${supplier.id}`)}
-                          onEdit={() => navigate(`/suppliers/${supplier.id}/edit`)}
-                          onDelete={() => setDeleteTarget(supplier)}
+                          ] : undefined}
+                          onView={canView ? () => navigate(`/suppliers/${supplier.id}`) : undefined}
+                          onEdit={canUpdate ? () => navigate(`/suppliers/${supplier.id}/edit`) : undefined}
+                          onDelete={canDelete ? () => setDeleteTarget(supplier) : undefined}
                         />
                       </td>
                     </tr>

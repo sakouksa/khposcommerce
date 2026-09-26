@@ -25,6 +25,7 @@ import StatusBadge from '@/components/common/StatusBadge'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
+import { useAuthStore } from '@/stores/authStore'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
 import { TableToolbar } from '@/components/common'
 import { ModernSelect } from '@/pages/pos/components/ModernSelect'
@@ -70,15 +71,24 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
   const { t, i18n } = useTranslation(['products', 'common'])
   const qc = useQueryClient()
   const toast = useToast()
+  const { hasPermission } = useAuthStore()
+
+  const canCreate = hasPermission(['unit.create', 'setting.create'])
+  const canUpdate = hasPermission(['unit.update', 'setting.update'])
+  const canDelete = hasPermission(['unit.delete', 'setting.delete'])
+  const canExport = hasPermission(['unit.export', 'unit.view', 'setting.view'])
+  const canImport = hasPermission(['unit.create', 'unit.import', 'setting.create'])
 
   // Open add modal only when triggerAdd changes to a positive number
   const prevTriggerRef = React.useRef(triggerAdd || 0)
   React.useEffect(() => {
     if (triggerAdd && triggerAdd > 0 && triggerAdd !== prevTriggerRef.current) {
-      openCreateModal()
+      if (canCreate) {
+        openCreateModal()
+      }
     }
     prevTriggerRef.current = triggerAdd || 0
-  }, [triggerAdd])
+  }, [triggerAdd, canCreate])
 
   const {
     page,
@@ -301,6 +311,10 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
   }
 
   const handleExport = () => {
+    if (!canExport) {
+      toast.error('Permission denied')
+      return
+    }
     unitService.export()
       .then(res => {
         const blob = new Blob(['\uFEFF', res.data], { type: 'text/csv;charset=utf-8;' })
@@ -325,30 +339,36 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
             subtitle={t('products.heroSubtitle')}
             action={
               <div className="flex items-center gap-2">
-                <button
-                  onClick={handleExport}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                >
-                  <Download size={15} />
-                  {t('products.exportCSV')}
-                </button>
+                {canExport && (
+                  <button
+                    onClick={handleExport}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <Download size={15} />
+                    {t('products.exportCSV')}
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setImportOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                >
-                  <Upload size={15} />
-                  {t('products.importCSV')}
-                </button>
+                {canImport && (
+                  <button
+                    onClick={() => setImportOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <Upload size={15} />
+                    {t('products.importCSV')}
+                  </button>
+                )}
 
-                <button
-                  onClick={openCreateModal}
-                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
-                             bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
-                >
-                  <Plus size={16} />
-                  {t('products.addUnit')}
-                </button>
+                {canCreate && (
+                  <button
+                    onClick={openCreateModal}
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
+                               bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
+                  >
+                    <Plus size={16} />
+                    {t('products.addUnit')}
+                  </button>
+                )}
               </div>
             }
           />
@@ -363,13 +383,15 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
             <span>{selectedRows.length} {t('products.selectedCount')}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setBulkDeleteConfirmOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-lg hover:bg-red-500 cursor-pointer"
-            >
-              <Trash size={13} />
-              {t('products.deleteSelected')}
-            </button>
+            {canDelete && (
+              <button
+                onClick={() => setBulkDeleteConfirmOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-lg hover:bg-red-500 cursor-pointer"
+              >
+                <Trash size={13} />
+                {t('products.deleteSelected')}
+              </button>
+            )}
             <button
               onClick={() => setSelectedRows([])}
               className="text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 cursor-pointer"
@@ -513,8 +535,8 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
                     <td className="text-right pr-4">
                       <TableActionMenu
                         variant="inline"
-                        onEdit={() => openEditModal(unit)}
-                        onDelete={() => setDeleteTarget(unit)}
+                        onEdit={canUpdate ? () => openEditModal(unit) : undefined}
+                        onDelete={canDelete ? () => setDeleteTarget(unit) : undefined}
                       />
                     </td>
                   </tr>

@@ -1,0 +1,47 @@
+name: Build & Release Mobile POS APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build Release APK & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        working-directory: ./mobile/app-khposcommerce
+        run: flutter pub get
+
+      - name: Build Release APK
+        working-directory: ./mobile/app-khposcommerce
+        run: flutter build apk --release
+
+      - name: Upload APK to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: mobile/app-khposcommerce/build/app/outputs/flutter-apk/app-release.apk
+          generate_release_notes: true
+          name: Enterprise Mobile POS ${{ github.ref_name }}

@@ -77,8 +77,8 @@ interface OrdersTableSectionProps {
   sortBy?: string
   sortOrder?: 'asc' | 'desc'
   onSort?: (column: string) => void
-  onView: (order: Order) => void
-  onPrintReceipt: (order: Order) => void
+  onView?: (order: Order) => void
+  onPrintReceipt?: (order: Order) => void
   onPrintWaybill?: (order: Order) => void
   onUpdateStatus?: (order: Order) => void
   onQuickStatusChange?: (order: Order, newStatus: string) => void
@@ -508,9 +508,9 @@ export const OrdersTableSection: React.FC<OrdersTableSectionProps> = ({
                 maxInline={2}
                 buttonSize="sm"
                 align="right"
-                onView={() => onView(order)}
+                onView={onView ? () => onView(order) : undefined}
                 viewLabel={t('common:viewDetails', 'View Details')}
-                onPrint={() => onPrintReceipt(order)}
+                onPrint={onPrintReceipt ? () => onPrintReceipt(order) : undefined}
                 printLabel={t('printReceipt', 'Print Receipt')}
                 items={[
                   ...(onPrintWaybill
@@ -690,7 +690,7 @@ export const OrdersTableSection: React.FC<OrdersTableSectionProps> = ({
       sortKey={sortBy}
       sortDir={sortOrder}
       onSort={onSort}
-      onRowClick={(order) => onView(order)}
+      onRowClick={onView ? (order) => onView(order) : undefined}
       emptyText={t('noOrdersFound', 'No web orders found matching your criteria.')}
       renderMobileCard={renderMobileCard}
     />

@@ -49,12 +49,33 @@ import { EmployeeFormModal } from './components/EmployeeFormModal'
 import { EmployeeImportModal } from './components/EmployeeImportModal'
 import { EmployeeTableSection } from './components/EmployeeTableSection'
 import { INITIAL_VISIBLE_COLUMNS_MAP, type Tab, type ImportResult } from './types/employee.types'
+import { useAuthStore } from '@/stores/authStore'
 
 const EmployeesPage: React.FC = () => {
   const { t } = useTranslation(['employees', 'common', 'nav'])
   const navigate = useNavigate()
   const qc = useQueryClient()
   const toast = useToast()
+  const { hasPermission } = useAuthStore()
+
+  const canCreateEmployee = hasPermission('employee.create')
+  const canExportEmployee = hasPermission(['employee.export', 'employee.view'])
+  const canImportEmployee = hasPermission(['employee.create', 'employee.import'])
+
+  const canCreatePayroll = hasPermission('payroll.create')
+  const canExportPayroll = hasPermission(['payroll.export', 'payroll.view'])
+
+  const canCreateAttendance = hasPermission('attendance.create')
+  const canExportAttendance = hasPermission(['attendance.export', 'attendance.view'])
+  const canCreateShift = hasPermission(['shift.create', 'attendance.create'])
+
+  const canCreateLeave = hasPermission('leave_request.create')
+  const canExportLeave = hasPermission(['leave_request.export', 'leave_request.view'])
+
+  const canCreateHoliday = hasPermission('holiday.create')
+  const canCreateDepartment = hasPermission('department.create')
+  const canCreatePosition = hasPermission('position.create')
+
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setPageActiveTab] = usePageTab<Tab>({
     storageKey: 'employees_active_tab',
@@ -73,6 +94,12 @@ const EmployeesPage: React.FC = () => {
       }, { replace: true })
     }
   }
+
+  const canCreateCurrentTab =
+    activeTab === 'payrolls' ? canCreatePayroll :
+    activeTab === 'departments' ? canCreateDepartment :
+    activeTab === 'positions' ? canCreatePosition :
+    canCreateEmployee
 
   // Server side pagination
   const {
@@ -1051,31 +1078,39 @@ const EmployeesPage: React.FC = () => {
         <HeaderActionsGroup>
           {activeTab === 'payrolls' && (
             <>
-              <AddButton
-                onClick={() => setAutoPayrollModalOpen(true)}
-                icon={<Calculator size={15} />}
-                label={t('employees.auto_generate_payroll', 'Auto-Generate')}
-              />
+              {canCreatePayroll && (
+                <AddButton
+                  onClick={() => setAutoPayrollModalOpen(true)}
+                  icon={<Calculator size={15} />}
+                  label={t('employees.auto_generate_payroll', 'Auto-Generate')}
+                />
+              )}
 
-              <ActionButton
-                onClick={handleExportAbaBulk}
-                icon={<Landmark size={15} className="text-emerald-600 dark:text-emerald-400" />}
-                label={t('employees.export_aba_bulk', 'ABA Bulk CSV')}
-                title="Export ABA Bank Corporate CSV"
-              />
+              {canExportPayroll && (
+                <ActionButton
+                  onClick={handleExportAbaBulk}
+                  icon={<Landmark size={15} className="text-emerald-600 dark:text-emerald-400" />}
+                  label={t('employees.export_aba_bulk', 'ABA Bulk CSV')}
+                  title="Export ABA Bank Corporate CSV"
+                />
+              )}
             </>
           )}
 
           {activeTab === 'employees' && (
             <>
-              <ImportButton
-                onClick={() => setImportOpen(true)}
-                label={t('employees.import_csv', 'Import CSV')}
-              />
-              <ExportButton
-                onClick={handleExport}
-                label={t('employees.export_csv', 'Export CSV')}
-              />
+              {canImportEmployee && (
+                <ImportButton
+                  onClick={() => setImportOpen(true)}
+                  label={t('employees.import_csv', 'Import CSV')}
+                />
+              )}
+              {canExportEmployee && (
+                <ExportButton
+                  onClick={handleExport}
+                  label={t('employees.export_csv', 'Export CSV')}
+                />
+              )}
             </>
           )}
 
@@ -1083,23 +1118,29 @@ const EmployeesPage: React.FC = () => {
             <>
               {attendanceSubTab === 'logs' && (
                 <>
-                  <QrKioskButton
-                    onClick={() => setKioskModalOpen(true)}
-                    label={t('employees.qr_attendance', 'QR Attendance')}
-                  />
-                  <ExportButton
-                    onExportRange={handleExportAttendanceCsv}
-                    loading={exportingAttendance}
-                    label={t('common.exportCsv', 'Export CSV')}
-                  />
-                  <AddButton
-                    onClick={() => setAttendanceQuickModalOpen(true)}
-                    label={t('employees.add_attendance', 'Record Attendance')}
-                  />
+                  {canCreateAttendance && (
+                    <QrKioskButton
+                      onClick={() => setKioskModalOpen(true)}
+                      label={t('employees.qr_attendance', 'QR Attendance')}
+                    />
+                  )}
+                  {canExportAttendance && (
+                    <ExportButton
+                      onExportRange={handleExportAttendanceCsv}
+                      loading={exportingAttendance}
+                      label={t('common.exportCsv', 'Export CSV')}
+                    />
+                  )}
+                  {canCreateAttendance && (
+                    <AddButton
+                      onClick={() => setAttendanceQuickModalOpen(true)}
+                      label={t('employees.add_attendance', 'Record Attendance')}
+                    />
+                  )}
                 </>
               )}
 
-              {attendanceSubTab === 'shifts' && (
+              {attendanceSubTab === 'shifts' && canCreateShift && (
                 <AddButton
                   onClick={() => {
                     sound.playClick()
@@ -1133,22 +1174,26 @@ const EmployeesPage: React.FC = () => {
 
               {attendanceSubTab === 'summary' && (
                 <>
-                  <ExportButton
-                    onClick={() => {
-                      sound.playClick()
-                      exportMonthlySummaryRef.current?.()
-                    }}
-                    label={t('common.exportCsv', 'Export CSV')}
-                  />
-                  <AddButton
-                    onClick={() => {
-                      sound.playClick()
-                      setAbaBulkMonth(attendanceMonth)
-                      setAutoPayrollModalOpen(true)
-                    }}
-                    icon={<Calculator size={15} />}
-                    label={t('employees.calculate_payroll_shortcut', 'Calculate Payroll')}
-                  />
+                  {canExportAttendance && (
+                    <ExportButton
+                      onClick={() => {
+                        sound.playClick()
+                        exportMonthlySummaryRef.current?.()
+                      }}
+                      label={t('common.exportCsv', 'Export CSV')}
+                    />
+                  )}
+                  {canCreatePayroll && (
+                    <AddButton
+                      onClick={() => {
+                        sound.playClick()
+                        setAbaBulkMonth(attendanceMonth)
+                        setAutoPayrollModalOpen(true)
+                      }}
+                      icon={<Calculator size={15} />}
+                      label={t('employees.calculate_payroll_shortcut', 'Calculate Payroll')}
+                    />
+                  )}
                 </>
               )}
             </>
@@ -1156,25 +1201,29 @@ const EmployeesPage: React.FC = () => {
 
           {activeTab === 'leaves' && (
             <>
-              <ExportButton
-                onClick={handleExport}
-                label={t('common.exportCsv', 'Export CSV')}
-              />
-              <AddButton
-                onClick={() => setLeaveCreateModalOpen(true)}
-                label={t('employees.add_leave', 'Request Leave')}
-              />
+              {canExportLeave && (
+                <ExportButton
+                  onClick={handleExport}
+                  label={t('common.exportCsv', 'Export CSV')}
+                />
+              )}
+              {canCreateLeave && (
+                <AddButton
+                  onClick={() => setLeaveCreateModalOpen(true)}
+                  label={t('employees.add_leave', 'Request Leave')}
+                />
+              )}
             </>
           )}
 
-          {activeTab === 'holidays' && (
+          {activeTab === 'holidays' && canCreateHoliday && (
             <AddButton
               onClick={() => setHolidayCreateModalOpen(true)}
               label={t('employees.add_holiday', 'Add Holiday')}
             />
           )}
 
-          {activeTab !== 'leaves' && activeTab !== 'attendance' && activeTab !== 'holidays' && (
+          {activeTab !== 'leaves' && activeTab !== 'attendance' && activeTab !== 'holidays' && canCreateCurrentTab && (
             <AddButton
               onClick={() => openCreateModal()}
               label={

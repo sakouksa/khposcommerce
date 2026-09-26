@@ -6,13 +6,23 @@ import AccessDeniedPage from '@/components/shared/AccessDeniedPage'
 export interface ProtectedRouteProps {
   children: React.ReactNode
   permission?: string | string[]
-  role?: string
+  anyPermission?: string[]
+  allPermissions?: string[]
+  role?: string | string[]
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, permission, role }) => {
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  permission,
+  anyPermission,
+  allPermissions,
+  role,
+}) => {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn)
   const hasRole = useAuthStore((s) => s.hasRole)
   const hasPermission = useAuthStore((s) => s.hasPermission)
+  const hasAnyPermission = useAuthStore((s) => s.hasAnyPermission)
+  const hasAllPermissions = useAuthStore((s) => s.hasAllPermissions)
 
   if (!isLoggedIn) return <Navigate to="/login" replace />
 
@@ -21,6 +31,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, permis
   }
 
   if (permission && !hasPermission(permission)) {
+    return <AccessDeniedPage />
+  }
+
+  if (anyPermission && !hasAnyPermission(anyPermission)) {
+    return <AccessDeniedPage />
+  }
+
+  if (allPermissions && !hasAllPermissions(allPermissions)) {
     return <AccessDeniedPage />
   }
 

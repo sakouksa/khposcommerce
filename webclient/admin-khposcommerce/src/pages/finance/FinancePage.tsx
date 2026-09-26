@@ -28,6 +28,7 @@ import WorkspaceTabs from '@/components/shared/WorkspaceTabs'
 import { useServerPagination } from '@/hooks/useServerPagination'
 import { usePageTab } from '@/hooks/usePageTab'
 import { useTranslation } from 'react-i18next'
+import { useAuthStore } from '@/stores/authStore'
 import { downloadCsv } from '@/utils/export'
 
 import TransactionsTab from './components/tabs/TransactionsTab'
@@ -55,6 +56,48 @@ const FinancePage: React.FC = () => {
   const toast = useToast()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { hasPermission } = useAuthStore()
+
+  // Permissions per tab
+  const canCreateExpense = hasPermission('expense.create')
+  const canUpdateExpense = hasPermission('expense.update')
+  const canDeleteExpense = hasPermission('expense.delete')
+  const canApproveExpense = hasPermission(['expense.approve', 'expense.update'])
+  const canExportExpense = hasPermission(['expense.export', 'expense.view'])
+
+  const canCreateCategory = hasPermission(['expense_category.create', 'expense.create'])
+  const canUpdateCategory = hasPermission(['expense_category.update', 'expense.update'])
+  const canDeleteCategory = hasPermission(['expense_category.delete', 'expense.delete'])
+
+  const canCreateRegister = hasPermission(['cash_register.create', 'setting.create'])
+  const canUpdateRegister = hasPermission(['cash_register.update', 'setting.update'])
+  const canDeleteRegister = hasPermission(['cash_register.delete', 'setting.delete'])
+  const canManageRegister = hasPermission(['cash_register.manage', 'setting.update'])
+
+  const canCreatePaymentMethod = hasPermission(['payment_method.create', 'setting.create'])
+  const canUpdatePaymentMethod = hasPermission(['payment_method.update', 'setting.update'])
+  const canDeletePaymentMethod = hasPermission(['payment_method.delete', 'setting.delete'])
+
+  const canCreateCurrency = hasPermission(['currency.create', 'setting.create'])
+  const canUpdateCurrency = hasPermission(['currency.update', 'setting.update'])
+  const canDeleteCurrency = hasPermission(['currency.delete', 'setting.delete'])
+
+  const canCreateTax = hasPermission(['tax.create', 'setting.create'])
+  const canUpdateTax = hasPermission(['tax.update', 'setting.update'])
+  const canDeleteTax = hasPermission(['tax.delete', 'setting.delete'])
+
+  const canCreateForActiveTab = useMemo(() => {
+    switch (activeTab) {
+      case 'expenses': return canCreateExpense
+      case 'categories': return canCreateCategory
+      case 'registers': return canCreateRegister
+      case 'payment_methods': return canCreatePaymentMethod
+      case 'currencies': return canCreateCurrency
+      case 'taxes': return canCreateTax
+      case 'transactions': return false
+      default: return false
+    }
+  }, [activeTab, canCreateExpense, canCreateCategory, canCreateRegister, canCreatePaymentMethod, canCreateCurrency, canCreateTax])
   const [activeTab, setActiveTabRaw] = usePageTab<TabType>({
     storageKey: 'finance_active_tab',
     defaultTab: 'expenses',
@@ -1024,20 +1067,26 @@ const FinancePage: React.FC = () => {
         <HeaderActionsGroup>
           {activeTab === 'expenses' && (
             <>
-              <ImportButton
-                onClick={() => setImportOpen(true)}
-                label={t('finance.import_csv', 'Import CSV')}
-              />
-              <ExportButton
-                onClick={handleExportCsv}
-                label={t('finance.export_csv', 'Export CSV')}
-              />
+              {canCreateExpense && (
+                <ImportButton
+                  onClick={() => setImportOpen(true)}
+                  label={t('finance.import_csv', 'Import CSV')}
+                />
+              )}
+              {canExportExpense && (
+                <ExportButton
+                  onClick={handleExportCsv}
+                  label={t('finance.export_csv', 'Export CSV')}
+                />
+              )}
             </>
           )}
-          <AddButton
-            onClick={handleAddActionClick}
-            label={getAddButtonLabel()}
-          />
+          {canCreateForActiveTab && (
+            <AddButton
+              onClick={handleAddActionClick}
+              label={getAddButtonLabel()}
+            />
+          )}
         </HeaderActionsGroup>
       </div>
 
@@ -1239,14 +1288,16 @@ const FinancePage: React.FC = () => {
 
       {activeTab === 'expenses' && (
         <div className="space-y-4">
-          <BulkSelectionBanner
-            selectedCount={selectedExpenseIds.length}
-            onDelete={() => setBulkDeleteConfirmOpen(true)}
-            onClear={() => setSelectedExpenseIds([])}
-            deleteLoading={bulkDeleteMutation.isPending}
-            deleteLabel={t('finance.delete_selected', t('common.deleteSelected', 'Delete Selected'))}
-            clearLabel={t('common.cancel', 'Cancel')}
-          />
+          {canDeleteExpense && (
+            <BulkSelectionBanner
+              selectedCount={selectedExpenseIds.length}
+              onDelete={() => setBulkDeleteConfirmOpen(true)}
+              onClear={() => setSelectedExpenseIds([])}
+              deleteLoading={bulkDeleteMutation.isPending}
+              deleteLabel={t('finance.delete_selected', t('common.deleteSelected', 'Delete Selected'))}
+              clearLabel={t('common.cancel', 'Cancel')}
+            />
+          )}
           <ExpensesTab
             expenses={expenses}
             allExpenses={allExpenses}
@@ -1254,8 +1305,8 @@ const FinancePage: React.FC = () => {
             isLoading={isLoading}
             isFetching={isFetching}
             visibleColumns={visibleColumns}
-            openEditDrawer={openEditDrawer}
-            handleDelete={handleDelete}
+            openEditDrawer={canUpdateExpense ? openEditDrawer : undefined}
+            handleDelete={canDeleteExpense ? handleDelete : undefined}
             renderSortIcon={renderSortIcon}
             handleSort={handleSort}
             selectedRows={selectedExpenseIds}
@@ -1264,29 +1315,31 @@ const FinancePage: React.FC = () => {
             activeCategoryFilter={activeCategoryFilter}
             setActiveCategoryFilter={setActiveCategoryFilter}
             onPrintVoucher={(exp) => setPrintExpenseModalItem(exp)}
-            onApprove={(id) => updateExpenseStatusMutation.mutate({ id, status: 'approved' })}
-            onReject={(id) => updateExpenseStatusMutation.mutate({ id, status: 'rejected' })}
+            onApprove={canApproveExpense ? (id) => updateExpenseStatusMutation.mutate({ id, status: 'approved' }) : undefined}
+            onReject={canApproveExpense ? (id) => updateExpenseStatusMutation.mutate({ id, status: 'rejected' }) : undefined}
           />
         </div>
       )}
 
       {activeTab === 'categories' && (
         <div className="space-y-4">
-          <BulkSelectionBanner
-            selectedCount={selectedCategoryIds.length}
-            onDelete={() => setBulkDeleteCategoryConfirmOpen(true)}
-            onClear={() => setSelectedCategoryIds([])}
-            deleteLoading={bulkDeleteCategoriesMutation.isPending}
-            deleteLabel={t('finance.delete_selected_categories', t('common.deleteSelected', 'Delete Selected'))}
-            clearLabel={t('common.cancel', 'Cancel')}
-          />
+          {canDeleteCategory && (
+            <BulkSelectionBanner
+              selectedCount={selectedCategoryIds.length}
+              onDelete={() => setBulkDeleteCategoryConfirmOpen(true)}
+              onClear={() => setSelectedCategoryIds([])}
+              deleteLoading={bulkDeleteCategoriesMutation.isPending}
+              deleteLabel={t('finance.delete_selected_categories', t('common.deleteSelected', 'Delete Selected'))}
+              clearLabel={t('common.cancel', 'Cancel')}
+            />
+          )}
           <CategoriesTab
             categories={categories}
             isLoading={isLoading}
             isFetching={isFetching}
             visibleColumns={visibleColumns}
-            openEditDrawer={openEditDrawer}
-            handleDelete={handleDelete}
+            openEditDrawer={canUpdateCategory ? openEditDrawer : undefined}
+            handleDelete={canDeleteCategory ? handleDelete : undefined}
             renderSortIcon={renderSortIcon}
             handleSort={handleSort}
             selectedRows={selectedCategoryIds}
@@ -1302,9 +1355,9 @@ const FinancePage: React.FC = () => {
           isLoading={isLoading}
           isFetching={isFetching}
           visibleColumns={visibleColumns}
-          openEditDrawer={openEditDrawer}
-          handleDelete={handleDelete}
-          onCloseShift={(reg) => setCloseRegisterModalItem(reg)}
+          openEditDrawer={canUpdateRegister ? openEditDrawer : undefined}
+          handleDelete={canDeleteRegister ? handleDelete : undefined}
+          onCloseShift={canManageRegister ? (reg) => setCloseRegisterModalItem(reg) : undefined}
         />
       )}
 
@@ -1314,9 +1367,9 @@ const FinancePage: React.FC = () => {
           isLoading={isLoading}
           isFetching={isFetching}
           visibleColumns={visibleColumns}
-          openEditDrawer={openEditDrawer}
-          handleDelete={handleDelete}
-          toggleStatus={(method) => togglePaymentMethodStatusMutation.mutate({ id: method.id, active: !method.is_active })}
+          openEditDrawer={canUpdatePaymentMethod ? openEditDrawer : undefined}
+          handleDelete={canDeletePaymentMethod ? handleDelete : undefined}
+          toggleStatus={canUpdatePaymentMethod ? (method) => togglePaymentMethodStatusMutation.mutate({ id: method.id, active: !method.is_active }) : undefined}
         />
       )}
 
@@ -1326,8 +1379,8 @@ const FinancePage: React.FC = () => {
           isLoading={isLoading}
           isFetching={isFetching}
           visibleColumns={visibleColumns}
-          openEditDrawer={openEditDrawer}
-          handleDelete={handleDelete}
+          openEditDrawer={undefined}
+          handleDelete={undefined}
         />
       )}
 
@@ -1337,8 +1390,8 @@ const FinancePage: React.FC = () => {
           isLoading={isLoading}
           isFetching={isFetching}
           visibleColumns={visibleColumns}
-          openEditDrawer={openEditDrawer}
-          handleDelete={handleDelete}
+          openEditDrawer={canUpdateCurrency ? openEditDrawer : undefined}
+          handleDelete={canDeleteCurrency ? handleDelete : undefined}
         />
       )}
 
@@ -1348,8 +1401,8 @@ const FinancePage: React.FC = () => {
           isLoading={isLoading}
           isFetching={isFetching}
           visibleColumns={visibleColumns}
-          openEditDrawer={openEditDrawer}
-          handleDelete={handleDelete}
+          openEditDrawer={canUpdateTax ? openEditDrawer : undefined}
+          handleDelete={canDeleteTax ? handleDelete : undefined}
         />
       )}
 

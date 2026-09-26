@@ -44,7 +44,9 @@ import type { ColumnOption } from '@/components/shared/ColumnSettingsPopover'
 import { employeeService } from '@/services/employeeService'
 import { useToast } from '@/hooks/useToast'
 import { sound } from '@/utils/sound'
+import { GlobalFormat } from '@/utils/formatters'
 import { focusFirstInvalidField } from '@/utils/formValidation'
+import { useAuthStore } from '@/stores/authStore'
 import { EmployeeAvatar } from './EmployeeAvatar'
 import { LeaveFilterDrawer } from './LeaveFilterDrawer'
 import { LeaveDetailDrawer } from './LeaveDetailDrawer'
@@ -63,6 +65,11 @@ export const LeaveRequestsTab: React.FC<LeaveRequestsTabProps> = ({
   const { t, i18n } = useTranslation(['employees', 'common'])
   const qc = useQueryClient()
   const toast = useToast()
+  const { hasPermission } = useAuthStore()
+
+  const canApprove = hasPermission(['leave_request.approve', 'leave_request.update'])
+  const canCreate = hasPermission('leave_request.create')
+  const canDelete = hasPermission('leave_request.delete')
 
   // ─── Pagination & Filtering State ──────────────────────────────────────────
   const [page, setPage] = useState(1)
@@ -317,29 +324,8 @@ export const LeaveRequestsTab: React.FC<LeaveRequestsTabProps> = ({
     endDateFilter,
   ].filter(Boolean).length
 
-  // Helper date formatter
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '—'
-    try {
-      const d = new Date(dateStr)
-      if (isNaN(d.getTime())) return dateStr.split('T')[0] || '—'
-      const isKhmer = i18n.language?.startsWith('km')
-      if (isKhmer) {
-        const monthsKm = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ']
-        const day = d.getDate()
-        const month = monthsKm[d.getMonth()]
-        const year = d.getFullYear()
-        return `${day} ${month} ${year}`
-      }
-      return d.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    } catch {
-      return dateStr.split('T')[0]
-    }
-  }
+  // Unified Global Date Formatter
+  const formatDate = (dateStr?: string) => GlobalFormat.displayDate(dateStr)
 
   const calculateDays = (item: any) => {
     if (item.total_days) {
@@ -798,7 +784,7 @@ export const LeaveRequestsTab: React.FC<LeaveRequestsTabProps> = ({
                                 }}
                                 viewLabel={t('employees.view_details', 'View Details')}
                                 items={
-                                  item.status === 'pending'
+                                  item.status === 'pending' && canApprove
                                     ? [
                                         {
                                           label: t('employees.approve', 'Approve'),
@@ -876,8 +862,8 @@ export const LeaveRequestsTab: React.FC<LeaveRequestsTabProps> = ({
         isOpen={Boolean(inspectRecord)}
         onClose={() => setInspectRecord(null)}
         record={inspectRecord}
-        onApprove={(id) => approveMutation.mutate({ id, notes: '' })}
-        onReject={(record) => {
+        onApprove={canApprove ? (id) => approveMutation.mutate({ id, notes: '' }) : undefined}
+        onReject={canApprove ? (record) => {
           setActionModal({
             open: true,
             type: 'reject',
@@ -885,7 +871,7 @@ export const LeaveRequestsTab: React.FC<LeaveRequestsTabProps> = ({
             employeeName: record.employee?.name,
             notes: '',
           })
-        }}
+        } : undefined}
         isApproving={approveMutation.isPending}
       />
 

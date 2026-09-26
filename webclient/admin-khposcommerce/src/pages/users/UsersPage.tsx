@@ -16,6 +16,7 @@ import Breadcrumb from '@/components/common/Breadcrumb'
 import { downloadCsv } from '@/utils/export'
 import { useTranslation } from 'react-i18next'
 import { TableToolbar } from '@/components/common'
+import { usePermission } from '@/hooks/usePermission'
 
 import { UserStatsCards } from './components/UserStatsCards'
 import { UserFilterDrawer } from './components/UserFilterDrawer'
@@ -31,6 +32,13 @@ const UsersPage: React.FC = () => {
   const { t } = useTranslation()
   const qc = useQueryClient()
   const toast = useToast()
+
+  const { hasPermission, hasAnyPermission } = usePermission()
+  const canCreate = hasPermission('user.create')
+  const canEdit = hasPermission('user.update')
+  const canDelete = hasPermission('user.delete')
+  const canExport = hasPermission('user.export')
+  const canManageRole = hasAnyPermission(['role.update', 'user.update'])
 
   const {
     page,
@@ -485,27 +493,33 @@ const UsersPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto xl:justify-end shrink-0">
-          <button
-            onClick={() => setImportModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-xs"
-          >
-            <Upload size={15} />
-            <span>Import CSV</span>
-          </button>
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-xs"
-          >
-            <Download size={15} />
-            <span>Export CSV</span>
-          </button>
-          <button
-            onClick={openCreateModal}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-xs"
-          >
-            <Plus size={16} />
-            <span>Add New User</span>
-          </button>
+          {canCreate && (
+            <button
+              onClick={() => setImportModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-xs"
+            >
+              <Upload size={15} />
+              <span>Import CSV</span>
+            </button>
+          )}
+          {canExport && (
+            <button
+              onClick={handleExportCSV}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-xs"
+            >
+              <Download size={15} />
+              <span>Export CSV</span>
+            </button>
+          )}
+          {canCreate && (
+            <button
+              onClick={openCreateModal}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-xs"
+            >
+              <Plus size={16} />
+              <span>Add New User</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -567,6 +581,9 @@ const UsersPage: React.FC = () => {
         openResetPasswordModal={openResetPasswordModal}
         setDeleteTarget={setDeleteTarget}
         toggleActiveMutation={toggleActiveMutation}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        canManageRole={canManageRole}
       />
 
       <Pagination
@@ -622,6 +639,8 @@ const UsersPage: React.FC = () => {
         getAvatarUrl={getAvatarUrl}
         openResetPasswordModal={openResetPasswordModal}
         openPermissionModal={openPermissionModal}
+        canEdit={canEdit}
+        canManageRole={canManageRole}
       />
 
       {/* Permissions Modal */}

@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Calendar, Repeat, Loader2, Globe } from 'lucide-react'
+import { Calendar, Repeat, Loader2, CalendarDays } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { employeeService } from '@/services/employeeService'
 import { useToast } from '@/hooks/useToast'
 import { sound } from '@/utils/sound'
+import { GlobalFormat } from '@/utils/formatters'
 import {
   TableToolbar,
   TableActionMenu,
@@ -22,6 +23,7 @@ import TableWrapper from '@/components/shared/TableWrapper'
 import Pagination from '@/components/shared/Pagination'
 import BulkSelectionBanner from '@/components/shared/BulkSelectionBanner'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
+import { useAuthStore } from '@/stores/authStore'
 import type { ColumnOption } from '@/components/shared/ColumnSettingsPopover'
 import type { HolidayItem } from '../types/employee.types'
 
@@ -38,6 +40,11 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
   const isKhmer = i18n.language === 'km'
   const toast = useToast()
   const qc = useQueryClient()
+  const { hasPermission } = useAuthStore()
+
+  const canCreate = hasPermission('holiday.create')
+  const canUpdate = hasPermission('holiday.update')
+  const canDelete = hasPermission('holiday.delete')
 
   // Pagination & Filtering
   const [page, setPage] = useState(1)
@@ -190,14 +197,14 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
         t('employees.sync_live_success', {
           count,
           year: currentYear,
-          defaultValue: `Successfully synchronized ${count} public holidays for year ${currentYear} from Live API!`,
+          defaultValue: `Successfully synchronized ${count} public holidays for year ${currentYear}!`,
         })
       )
       qc.invalidateQueries({ queryKey: ['holidays'] })
     },
     onError: (err: any) => {
       sound.playError()
-      const msg = err?.response?.data?.message || t('common.error_occurred', 'Failed to sync live holidays API')
+      const msg = err?.response?.data?.message || t('common.error_occurred', 'Failed to synchronize public holidays')
       toast.error(msg)
     },
   })
@@ -297,31 +304,6 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
     bulkDeleteMutation.mutate(selectedRows)
   }
 
-  // Format Date & Day Name
-  const formatHolidayDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr)
-      if (isNaN(d.getTime())) return dateStr
-      return d.toLocaleDateString(isKhmer ? 'km-KH' : 'en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      })
-    } catch {
-      return dateStr
-    }
-  }
-
-  const getDayName = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr)
-      if (isNaN(d.getTime())) return ''
-      return d.toLocaleDateString(isKhmer ? 'km-KH' : 'en-US', { weekday: 'long' })
-    } catch {
-      return ''
-    }
-  }
-
   return (
     <div className="space-y-4">
       {/* ─── Global Standard Table Toolbar ─── */}
@@ -355,18 +337,18 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
             className="group h-10 min-h-[40px] px-3.5 rounded-xl border border-border/80 bg-background hover:bg-muted text-xs sm:text-[13px] font-medium text-foreground hover:text-foreground flex items-center gap-2 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] shadow-xs hover:shadow shrink-0 whitespace-nowrap"
             title={t('employees.sync_current_year_holidays_tooltip', {
               year: currentYear,
-              defaultValue: `Fetch official Cambodian public holidays for ${currentYear} from Live API`,
+              defaultValue: `Fetch official Cambodian public holidays for ${currentYear}`,
             })}
           >
             {syncLiveApiMutation.isPending ? (
               <Loader2 size={14} className="animate-spin text-primary shrink-0" />
             ) : (
-              <Globe size={14} className="text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
+              <CalendarDays size={14} className="text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
             )}
             <span className="hidden sm:inline">
               {t('employees.sync_current_year_holidays', {
                 year: currentYear,
-                defaultValue: `Sync Holidays (${currentYear})`,
+                defaultValue: `Sync Public Holidays (${currentYear})`,
               })}
             </span>
           </button>
@@ -374,13 +356,15 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
       />
 
       {/* ─── Bulk actions banner ─── */}
-      <BulkSelectionBanner
-        selectedCount={selectedRows.length}
-        onDelete={() => setBulkDeleteConfirmOpen(true)}
-        onClear={() => setSelectedRows([])}
-        deleteLabel={t('employees.deleteSelected', 'Delete Selected')}
-        deleteLoading={bulkDeleteMutation.isPending}
-      />
+      {canDelete && (
+        <BulkSelectionBanner
+          selectedCount={selectedRows.length}
+          onDelete={() => setBulkDeleteConfirmOpen(true)}
+          onClear={() => setSelectedRows([])}
+          deleteLabel={t('employees.deleteSelected', 'Delete Selected')}
+          deleteLoading={bulkDeleteMutation.isPending}
+        />
+      )}
 
       {/* ─── Main Content: Global Standard Table ─── */}
       <TableWrapper isFetching={isLoading || isFetching}>
@@ -440,14 +424,14 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
                     ? t('common.tryDifferentSearch', 'Try searching for a different keyword.')
                     : t('employees.no_holidays_for_year_desc', {
                         year: currentYear,
-                        defaultValue: `No public holidays recorded for year ${currentYear} yet. Click below to fetch from Live API.`,
+                        defaultValue: `No public holidays recorded for year ${currentYear} yet. Click below to load public holidays.`,
                       })
                 }
                 actionLabel={
                   !search
                     ? t('employees.sync_current_year_holidays', {
                         year: currentYear,
-                        defaultValue: `Sync Holidays (${currentYear})`,
+                        defaultValue: `Sync Public Holidays (${currentYear})`,
                       })
                     : undefined
                 }
@@ -490,15 +474,15 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
 
                     {/* Date */}
                     {visibleColumns.date && (
-                      <td className="py-3 px-4 text-xs font-medium text-foreground whitespace-nowrap font-mono">
-                        {formatHolidayDate(item.date)}
+                      <td className="py-3 px-4 text-xs font-semibold text-foreground whitespace-nowrap">
+                        {GlobalFormat.displayDate(item.date)}
                       </td>
                     )}
 
                     {/* Day Name */}
                     {visibleColumns.day && (
                       <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
-                        {getDayName(item.date)}
+                        {GlobalFormat.dayOfWeek(item.date)}
                       </td>
                     )}
 
@@ -539,12 +523,12 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
                           variant="inline"
                           buttonSize="sm"
                           align="right"
-                          onEdit={() => openEditModal(item)}
+                          onEdit={canUpdate ? () => openEditModal(item) : undefined}
                           editLabel={t('common.edit', 'Edit')}
-                          onDelete={() => {
+                          onDelete={canDelete ? () => {
                             sound.playDelete()
                             setDeleteTarget(item)
-                          }}
+                          } : undefined}
                           deleteLabel={t('common.delete', 'Delete')}
                         />
                       </div>

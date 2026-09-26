@@ -64,13 +64,21 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                   onChange={(e) => setSelectedRole(e.target.value)}
                   className="form-input text-xs w-full bg-card border-border"
                 >
-                  <option value="admin">Admin / Super Administrator</option>
-                  <option value="manager">Manager</option>
-                  <option value="cashier">Cashier</option>
-                  <option value="staff">Staff</option>
-                  {roles.map((r: any) => (
-                    <option key={r.id} value={r.name}>{r.name}</option>
-                  ))}
+                  {roles && roles.length > 0 ? (
+                    roles.map((r: any) => (
+                      <option key={r.id || r.name} value={r.name}>
+                        {r.name.replace(/_/g, ' ').toUpperCase()} ({r.name})
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="super_admin">SUPER ADMIN (super_admin)</option>
+                      <option value="admin">ADMIN (admin)</option>
+                      <option value="manager">MANAGER (manager)</option>
+                      <option value="cashier">CASHIER (cashier)</option>
+                      <option value="warehouse_staff">WAREHOUSE STAFF (warehouse_staff)</option>
+                    </>
+                  )}
                 </select>
               </div>
 

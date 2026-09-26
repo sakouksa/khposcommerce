@@ -29,6 +29,7 @@ import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
+import { useAuthStore } from '@/stores/authStore'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
 import { TableToolbar, AddButton, ExportButton, ImportButton } from '@/components/common'
 import { ModernSelect } from '@/pages/pos/components/ModernSelect'
@@ -68,15 +69,24 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
   const navigate = useNavigate()
   const qc = useQueryClient()
   const toast = useToast()
+  const { hasPermission } = useAuthStore()
+
+  const canCreate = hasPermission('brand.create')
+  const canUpdate = hasPermission('brand.update')
+  const canDelete = hasPermission('brand.delete')
+  const canExport = hasPermission(['brand.export', 'brand.view'])
+  const canImport = hasPermission(['brand.create', 'brand.import'])
 
   // Open add modal ONLY when parent triggers it with a positive change
   const prevTriggerRef = React.useRef(triggerAdd || 0)
   React.useEffect(() => {
     if (triggerAdd && triggerAdd > 0 && triggerAdd !== prevTriggerRef.current) {
-      openCreateModal()
+      if (canCreate) {
+        openCreateModal()
+      }
     }
     prevTriggerRef.current = triggerAdd || 0
-  }, [triggerAdd])
+  }, [triggerAdd, canCreate])
 
   const {
     page,
@@ -392,30 +402,36 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
                   {recycleBinMode ? t('products.recycleBin') : t('products.trash')}
                 </button>
 
-                <button
-                  onClick={handleExport}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs cursor-pointer"
-                >
-                  <Download size={15} />
-                  {t('products.exportCSV')}
-                </button>
+                {canExport && (
+                  <button
+                    onClick={handleExport}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <Download size={15} />
+                    {t('products.exportCSV')}
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setImportOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs cursor-pointer"
-                >
-                  <Upload size={15} />
-                  {t('products.importCSV')}
-                </button>
+                {canImport && (
+                  <button
+                    onClick={() => setImportOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <Upload size={15} />
+                    {t('products.importCSV')}
+                  </button>
+                )}
 
-                <button
-                  onClick={openCreateModal}
-                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
-                             bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
-                >
-                  <Plus size={16} />
-                  {t('products.addBrand')}
-                </button>
+                {canCreate && (
+                  <button
+                    onClick={openCreateModal}
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
+                               bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
+                  >
+                    <Plus size={16} />
+                    {t('products.addBrand')}
+                  </button>
+                )}
               </div>
             }
           />
@@ -432,34 +448,40 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
           <div className="flex items-center gap-2">
             {recycleBinMode ? (
               <>
-                <button
-                  onClick={() => bulkRestoreMutation.mutate(selectedRows)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-500 transition-colors shadow-xs cursor-pointer"
-                >
-                  <RefreshCw size={13} />
-                  {t('products.restoreSelected')}
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm('Permanently delete selected brands? This cannot be undone.')) {
-                      selectedRows.forEach(id => forceDeleteMutation.mutate(id))
-                      setSelectedRows([])
-                    }
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 transition-colors shadow-xs cursor-pointer"
-                >
-                  <Trash size={13} />
-                  {t('products.permanentDelete')}
-                </button>
+                {canUpdate && (
+                  <button
+                    onClick={() => bulkRestoreMutation.mutate(selectedRows)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-500 transition-colors shadow-xs cursor-pointer"
+                  >
+                    <RefreshCw size={13} />
+                    {t('products.restoreSelected')}
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => {
+                      if (confirm('Permanently delete selected brands? This cannot be undone.')) {
+                        selectedRows.forEach(id => forceDeleteMutation.mutate(id))
+                        setSelectedRows([])
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 transition-colors shadow-xs cursor-pointer"
+                  >
+                    <Trash size={13} />
+                    {t('products.permanentDelete')}
+                  </button>
+                )}
               </>
             ) : (
-              <button
-                onClick={() => setBulkDeleteConfirmOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 cursor-pointer transition-colors shadow-xs"
-              >
-                <Trash size={13} />
-                {t('products.deleteSelected')}
-              </button>
+              canDelete && (
+                <button
+                  onClick={() => setBulkDeleteConfirmOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 cursor-pointer transition-colors shadow-xs"
+                >
+                  <Trash size={13} />
+                  {t('products.deleteSelected')}
+                </button>
+              )
             )}
             <button
               onClick={() => setSelectedRows([])}
@@ -679,25 +701,29 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
                       <td className="py-3.5 pr-4 text-right">
                         {recycleBinMode ? (
                           <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => restoreMutation.mutate(brand.id)}
-                              className="p-1.5 hover:bg-muted rounded-lg text-indigo-500 hover:text-indigo-600 transition-colors cursor-pointer"
-                              title="Restore"
-                            >
-                              <RefreshCw size={14} />
-                            </button>
-                            <button
-                              onClick={() => setDeleteTarget(brand)}
-                              className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
-                              title="Permanent Delete"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            {canUpdate && (
+                              <button
+                                onClick={() => restoreMutation.mutate(brand.id)}
+                                className="p-1.5 hover:bg-muted rounded-lg text-indigo-500 hover:text-indigo-600 transition-colors cursor-pointer"
+                                title="Restore"
+                              >
+                                <RefreshCw size={14} />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                onClick={() => setDeleteTarget(brand)}
+                                className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
+                                title="Permanent Delete"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
                           </div>
                         ) : (
                           <TableActionMenu
-                            onEdit={() => openEditModal(brand)}
-                            onDelete={() => setDeleteTarget(brand)}
+                            onEdit={canUpdate ? () => openEditModal(brand) : undefined}
+                            onDelete={canDelete ? () => setDeleteTarget(brand) : undefined}
                           />
                         )}
                       </td>

@@ -25,6 +25,7 @@ import { SalesTableSection } from './components/SalesTableSection'
 import { AnimatePresence } from 'framer-motion'
 import { useThemeStore } from '@/stores/themeStore'
 import { downloadCsv, getDateRangeBounds } from '@/utils/export'
+import { usePermission } from '@/hooks/usePermission'
 
 
 const KHR_RATE = 4100
@@ -37,6 +38,12 @@ const SalesPage: React.FC = () => {
   const queryClient = useQueryClient()
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
+
+  const { hasPermission } = usePermission()
+  const canCreate = hasPermission('sale.create')
+  const canExport = hasPermission('sale.export')
+  const canRefund = hasPermission('sale.refund')
+  const canView = hasPermission('sale.view')
 
   const {
     page,
@@ -340,17 +347,21 @@ const SalesPage: React.FC = () => {
         </div>
 
         <HeaderActionsGroup className="w-full sm:w-auto flex items-center gap-2">
-          <ExportButton
-            onExportRange={(range) => handleExport(range)}
-            loading={isExporting}
-            label={t('common.exportCsv')}
-            className="flex-1 sm:flex-none justify-center"
-          />
-          <AddButton
-            onClick={() => navigate('/pos')}
-            label={t('openPos', 'Open POS')}
-            className="flex-1 sm:flex-none justify-center"
-          />
+          {canExport && (
+            <ExportButton
+              onExportRange={(range) => handleExport(range)}
+              loading={isExporting}
+              label={t('common.exportCsv')}
+              className="flex-1 sm:flex-none justify-center"
+            />
+          )}
+          {canCreate && (
+            <AddButton
+              onClick={() => navigate('/pos')}
+              label={t('openPos', 'Open POS')}
+              className="flex-1 sm:flex-none justify-center"
+            />
+          )}
         </HeaderActionsGroup>
       </div>
 
@@ -393,6 +404,8 @@ const SalesPage: React.FC = () => {
         onView={(sale) => navigate(`/sales/${sale.id}`)}
         onPrintReceipt={(sale) => setReceiptModalSale(sale)}
         onRefund={(sale) => setRefundModalSale(sale)}
+        canRefund={canRefund}
+        canPrint={canView}
       />
 
       {/* ── 6. PAGINATION ────────────────────────────────────────────────────── */}
@@ -450,6 +463,7 @@ const SalesPage: React.FC = () => {
               if (activeSale) setRefundModalSale(activeSale)
             }}
             isRefunding={refundMutation.isPending}
+            canRefund={canRefund}
           />
         )}
       </AnimatePresence>

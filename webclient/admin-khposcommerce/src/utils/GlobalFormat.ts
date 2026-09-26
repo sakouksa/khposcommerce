@@ -11,6 +11,8 @@ import {
   formatShortDate,
   formatShortDateTime,
   formatDisplayDate,
+  formatMonth,
+  formatDayOfWeek,
   formatDateTimeLocal,
   formatDateTime,
   formatDate,
@@ -70,6 +72,14 @@ export class GlobalFormat {
 
   public static displayDate(d?: string | Date | null, options?: FormatDateOptions): string {
     return formatDisplayDate(d, options)
+  }
+
+  public static month(d?: string | Date | null, options?: FormatDateOptions): string {
+    return formatMonth(d, options)
+  }
+
+  public static dayOfWeek(d?: string | Date | null, options?: FormatDateOptions): string {
+    return formatDayOfWeek(d, options)
   }
 
   public static dateInput(d?: string | Date | null): string {

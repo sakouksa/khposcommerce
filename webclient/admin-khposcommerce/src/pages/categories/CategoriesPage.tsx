@@ -32,6 +32,7 @@ import { useTranslation } from 'react-i18next'
 import { ModernSelect } from '@/pages/pos/components/ModernSelect'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { useThemeStore } from '@/stores/themeStore'
+import { useAuthStore } from '@/stores/authStore'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
 
 interface Category {
@@ -107,15 +108,24 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
   const navigate = useNavigate()
   const qc = useQueryClient()
   const toast = useToast()
+  const { hasPermission } = useAuthStore()
+
+  const canCreate = hasPermission('category.create')
+  const canUpdate = hasPermission('category.update')
+  const canDelete = hasPermission('category.delete')
+  const canExport = hasPermission(['category.export', 'category.view'])
+  const canImport = hasPermission(['category.create', 'category.import'])
 
   // Open add modal ONLY when parent triggers it with an active change
   const prevTriggerRef = React.useRef(triggerAdd || 0)
   React.useEffect(() => {
     if (triggerAdd && triggerAdd > 0 && triggerAdd !== prevTriggerRef.current) {
-      openCreateModal()
+      if (canCreate) {
+        openCreateModal()
+      }
     }
     prevTriggerRef.current = triggerAdd || 0
-  }, [triggerAdd])
+  }, [triggerAdd, canCreate])
 
   const {
     page,
@@ -623,25 +633,29 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
         <td className="py-3.5 pr-4 text-right">
           {recycleBinMode ? (
             <div className="flex items-center justify-end gap-1">
-              <button
-                onClick={() => restoreMutation.mutate(node.id)}
-                className="p-1.5 hover:bg-muted rounded-lg text-indigo-500 hover:text-indigo-600 transition-colors"
-                title="Restore"
-              >
-                <RefreshCw size={14} />
-              </button>
-              <button
-                onClick={() => setDeleteTarget(node)}
-                className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-muted-foreground hover:text-red-500 transition-colors"
-                title="Permanent Delete"
-              >
-                <Trash2 size={14} />
-              </button>
+              {canUpdate && (
+                <button
+                  onClick={() => restoreMutation.mutate(node.id)}
+                  className="p-1.5 hover:bg-muted rounded-lg text-indigo-500 hover:text-indigo-600 transition-colors"
+                  title="Restore"
+                >
+                  <RefreshCw size={14} />
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  onClick={() => setDeleteTarget(node)}
+                  className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-muted-foreground hover:text-red-500 transition-colors"
+                  title="Permanent Delete"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
           ) : (
             <TableActionMenu
-              onEdit={() => openEditModal(node)}
-              onDelete={() => setDeleteTarget(node)}
+              onEdit={canUpdate ? () => openEditModal(node) : undefined}
+              onDelete={canDelete ? () => setDeleteTarget(node) : undefined}
             />
           )}
         </td>
@@ -686,30 +700,36 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
                   {recycleBinMode ? t('products.recycleBin') : t('products.trash')}
                 </button>
 
-                <button
-                  onClick={handleExport}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs"
-                >
-                  <Download size={15} />
-                  {t('products.exportCSV')}
-                </button>
+                {canExport && (
+                  <button
+                    onClick={handleExport}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs"
+                  >
+                    <Download size={15} />
+                    {t('products.exportCSV')}
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setImportOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs"
-                >
-                  <Upload size={15} />
-                  {t('products.importCSV')}
-                </button>
+                {canImport && (
+                  <button
+                    onClick={() => setImportOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs"
+                  >
+                    <Upload size={15} />
+                    {t('products.importCSV')}
+                  </button>
+                )}
 
-                <button
-                  onClick={openCreateModal}
-                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
-                             bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm"
-                >
-                  <Plus size={16} />
-                  {t('products.addCategory')}
-                </button>
+                {canCreate && (
+                  <button
+                    onClick={openCreateModal}
+                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
+                               bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+                  >
+                    <Plus size={16} />
+                    {t('products.addCategory')}
+                  </button>
+                )}
               </div>
             }
           />
@@ -726,34 +746,40 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
           <div className="flex items-center gap-2">
             {recycleBinMode ? (
               <>
-                <button
-                  onClick={() => bulkRestoreMutation.mutate(selectedRows)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-500 transition-colors shadow-xs"
-                >
-                  <RefreshCw size={13} />
-                  {t('products.restoreSelected')}
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm('Permanently delete selected categories? This cannot be undone.')) {
-                      selectedRows.forEach(id => forceDeleteMutation.mutate(id))
-                      setSelectedRows([])
-                    }
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 transition-colors shadow-xs"
-                >
-                  <Trash size={13} />
-                  {t('products.permanentDelete')}
-                </button>
+                {canUpdate && (
+                  <button
+                    onClick={() => bulkRestoreMutation.mutate(selectedRows)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-500 transition-colors shadow-xs"
+                  >
+                    <RefreshCw size={13} />
+                    {t('products.restoreSelected')}
+                  </button>
+                )}
+                {canDelete && (
+                  <button
+                    onClick={() => {
+                      if (confirm('Permanently delete selected categories? This cannot be undone.')) {
+                        selectedRows.forEach(id => forceDeleteMutation.mutate(id))
+                        setSelectedRows([])
+                      }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 transition-colors shadow-xs"
+                  >
+                    <Trash size={13} />
+                    {t('products.permanentDelete')}
+                  </button>
+                )}
               </>
             ) : (
-              <button
-                onClick={() => setBulkDeleteConfirmOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 cursor-pointer transition-colors shadow-xs"
-              >
-                <Trash size={13} />
-                {t('products.deleteSelected')}
-              </button>
+              canDelete && (
+                <button
+                  onClick={() => setBulkDeleteConfirmOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 cursor-pointer transition-colors shadow-xs"
+                >
+                  <Trash size={13} />
+                  {t('products.deleteSelected')}
+                </button>
+              )
             )}
             <button
               onClick={() => setSelectedRows([])}

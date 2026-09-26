@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Calendar, Repeat, CalendarPlus, Loader2, Globe } from 'lucide-react'
+import { Calendar, Repeat, Loader2, Globe } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { employeeService } from '@/services/employeeService'
 import { useToast } from '@/hooks/useToast'
@@ -196,20 +196,6 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
     },
   })
 
-  const loadPresetMutation = useMutation({
-    mutationFn: () => employeeService.loadCambodiaHolidaysPreset(),
-    onSuccess: (res: any) => {
-      sound.playSuccess()
-      const count = res?.data?.imported_count ?? 22
-      toast.success(t('employees.cambodia_holidays_loaded', { count, defaultValue: `Imported ${count} holidays successfully!` }))
-      qc.invalidateQueries({ queryKey: ['holidays'] })
-    },
-    onError: (err: any) => {
-      sound.playError()
-      const msg = err?.response?.data?.message || t('common.error_occurred', 'Failed to load holidays preset')
-      toast.error(msg)
-    },
-  })
 
   // Sync form inputs when modalOpen changes from outside (e.g. from EmployeesPage header Add button)
   useEffect(() => {

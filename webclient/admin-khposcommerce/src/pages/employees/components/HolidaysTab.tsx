@@ -66,8 +66,13 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
 
   // Modal states
   const [internalModalOpen, setInternalModalOpen] = useState(false)
-  const modalOpen = propModalOpen !== undefined ? propModalOpen : internalModalOpen
-  const setModalOpen = propSetModalOpen !== undefined ? propSetModalOpen : setInternalModalOpen
+  const modalOpen = Boolean(propModalOpen) || internalModalOpen
+  const setModalOpen = (open: boolean) => {
+    setInternalModalOpen(open)
+    if (propSetModalOpen) {
+      propSetModalOpen(open)
+    }
+  }
 
   const [editingItem, setEditingItem] = useState<HolidayItem | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<HolidayItem | null>(null)
@@ -138,7 +143,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
   const deleteMutation = useMutation({
     mutationFn: (id: number | string) => employeeService.deleteHoliday(id),
     onSuccess: () => {
-      sound.playTrash()
+      sound.playDelete()
       toast.success(t('employees.holiday_deleted_success', 'Holiday deleted successfully'))
       qc.invalidateQueries({ queryKey: ['holidays'] })
       setDeleteTarget(null)
@@ -153,7 +158,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
   const bulkDeleteMutation = useMutation({
     mutationFn: (ids: (number | string)[]) => employeeService.bulkDeleteHolidays(ids),
     onSuccess: (res: any) => {
-      sound.playTrash()
+      sound.playDelete()
       const count = res?.data?.deleted_count ?? selectedRows.length
       toast.success(t('employees.holiday_deleted_success', `${count} holidays deleted successfully`))
       setSelectedRows([])
@@ -196,7 +201,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
 
   // Modal helpers
   const openCreateModal = () => {
-    sound.playPop()
+    sound.playClick()
     setEditingItem(null)
     setFormTitleEn('')
     setFormTitleKm('')
@@ -208,7 +213,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
   }
 
   const openEditModal = (item: HolidayItem) => {
-    sound.playPop()
+    sound.playClick()
     setEditingItem(item)
     setFormTitleEn(item.title_en || '')
     setFormTitleKm(item.title_km || '')
@@ -220,7 +225,10 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
   }
 
   const closeModal = () => {
-    setModalOpen(false)
+    setInternalModalOpen(false)
+    if (propSetModalOpen) {
+      propSetModalOpen(false)
+    }
     setEditingItem(null)
   }
 
@@ -496,14 +504,13 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
                     <td className="py-3 px-4 text-right whitespace-nowrap print:hidden !pr-6" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end">
                         <TableActionMenu
-                          variant="hybrid"
-                          maxInline={2}
+                          variant="inline"
                           buttonSize="sm"
                           align="right"
                           onEdit={() => openEditModal(item)}
                           editLabel={t('common.edit', 'Edit')}
                           onDelete={() => {
-                            sound.playPop()
+                            sound.playDelete()
                             setDeleteTarget(item)
                           }}
                           deleteLabel={t('common.delete', 'Delete')}
@@ -661,22 +668,30 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
 
       {/* ─── DELETE CONFIRM DIALOG ─── */}
       <ConfirmDialog
+        open={Boolean(deleteTarget)}
         isOpen={Boolean(deleteTarget)}
+        onCancel={() => setDeleteTarget(null)}
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         title={t('employees.delete_holiday_title', 'Delete Holiday')}
+        itemName={deleteTarget?.title_km || deleteTarget?.title_en || ''}
         message={t('employees.delete_holiday_confirm', {
           title: deleteTarget?.title_km || deleteTarget?.title_en || '',
           defaultValue: `Are you sure you want to delete holiday «${deleteTarget?.title_km || deleteTarget?.title_en}»?`
         })}
+        confirmText={t('common.delete', 'Delete')}
         confirmLabel={t('common.delete', 'Delete')}
+        cancelText={t('common.cancel', 'Cancel')}
+        cancelLabel={t('common.cancel', 'Cancel')}
         variant="danger"
         loading={deleteMutation.isPending}
       />
 
       {/* ─── BULK DELETE CONFIRM DIALOG ─── */}
       <ConfirmDialog
+        open={bulkDeleteConfirmOpen}
         isOpen={bulkDeleteConfirmOpen}
+        onCancel={() => setBulkDeleteConfirmOpen(false)}
         onClose={() => setBulkDeleteConfirmOpen(false)}
         onConfirm={handleBulkDelete}
         title={t('employees.bulkDeleteTitle', 'Delete Selected Holidays')}
@@ -684,7 +699,10 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
           count: selectedRows.length,
           defaultValue: `Are you sure you want to delete ${selectedRows.length} selected holidays?`
         })}
+        confirmText={t('common.delete', 'Delete')}
         confirmLabel={t('common.delete', 'Delete')}
+        cancelText={t('common.cancel', 'Cancel')}
+        cancelLabel={t('common.cancel', 'Cancel')}
         variant="danger"
         loading={bulkDeleteMutation.isPending}
       />

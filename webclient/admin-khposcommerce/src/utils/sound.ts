@@ -74,6 +74,11 @@ class SoundSystem {
     } catch (e) {}
   }
 
+  // Soft Tactile Pop / Click feedback
+  playPop() {
+    this.playClick()
+  }
+
   // 2. Success Double Chime (Product Added / Operation Succeeded)
   playSuccess() {
     if (this.isMuted) return
@@ -178,6 +183,11 @@ class SoundSystem {
       osc.start(now)
       osc.stop(now + 0.1)
     } catch (e) {}
+  }
+
+  // Trash / Bin sound alias
+  playTrash() {
+    this.playDelete()
   }
 
   // 6. Checkout Celebration Cash Register Sweep (Complete & Pay)

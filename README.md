@@ -15,7 +15,7 @@ An enterprise-grade, high-performance unified commerce platform designed for mul
 
 - 🏢 **Multi-Location Warehouse Inventory**: Real-time stock ledgers, atomic stock updates, inter-warehouse transfers, stock adjustments, and cycle count audits (Opname).
 - ⚡ **High-Speed Point of Sale (POS)**: Barcode scanning, customizable cash register shifts, split payments (Cash, ABA PayWay, Bakong KHQR, Cards), receipt printing, and offline tolerance.
-- 🌐 **5-Language Internationalization (i18n)**: Native support for **Khmer (`km`)**, **English (`en`)**, **Chinese (`zh`)**, **Thai (`th`)**, and **Vietnamese (`vi`)** across the entire UI.
+- 🌐 **Language**: Native support for **Khmer (`km`)**, **English (`en`)**.
 - 🎨 **Enterprise UI/UX Design**: Clean tabs, customizable column visibility, standardized filter drawers, and dark/light themes.
 - 🛒 **Customer E-Commerce Storefront**: Modern web storefront with catalog browsing, shopping cart, promotions, and order tracking.
 - 📱 **Mobile Flutter Application**: Mobile POS, camera barcode scanner, and Bluetooth thermal printer drivers.
@@ -29,9 +29,9 @@ An enterprise-grade, high-performance unified commerce platform designed for mul
 pos-ecommerce/
 ├── 📁 backend-khposcommerce/       # Core RESTful API & Business Logic (Laravel)
 ├── 📁 webclient/                   # Web Frontends (React / Vite + TypeScript)
-│   ├── 📁 admin-khposcommerce/     # Back-Office Admin & Web POS Terminal
+│   ├── 📁 merchant-khposcommerce/     # Back-Office Admin & Web POS Terminal
 │   ├── 📁 storefront-khposcommerce/# E-Commerce Storefront សម្រាប់អតិថិជនទិញទំនិញ
-│   └── 📁 superadmin-khposcommerce/# Platform Management (Multi-tenant SaaS)
+│   └── 📁 control-khposcommerce/# Platform Management (Multi-tenant SaaS)
 ├── 📁 app-khposcommerce/           # Mobile POS / Barcode Scanner / Bluetooth Printer (Flutter)
 ├── 📁 packages/                    # Shared Packages រវាង Frontends
 │   ├── 📁 ui/                      # Shared Tailwind / UI Components (@khposcommerce/ui)

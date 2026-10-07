@@ -93,9 +93,10 @@ api/backend-khposcommerce/app/Http/Controllers/Api/
 | :--- | :--- | :--- | :--- |
 | **Public / Landing** | `/api/v1/*` | `routes/api/v1/public.php` | None (Public) |
 | **Auth** | `/api/v1/auth/*` | `routes/api/v1/auth.php` | JWT / Guest |
-| **Customer Storefront** | `/api/v1/customer/*` (alias `/api/v1/store/*`) | `routes/api/v1/customer.php` | Optional Customer JWT |
-| **Admin ERP** | `/api/v1/admin/*` | `routes/api/v1/admin.php` | `auth.jwt`, Spatie RBAC, Tenant |
-| **Mobile POS** | `/api/v1/mobile/*` | `routes/api/v1/mobile.php` | `auth.jwt`, Cashier Branch Scope |
+| **Storefront Website** | `/api/v1/storefront/*` (aliases: `/customer/*`, `/store/*`) | `routes/api/v1/storefront.php` | Optional Customer JWT |
+| **Merchant ERP & POS** | `/api/v1/merchant/*` (alias: `/admin/*`) | `routes/api/v1/merchant.php` | `auth.jwt`, Spatie RBAC, Tenant |
+| **Control (SaaS Platform)** | `/api/v1/control/*` (alias: `/platform/*`) | `routes/api/v1/control.php` | `auth.jwt`, Platform Admin Scope |
+| **Mobile POS (Flutter)** | `/api/v1/mobile/*` | `routes/api/v1/mobile.php` | `auth.jwt`, Cashier Branch Scope |
 
 ---
 

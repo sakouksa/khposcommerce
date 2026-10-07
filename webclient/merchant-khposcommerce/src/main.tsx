@@ -2,8 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import { ensureLanguageLoaded, buildActiveDict } from './lib/i18n'
-import { initCambodiaTimezoneGlobally } from './utils/formatters'
+import { ensureLanguageLoaded, buildActiveDict } from './lib/i18n.ts'
+import { initCambodiaTimezoneGlobally } from './utils/formatters.ts'
 
 // Enforce Asia/Phnom_Penh as global default timezone for all date/time operations
 initCambodiaTimezoneGlobally()

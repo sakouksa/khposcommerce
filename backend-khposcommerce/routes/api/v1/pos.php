@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Admin\POS\POSController;
 use App\Http\Controllers\Api\V1\Admin\POS\CashRegisterController;
-use App\Http\Controllers\Api\V1\Admin\Payment\BakongController;
+use App\Http\Controllers\Api\V1\Admin\POS\BakongController;
 
 /*
 |--------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+# OS files
 .DS_Store
 *.backup
 *.log
@@ -14,15 +15,20 @@ replay_*
 
 # Dependencies
 node_modules/
+**/node_modules/
 vendor/
+**/vendor/
+.pnpm-store/
 
 # Flutter & Mobile builds
 .dart_tool/
+**/mobile/**/.dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
 build/
+**/mobile/**/build/
 **/android/build/
 **/android/.gradle/
 **/ios/Pods/
@@ -32,21 +38,23 @@ build/
 **/macos/.symlinks/
 **/macos/Flutter/ephemeral/
 
-# IDE
+# IDE & Editors
 .idea/
 .vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# Database dumps (exceeding 100MB GitHub limit)
-/database/
-*.sql
+# Database dumps
+/database/*.sql
+*.sql.gz
 
-# Build outputs
+# Build outputs & caches
 dist/
 **/dist/
 *.tsbuildinfo
-
-# GitHub Actions workflows (requires workflow PAT scope)
-.github/
-
-
-
+.phpunit.result.cache
+.vite/
+.turbo/

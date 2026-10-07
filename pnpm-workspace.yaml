@@ -1,0 +1,5 @@
+packages:
+  - 'webclient/*'
+  - 'packages/*'
+allowBuilds:
+  esbuild: true

@@ -6,7 +6,7 @@ import {
   GlobalPrintHeader,
   GlobalPrintFooter,
 } from '@/components/shared/GlobalPrint'
-import type { OrderReturn } from '@/types/orderReturn.types'
+import type { OrderReturn } from '../types'
 import { GlobalFormat } from '@/utils/formatters'
 import { useAuthStore } from '@/stores/authStore'
 

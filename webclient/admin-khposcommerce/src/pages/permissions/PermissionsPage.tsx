@@ -18,7 +18,7 @@ import { useServerPagination } from '@/hooks/useServerPagination'
 import TableWrapper from '@/components/shared/TableWrapper'
 import SearchInput from '@/components/shared/SearchInput'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import { TableToolbar, EnterpriseDatePicker } from '@/components/common'
+import { TableToolbar, EnterpriseDatePicker, HeaderActionsGroup, AddButton, ExportButton, ImportButton } from '@/components/common'
 import CsvImportModal from '@/components/shared/CsvImportModal'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
@@ -492,9 +492,8 @@ const PermissionsPage: React.FC = () => {
       {/* ── 1. BREADCRUMB ─────────────────────────────────────────────────── */}
       <Breadcrumb
         items={[
-          { label: 'Dashboard', path: '/dashboard' },
-          { label: 'Administration' },
-          { label: 'Permissions Management' },
+          { label: t('nav.administration', 'Administration'), path: '/users' },
+          { label: t('nav.permissions', 'Permissions Management') },
         ]}
       />
 
@@ -502,41 +501,32 @@ const PermissionsPage: React.FC = () => {
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
         <div className="space-y-1 min-w-0 flex-1 z-10">
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
-            Permissions Management
+            {t('permissions.title', 'Permissions Management')}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
-            Manage system permissions, access control rules, roles, user privileges, and security policies across the Enterprise POS platform.
+            {t('permissions.subtitle', 'Manage system permissions, access control rules, roles, user privileges, and security policies across the Enterprise POS platform.')}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto xl:justify-end shrink-0 z-10">
+        <HeaderActionsGroup>
           {canCreate && (
-            <button
+            <ImportButton
               onClick={() => setImportModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
-            >
-              <Upload size={15} />
-              <span>Import CSV</span>
-            </button>
+              label={t('common.importCsv', 'Import CSV')}
+            />
           )}
           {canExport && (
-            <button
+            <ExportButton
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all shadow-2xs cursor-pointer"
-            >
-              <Download size={15} />
-              <span>Export CSV</span>
-            </button>
+              label={t('common.exportCsv', 'Export CSV')}
+            />
           )}
           {canCreate && (
-            <button
+            <AddButton
               onClick={openCreateModal}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-all shadow-md active:scale-95 cursor-pointer"
-            >
-              <Plus size={16} />
-              <span>Create Permission</span>
-            </button>
+              label={t('permissions.createPermission', 'Create Permission')}
+            />
           )}
-        </div>
+        </HeaderActionsGroup>
       </div>
 
       {/* ── 3. TOP 4 LARGE UNIQUE SECURITY KPI CARDS ───────────────────────── */}

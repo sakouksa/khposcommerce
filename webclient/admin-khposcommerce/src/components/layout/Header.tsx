@@ -70,6 +70,17 @@ const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
         return t('nav.financeManagement', 'Finance')
       case 'expenses':
         return t('finance.expenses', 'Expenses')
+      case 'transactions':
+        return t('finance.transactions', 'Transactions')
+      case 'registers':
+        return t('finance.registers', 'Registers')
+      case 'payment-methods':
+      case 'payments':
+        return t('finance.payment_methods', 'Payment Methods')
+      case 'currencies':
+        return t('finance.currencies', 'Currencies')
+      case 'taxes':
+        return t('finance.taxes', 'Taxes')
       case 'reports':
         return t('nav.reportsManagement', 'Reports')
       case 'users':

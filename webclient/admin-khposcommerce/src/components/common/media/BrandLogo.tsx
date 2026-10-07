@@ -79,7 +79,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           />
         ) : (
           /* Sleek fallback vector monogram badge with curved modern radius */
-          <div className={`w-full h-full aspect-square ${roundedClass} bg-gradient-to-tr from-rose-600 via-red-600 to-amber-500 flex items-center justify-center text-white font-black shadow-inner`}>
+          <div className={`w-full h-full aspect-square ${roundedClass} bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-500 flex items-center justify-center text-white font-black shadow-inner`}>
             <span className="leading-none text-white tracking-wider font-extrabold text-sm uppercase">
               {displayName.charAt(0).toUpperCase()}
             </span>

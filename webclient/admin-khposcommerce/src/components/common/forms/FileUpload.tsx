@@ -285,7 +285,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                     enableLightbox
                       ? {
                           zIndex: 9999,
-                          mask: (
+                          cover: (
                             <div className="flex items-center justify-center gap-1.5 text-white text-xs font-semibold">
                               <Eye size={15} />
                               <span>{t('common.view', 'Preview')}</span>

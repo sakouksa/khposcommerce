@@ -43,12 +43,12 @@ services:
   # ─── 3. Backend API (Staging) ───────────────────────────────────────────────
   backend:
     build:
-      context: ./api/backend-khposcommerce
-      dockerfile: docker/Dockerfile.prod
+      context: ./backend-khposcommerce
+      dockerfile: docker/php/Dockerfile.prod
     container_name: enterprise_pos_backend_staging
     restart: unless-stopped
     env_file:
-      - ./api/backend-khposcommerce/.env.staging
+      - ./backend-khposcommerce/.env.staging
     volumes:
       - backend_staging_storage:/var/www/storage
     networks:

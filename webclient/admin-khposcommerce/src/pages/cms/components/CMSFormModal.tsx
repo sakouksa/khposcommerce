@@ -22,7 +22,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { EnterpriseModal, ModalFooter, RichTextEditor, type ModalHeaderIconVariant } from '@/components/common'
 import { generateSlug } from '@/utils/slug'
-import { POLICY_TEMPLATES } from '../constants/policyTemplates'
+import { POLICY_TEMPLATES } from '../policyTemplates'
 import type { Tab } from '../types/cms.types'
 
 export interface CMSFormModalProps {
@@ -159,50 +159,50 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
     switch (activeTab) {
       case 'blogs':
         return {
-          title: isEdit ? t('cms.editBlog', 'Edit Article') : t('cms.addBlog', 'Add New Article'),
-          subtitle: t('cms.formBlogSubtitle', 'Fill in article details, content, cover image, and SEO settings'),
+          title: isEdit ? t('cms.editBlog') : t('cms.addBlog'),
+          subtitle: t('cms.formBlogSubtitle'),
           icon: <FileText size={20} />,
           variant: 'blue' as ModalHeaderIconVariant,
         }
       case 'blog-categories':
         return {
-          title: isEdit ? t('cms.editCategory', 'Edit Category') : t('cms.addCategory', 'Add New Category'),
-          subtitle: t('cms.formCategorySubtitle', 'Set category name, slug URL, description, and visibility'),
+          title: isEdit ? t('cms.editCategory') : t('cms.addCategory'),
+          subtitle: t('cms.formCategorySubtitle'),
           icon: <FolderOpen size={20} />,
           variant: 'amber' as ModalHeaderIconVariant,
         }
       case 'blog-tags':
         return {
-          title: isEdit ? t('cms.editTag', 'Edit Tag') : t('cms.addTag', 'Add New Tag'),
-          subtitle: t('cms.formTagSubtitle', 'Create or edit tag label and slug URL'),
+          title: isEdit ? t('cms.editTag') : t('cms.addTag'),
+          subtitle: t('cms.formTagSubtitle'),
           icon: <Tag size={20} />,
           variant: 'purple' as ModalHeaderIconVariant,
         }
       case 'pages':
         return {
-          title: isEdit ? t('cms.editPage', 'Edit Landing Page & Policy') : t('cms.addPage', 'Add Landing Page or Policy'),
-          subtitle: t('cms.formPageSubtitle', 'Design page title, slug URL, rich policy terms, and SEO settings'),
+          title: isEdit ? t('cms.editPage') : t('cms.addPage'),
+          subtitle: t('cms.formPageSubtitle'),
           icon: <FileCode size={20} />,
           variant: 'cyan' as ModalHeaderIconVariant,
         }
       case 'faqs':
         return {
-          title: isEdit ? t('cms.editFaq', 'Edit FAQ') : t('cms.addFaq', 'Add New FAQ'),
-          subtitle: t('cms.formFaqSubtitle', 'Enter question, detailed answer, and category grouping'),
+          title: isEdit ? t('cms.editFaq') : t('cms.addFaq'),
+          subtitle: t('cms.formFaqSubtitle'),
           icon: <HelpCircle size={20} />,
           variant: 'sky' as ModalHeaderIconVariant,
         }
       case 'testimonials':
         return {
-          title: isEdit ? t('cms.editTestimonial', 'Edit Testimonial') : t('cms.addTestimonial', 'Add Customer Testimonial'),
-          subtitle: t('cms.formTestimonialSubtitle', 'Customer feedback quote, star rating, author details, and homepage showcase'),
+          title: isEdit ? t('cms.editTestimonial') : t('cms.addTestimonial'),
+          subtitle: t('cms.formTestimonialSubtitle'),
           icon: <Quote size={20} />,
           variant: 'emerald' as ModalHeaderIconVariant,
         }
       default:
         return {
-          title: isEdit ? t('cms.editContent', 'Edit Content') : t('cms.addContent', 'Add New Content'),
-          subtitle: t('cms.cmsSubtitle', 'Manage CMS content records and settings'),
+          title: isEdit ? t('cms.editContent') : t('cms.addContent'),
+          subtitle: t('cms.cmsSubtitle'),
           icon: <Layers size={20} />,
           variant: 'emerald' as ModalHeaderIconVariant,
         }
@@ -232,11 +232,11 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
           onCancel={onClose}
           isSubmitting={isSubmitting}
           isEdit={isEdit}
-          cancelLabel={t('cms.cancel', t('common.cancel', 'Cancel'))}
+          cancelLabel={t('cms.cancel')}
           submitLabel={
             isEdit
-              ? t('cms.saveChanges', t('common.saveChanges', 'Save Changes'))
-              : t('cms.saveContent', t('common.save', 'Save Content'))
+              ? t('cms.saveChanges')
+              : t('cms.saveContent')
           }
           onSubmit={(e) => onSubmit(e || ({ preventDefault: () => {} } as any))}
         />
@@ -250,7 +250,7 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
           <div className="space-y-4">
             <div>
               <label className={labelCls}>
-                {t('cms.formCategoryName', 'Category Name')} <span className="text-rose-500">*</span>
+                {t('cms.formCategoryName')} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -262,13 +262,13 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
                     setSlug(generateSlug(e.target.value))
                   }
                 }}
-                placeholder="e.g. Technology News"
+                placeholder={t('cms.categoryNamePlaceholder')}
                 className={inputCls}
               />
             </div>
 
             <div>
-              <label className={labelCls}>{t('cms.colSlug', 'Slug URL')}</label>
+              <label className={labelCls}>{t('cms.colSlug')}</label>
               <input
                 type="text"
                 value={slug}
@@ -279,11 +279,11 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
             </div>
 
             <div>
-              <label className={labelCls}>{t('cms.formCategoryDesc', 'Description')}</label>
+              <label className={labelCls}>{t('cms.formCategoryDesc')}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder={t('cms.formCategoryDesc', 'Overview description of this category...')}
+                placeholder={t('cms.formCategoryDesc')}
                 rows={3}
                 className={textareaCls}
               />
@@ -291,8 +291,8 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
 
             <div className="flex items-center justify-between p-3.5 rounded-lg bg-muted/40 dark:bg-slate-800/40 border border-border/70 dark:border-slate-700/70">
               <div>
-                <p className="text-xs font-semibold text-foreground">{t('cms.formActiveStatus', 'Active Status')}</p>
-                <p className="text-[11px] text-muted-foreground">{t('cms.formActiveStatusDesc', 'Show this category in the public blog')}</p>
+                <p className="text-xs font-semibold text-foreground">{t('cms.formActiveStatus')}</p>
+                <p className="text-[11px] text-muted-foreground">{t('cms.formActiveStatusDesc')}</p>
               </div>
               <input
                 type="checkbox"
@@ -312,7 +312,7 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
           <div className="space-y-4">
             <div>
               <label className={labelCls}>
-                {t('cms.formTagName', 'Tag Name')} <span className="text-rose-500">*</span>
+                {t('cms.formTagName')} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -324,13 +324,13 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
                     setSlug(generateSlug(e.target.value))
                   }
                 }}
-                placeholder="e.g. React, E-Commerce, Tutorials"
+                placeholder={t('cms.tagPlaceholder')}
                 className={inputCls}
               />
             </div>
 
             <div>
-              <label className={labelCls}>{t('cms.colSlug', 'Slug URL')}</label>
+              <label className={labelCls}>{t('cms.colSlug')}</label>
               <input
                 type="text"
                 value={slug}
@@ -354,10 +354,10 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
                   <ShieldCheck size={18} className="text-primary shrink-0" />
                   <div>
                     <p className="font-bold text-xs text-foreground">
-                      {t('cms.loadPolicyTemplate', 'Load Store Policy Preset')}
+                      {t('cms.loadPolicyTemplate')}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      {t('cms.loadPolicyDesc', 'Pre-fill standard Cambodia E-Commerce policy clauses')}
+                      {t('cms.loadPolicyDesc')}
                     </p>
                   </div>
                 </div>
@@ -368,7 +368,7 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
                   className="h-8 px-2.5 text-xs rounded-lg border border-primary/30 bg-background text-foreground font-semibold cursor-pointer"
                   defaultValue=""
                 >
-                  <option value="" disabled>-- ជ្រើសរើសគំរូគោលការណ៍ --</option>
+                  <option value="" disabled>{t('cms.selectPolicyTemplate')}</option>
                   {POLICY_TEMPLATES.map((tmpl) => (
                     <option key={tmpl.key} value={tmpl.key}>
                       {tmpl.name_km}
@@ -380,7 +380,7 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
 
             <div>
               <label className={labelCls}>
-                {t('cms.formPageTitle', 'Page Title')} <span className="text-rose-500">*</span>
+                {t('cms.formPageTitle')} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -392,14 +392,14 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
                     setSlug(generateSlug(e.target.value))
                   }
                 }}
-                placeholder="e.g. គោលការណ៍ប្តូរទំនិញ & សងប្រាក់ (Return & Refund Policy)"
+                placeholder={t('cms.policyTitlePlaceholder')}
                 className={inputCls}
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className={labelCls}>{t('cms.colSlug', 'Slug URL')}</label>
+                <label className={labelCls}>{t('cms.colSlug')}</label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground font-mono text-xs">
                     /
@@ -415,47 +415,47 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
               </div>
 
               <div>
-                <label className={labelCls}>{t('cms.colStatus', 'Status')}</label>
+                <label className={labelCls}>{t('cms.colStatus')}</label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                   className={selectCls}
                 >
-                  <option value="published">{t('cms.published', 'Published')}</option>
-                  <option value="draft">{t('cms.drafts', 'Draft')}</option>
+                  <option value="published">{t('cms.published')}</option>
+                  <option value="draft">{t('cms.drafts')}</option>
                 </select>
               </div>
             </div>
 
             {/* Rich Text Editor for Content */}
             <div>
-              <label className={labelCls}>{t('cms.formPageContent', 'Policy & Page Content')}</label>
+              <label className={labelCls}>{t('cms.formPageContent')}</label>
               <RichTextEditor
                 value={content}
                 onChange={setContent}
-                placeholder="Write rich policy terms, delivery guidelines, or landing page body..."
+                placeholder={t('cms.formPageContentPlaceholder')}
                 minHeight="220px"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className={labelCls}>{t('cms.formSeoTitle', 'SEO Meta Title')}</label>
+                <label className={labelCls}>{t('cms.formSeoTitle')}</label>
                 <input
                   type="text"
                   value={metaTitle}
                   onChange={(e) => setMetaTitle(e.target.value)}
-                  placeholder="Meta title for Google Search..."
+                  placeholder={t('cms.formSeoTitlePlaceholder')}
                   className={inputCls}
                 />
               </div>
               <div>
-                <label className={labelCls}>{t('cms.formSeoDesc', 'SEO Meta Description')}</label>
+                <label className={labelCls}>{t('cms.formSeoDesc')}</label>
                 <input
                   type="text"
                   value={metaDescription}
                   onChange={(e) => setMetaDescription(e.target.value)}
-                  placeholder="Brief description for search snippets..."
+                  placeholder={t('cms.metaDescPlaceholder')}
                   className={inputCls}
                 />
               </div>
@@ -470,27 +470,27 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
           <div className="space-y-4">
             <div>
               <label className={labelCls}>
-                {t('cms.formQuestion', 'Question')} <span className="text-rose-500">*</span>
+                {t('cms.formQuestion')} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 required
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                placeholder={t('cms.formQuestionPlaceholder', 'e.g. How do I track my order delivery?')}
+                placeholder={t('cms.formQuestionPlaceholder')}
                 className={inputCls}
               />
             </div>
 
             <div>
               <label className={labelCls}>
-                {t('cms.formAnswer', 'Answer')} <span className="text-rose-500">*</span>
+                {t('cms.formAnswer')} <span className="text-rose-500">*</span>
               </label>
               <textarea
                 required
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
-                placeholder={t('cms.formAnswerPlaceholder', 'Detailed answer explanation for customers...')}
+                placeholder={t('cms.formAnswerPlaceholder')}
                 rows={4}
                 className={textareaCls}
               />
@@ -498,18 +498,18 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className={labelCls}>{t('cms.formFaqCategory', 'FAQ Category')}</label>
+                <label className={labelCls}>{t('cms.formFaqCategory')}</label>
                 <input
                   type="text"
                   value={faqCategory}
                   onChange={(e) => setFaqCategory(e.target.value)}
-                  placeholder={t('cms.formFaqCategoryPlaceholder', 'e.g. Orders, Delivery, Payments')}
+                  placeholder={t('cms.formFaqCategoryPlaceholder')}
                   className={inputCls}
                 />
               </div>
 
               <div>
-                <label className={labelCls}>{t('cms.formSortOrder', 'Sort Order')}</label>
+                <label className={labelCls}>{t('cms.formSortOrder')}</label>
                 <input
                   type="number"
                   value={sortOrder}
@@ -522,8 +522,8 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
 
             <div className="flex items-center justify-between p-3.5 rounded-lg bg-muted/40 dark:bg-slate-800/40 border border-border/70 dark:border-slate-700/70">
               <div>
-                <p className="text-xs font-semibold text-foreground">{t('cms.formActiveFaq', 'Active FAQ')}</p>
-                <p className="text-[11px] text-muted-foreground">{t('cms.formActiveFaqDesc', 'Show this question in the public Help & FAQ center')}</p>
+                <p className="text-xs font-semibold text-foreground">{t('cms.formActiveFaq')}</p>
+                <p className="text-[11px] text-muted-foreground">{t('cms.formActiveFaqDesc')}</p>
               </div>
               <input
                 type="checkbox"
@@ -543,7 +543,7 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
           <div className="space-y-4">
             <div>
               <label className={labelCls}>
-                {t('cms.authorName', 'Customer / Author Name')} <span className="text-rose-500">*</span>
+                {t('cms.authorName')} <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -553,36 +553,36 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
                   setName(e.target.value)
                   setTitle(e.target.value)
                 }}
-                placeholder="e.g. សុខ វិបុល / Sok Vibol"
+                placeholder={t('cms.clientNamePlaceholder')}
                 className={inputCls}
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className={labelCls}>{t('cms.roleTitle', 'Position / Role')}</label>
+                <label className={labelCls}>{t('cms.roleTitle')}</label>
                 <input
                   type="text"
                   value={testimonialRole}
                   onChange={(e) => setTestimonialRole?.(e.target.value)}
-                  placeholder="e.g. CEO, Store Manager"
+                  placeholder={t('cms.rolePlaceholder')}
                   className={inputCls}
                 />
               </div>
               <div>
-                <label className={labelCls}>{t('cms.companyName', 'Company / Business')}</label>
+                <label className={labelCls}>{t('cms.companyName')}</label>
                 <input
                   type="text"
                   value={testimonialCompany}
                   onChange={(e) => setTestimonialCompany?.(e.target.value)}
-                  placeholder="e.g. Angkor Mart Co., Ltd"
+                  placeholder={t('cms.companyPlaceholder')}
                   className={inputCls}
                 />
               </div>
             </div>
 
             <div>
-              <label className={labelCls}>{t('cms.starRating', 'Rating (1 to 5 Stars)')}</label>
+              <label className={labelCls}>{t('cms.starRating')}</label>
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -598,14 +598,14 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
                   </button>
                 ))}
                 <span className="text-xs font-bold text-foreground ml-2">
-                  {testimonialRating} / 5 Stars
+                  {testimonialRating} / 5 {t('cms.starsUnit')}
                 </span>
               </div>
             </div>
 
             <div>
               <label className={labelCls}>
-                {t('cms.testimonialComment', 'Review / Feedback Quote')} <span className="text-rose-500">*</span>
+                {t('cms.testimonialComment')} <span className="text-rose-500">*</span>
               </label>
               <textarea
                 required
@@ -614,7 +614,7 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
                   setTestimonialComment?.(e.target.value)
                   setContent(e.target.value)
                 }}
-                placeholder="Write genuine customer feedback about OptaPOS service and speed..."
+                placeholder={t('cms.testimonialCommentPlaceholder')}
                 rows={3}
                 className={textareaCls}
               />
@@ -622,8 +622,8 @@ export const CMSFormModal: React.FC<CMSFormModalProps> = ({
 
             <div className="flex items-center justify-between p-3.5 rounded-lg bg-muted/40 border border-border">
               <div>
-                <p className="text-xs font-semibold text-foreground">{t('cms.featuredOnHome', 'Feature on Homepage')}</p>
-                <p className="text-[11px] text-muted-foreground">{t('cms.featuredOnHomeDesc', 'Display this testimonial in the Storefront Home Testimonials carousel')}</p>
+                <p className="text-xs font-semibold text-foreground">{t('cms.featuredOnHome')}</p>
+                <p className="text-[11px] text-muted-foreground">{t('cms.featuredOnHomeDesc')}</p>
               </div>
               <input
                 type="checkbox"

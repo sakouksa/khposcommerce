@@ -1,0 +1,99 @@
+{
+  "deleteTitle": "Confirm Delete",
+  "deleteMessage": "Are you sure you want to delete this item? This action cannot be undone.",
+  "confirmDelete": "Delete",
+  "cancel": "Cancel",
+  "bulkDeleteTitle": "Delete Selected Items",
+  "bulkDeleteMessage": "Are you sure you want to delete {{count}} selected items? This action cannot be undone.",
+  "warningText": "This item will be deleted from the system. This action cannot be undone.",
+  "titles": {
+    "logout": "Sign out?",
+    "revoke": "Revoke device session?",
+    "delete": "Delete this item?",
+    "confirm": "Confirm Action"
+  },
+  "buttons": {
+    "logout": "Sign Out",
+    "revoke": "Revoke",
+    "restore": "Restore",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "descriptions": {
+    "delete": "This item will be deleted from the system. This action cannot be undone.",
+    "logout": "Your current session will be terminated.",
+    "itemDeleted": "will be deleted from the system. This action cannot be undone."
+  },
+  "entities": {
+    "category": {
+      "prefix": "The category",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "brand": {
+      "prefix": "The brand",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "unit": {
+      "prefix": "The unit",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "attribute": {
+      "prefix": "The attribute",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "tax": {
+      "prefix": "The tax rule",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "group": {
+      "prefix": "The customer group",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "address": {
+      "prefix": "The shipping address",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "customer": {
+      "prefix": "The customer profile",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "supplier": {
+      "prefix": "The supplier",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "product": {
+      "prefix": "The product",
+      "suffix": "will be removed from inventory. This action cannot be undone."
+    },
+    "employee": {
+      "prefix": "The employee profile",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "department": {
+      "prefix": "The department",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "position": {
+      "prefix": "The position",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "attendance": {
+      "prefix": "The attendance record",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "payroll": {
+      "prefix": "The payroll record",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "banner": {
+      "prefix": "The banner",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    },
+    "coupon": {
+      "prefix": "The coupon",
+      "suffix": "will be removed from the system. This action cannot be undone."
+    }
+  }
+}
+

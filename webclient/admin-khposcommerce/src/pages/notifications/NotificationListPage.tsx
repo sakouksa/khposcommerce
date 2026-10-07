@@ -6,7 +6,6 @@ import {
   Activity, ArrowUpRight, TrendingUp, Upload, Settings, CheckCircle2, Star, X,
   Building2, Zap, Radio, Send, MessageSquare, Flame, Check, SlidersHorizontal
 } from 'lucide-react'
-import { Select, DatePicker, Modal, Tooltip, Tag } from 'antd'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
@@ -15,7 +14,7 @@ import type { NotificationItem, NotificationPriority, NotificationStats } from '
 import { useToast } from '@/hooks/useToast'
 import { sound } from '@/utils/sound'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import PageHeader from '@/components/common/PageHeader'
+import { HeaderActionsGroup, AddButton, ExportButton } from '@/components/common'
 import DeleteConfirmDialog from '@/components/common/DeleteConfirmDialog'
 import Pagination from '@/components/shared/Pagination'
 import TableWrapper from '@/components/shared/TableWrapper'
@@ -270,13 +269,35 @@ const NotificationListPage: React.FC = () => {
   return (
     <div className="space-y-5 print:p-0">
       {/* ── 1. BREADCRUMB ─────────────────────────────────────────────────── */}
-      <Breadcrumb items={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Notifications Management' }]} />
-
-      <PageHeader
-        icon={<Bell size={24} />}
-        title={t('notifications.title', 'Notifications Management')}
-        subtitle={t('notifications.subtitle', 'Broadcast center, alert logs, and customer messaging triggers')}
+      <Breadcrumb
+        items={[
+          { label: t('nav.notifications', 'Notifications'), path: '/notifications' },
+          { label: t('nav.allNotifications', 'All Notifications') },
+        ]}
       />
+
+      {/* ── 2. FRAMELESS HERO HEADER ────────────────────────────────────────── */}
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+        <div className="space-y-1 min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+            {t('notifications.title', 'Notifications Management')}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+            {t('notifications.subtitle', 'Broadcast center, alert logs, and customer messaging triggers')}
+          </p>
+        </div>
+
+        <HeaderActionsGroup>
+          <ExportButton
+            onClick={handleExportCSV}
+            label={t('common.exportCsv', 'Export CSV')}
+          />
+          <AddButton
+            onClick={() => setCreateModalOpen(true)}
+            label={t('notifications.createNotification', 'Send Notification')}
+          />
+        </HeaderActionsGroup>
+      </div>
 
       {/* ── 2. TOP 4 SIMPLE YET ELEGANT METRIC CARDS ──────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -642,7 +663,9 @@ const NotificationListPage: React.FC = () => {
                       {/* CATEGORY */}
                       {visibleColumns.category && (
                         <td className="p-3.5">
-                          <Tag className="capitalize font-semibold rounded-lg text-xs m-0">{n.type}</Tag>
+                          <span className="capitalize font-semibold rounded-md text-xs px-2 py-0.5 bg-muted text-muted-foreground border border-border inline-block">
+                            {n.type}
+                          </span>
                         </td>
                       )}
 

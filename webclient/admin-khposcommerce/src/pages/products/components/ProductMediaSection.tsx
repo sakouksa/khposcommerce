@@ -98,7 +98,7 @@ export const ProductMediaSection: React.FC<ProductMediaSectionProps> = ({
                     <AntImage
                       src={imgUrl}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      wrapperClassName="w-full h-full flex items-center justify-center cursor-pointer"
+                      rootClassName="w-full h-full flex items-center justify-center cursor-pointer"
                       alt="catalog"
                       preview={{
                         mask: (
@@ -165,7 +165,7 @@ export const ProductMediaSection: React.FC<ProductMediaSectionProps> = ({
                     src={img.url}
                     alt="Preview"
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    wrapperClassName="w-full h-full flex items-center justify-center cursor-pointer"
+                    rootClassName="w-full h-full flex items-center justify-center cursor-pointer"
                     preview={{
                       mask: (
                         <div className="flex items-center gap-1 text-xs font-semibold text-white drop-shadow-md">

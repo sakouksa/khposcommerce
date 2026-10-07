@@ -217,6 +217,23 @@ api.interceptors.request.use(
     config.headers['X-OS-Name'] = info.os
     config.headers['X-Browser-Name'] = info.browser
 
+    // Multi-tenant & Multi-branch Scope Context Headers
+    const authState = useAuthStore.getState()
+    const activeCompanyId = typeof window !== 'undefined'
+      ? (localStorage.getItem('khpos_active_company_id') || authState.activeCompanyId || authState.user?.company_id || authState.user?.company?.id)
+      : (authState.activeCompanyId || authState.user?.company_id)
+
+    const activeBranchId = typeof window !== 'undefined'
+      ? (localStorage.getItem('khpos_active_branch_id') || authState.activeBranchId || authState.user?.branch_id || authState.user?.branch?.id)
+      : (authState.activeBranchId || authState.user?.branch_id)
+
+    if (activeCompanyId) {
+      config.headers['X-Company-Id'] = String(activeCompanyId)
+    }
+    if (activeBranchId) {
+      config.headers['X-Branch-Id'] = String(activeBranchId)
+    }
+
     return config
   },
   (error) => Promise.reject(error)

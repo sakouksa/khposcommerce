@@ -16,11 +16,19 @@ import {
 import { companyService } from '@/services/companyService'
 import { useToast } from '@/hooks/useToast'
 import { focusFirstInvalidField } from '@/utils/formValidation'
-import PageHeader from '@/components/common/PageHeader'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import StatusBadge from '@/components/common/StatusBadge'
-import { FieldError, getFieldClass, TableToolbar } from '@/components/common'
+import {
+  FieldError,
+  getFieldClass,
+  TableToolbar,
+  HeaderActionsGroup,
+  AddButton,
+  ExportButton,
+} from '@/components/common'
 import TableActionMenu from '@/components/shared/TableActionMenu'
+import { WarehouseStatsCards } from './components/WarehouseStatsCards'
+import { downloadCsv } from '@/utils/export'
 
 interface WarehouseItem {
   id:          number
@@ -212,26 +220,66 @@ const WarehousesPage: React.FC<{ isTab?: boolean }> = ({ isTab }) => {
     }
   }
 
+  const handleExportCSV = () => {
+    const list = data?.data ?? []
+    if (!list.length) {
+      toast.info(t('common.noDataToExport', 'No warehouse data to export.'))
+      return
+    }
+    const headers = ['ID', 'Name', 'Code', 'Branch', 'City', 'Province', 'Phone', 'PIC', 'Is Main', 'Status']
+    const rows = list.map((w: WarehouseItem) => [
+      w.id,
+      w.name,
+      w.code,
+      w.branch?.name || '',
+      w.city || '',
+      w.province || '',
+      w.phone || '',
+      w.pic_name || '',
+      w.is_main ? 'Yes' : 'No',
+      w.is_active ? 'Active' : 'Inactive',
+    ])
+    downloadCsv('company_warehouses', headers, rows)
+    toast.success(t('common.exportSuccess', 'Warehouses exported successfully.'))
+  }
+
   return (
     <div className="space-y-5">
       {!isTab && (
         <>
-          <Breadcrumb items={[{ label: 'Company' }, { label: 'Warehouses' }]} />
+          <Breadcrumb
+            items={[
+              { label: t('nav.companyManagement', 'Company Management'), path: '/company' },
+              { label: t('nav.warehouses', 'Warehouses') },
+            ]}
+          />
 
-          <PageHeader
-            icon={<Warehouse size={24} />}
-            title="Warehouses"
-            subtitle="Manage inventory depots, main storage units, and stock centers"
-            action={
-              <button
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+            <div className="space-y-1 min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+                {t('warehouses.title', 'Warehouses')}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                {t('warehouses.subtitle', 'Manage inventory depots, central storage facilities, and stock distribution centers')}
+              </p>
+            </div>
+
+            <HeaderActionsGroup>
+              <ExportButton
+                onClick={handleExportCSV}
+                label={t('common.exportCsv', 'Export CSV')}
+              />
+              <AddButton
                 onClick={openCreateModal}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white
-                           bg-gradient-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
-              >
-                <Plus size={16} />
-                Add Warehouse
-              </button>
-            }
+                label={t('warehouses.addWarehouse', 'Add Warehouse')}
+              />
+            </HeaderActionsGroup>
+          </div>
+
+          <WarehouseStatsCards
+            warehouses={data?.data ?? []}
+            total={data?.pagination?.total ?? data?.total}
+            isLoading={isLoading}
           />
         </>
       )}
@@ -240,20 +288,16 @@ const WarehousesPage: React.FC<{ isTab?: boolean }> = ({ isTab }) => {
       <TableToolbar
         search={search}
         onSearchChange={(val) => { setSearch(val); setPage(1); }}
-        searchPlaceholder="Search warehouses..."
+        searchPlaceholder={t('warehouses.searchPlaceholder', 'Search warehouses...')}
         onReset={reset}
         onRefresh={() => qc.invalidateQueries({ queryKey: ['warehouses'] })}
         refreshLoading={isFetching}
         rightActions={
           isTab ? (
-            <button
+            <AddButton
               onClick={openCreateModal}
-              className="flex items-center gap-1.5 px-4 h-10 min-h-[40px] text-xs sm:text-[13px] font-semibold text-white
-                         bg-gradient-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer ml-auto"
-            >
-              <Plus size={15} />
-              Add Warehouse
-            </button>
+              label={t('warehouses.addWarehouse', 'Add Warehouse')}
+            />
           ) : undefined
         }
       />

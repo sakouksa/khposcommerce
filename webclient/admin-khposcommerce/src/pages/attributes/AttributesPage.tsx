@@ -26,10 +26,11 @@ import StatusBadge from '@/components/common/StatusBadge'
 import { FieldError, getFieldClass } from '@/components/common'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { useTranslation } from 'react-i18next'
-import { useThemeStore } from '@/stores/themeStore'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
-import { TableToolbar } from '@/components/common'
+import { TableToolbar, AddButton, ExportButton, ImportButton, HeaderActionsGroup } from '@/components/common'
+import AttributeStatsCards from './components/AttributeStatsCards'
+import { useThemeStore } from '@/stores/themeStore'
 
 interface AttributeValue {
   id: number
@@ -264,7 +265,7 @@ const AttributesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
   }
 
   // Modal Handlers
-  const openCreateModal = () => {
+  function openCreateModal() {
     setEditingAttr(null)
     setFormErrors({})
     setName('')
@@ -376,40 +377,47 @@ const AttributesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
     <div className="space-y-5">
       {!isTab && (
         <>
-          <Breadcrumb items={[{ label: t('dashboard.title') || 'Dashboard', path: '/dashboard' }, { label: t('products.tabAttributes') }]} />
+          <Breadcrumb
+            items={[
+              { label: t('nav.productManagement', 'Products'), path: '/products' },
+              { label: t('nav.attributes', 'Product Attributes') },
+            ]}
+          />
 
-          <PageHeader
-            icon={<Sliders size={24} />}
-            title={t('products.tabAttributes')}
-            subtitle={t('products.heroSubtitle')}
-            action={
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleExport}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Download size={15} />
-                  {t('products.exportCSV')}
-                </button>
+          {/* Hero Header */}
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+            <div className="space-y-1 min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+                {t('products.tabAttributes', 'Product Attributes')}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                {t('attributes.subtitle', 'Configure variant attributes, colors, sizes, and custom specifications.')}
+              </p>
+            </div>
 
-                <button
-                  onClick={() => setImportOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Upload size={15} />
-                  {t('products.importCSV')}
-                </button>
+            <HeaderActionsGroup>
+              <ExportButton
+                onClick={handleExport}
+                label={t('products.exportCSV', 'Export CSV')}
+              />
 
-                <button
-                  onClick={openCreateModal}
-                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
-                             bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
-                >
-                  <Plus size={16} />
-                  {t('products.addAttribute')}
-                </button>
-              </div>
-            }
+              <ImportButton
+                onClick={() => setImportOpen(true)}
+                label={t('products.importCSV', 'Import CSV')}
+              />
+
+              <AddButton
+                onClick={openCreateModal}
+                label={t('products.addAttribute', 'Add Attribute')}
+              />
+            </HeaderActionsGroup>
+          </div>
+
+          {/* Stats Cards */}
+          <AttributeStatsCards
+            attributes={attributes}
+            total={pagination.total}
+            isLoading={isLoading}
           />
         </>
       )}

@@ -132,14 +132,14 @@ export const ProductTableSection: React.FC<ProductTableSectionProps> = ({
                   </th>
                 )}
 
-                {visibleColumns.price && (
+                {visibleColumns.supplier && (
                   <th
-                    onClick={() => onSort?.('selling_price')}
+                    onClick={() => onSort?.('brand_id')}
                     className="cursor-pointer hover:bg-muted/60 transition-colors group"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span>{t('colPrice', 'Price')}</span>
-                      {renderSortIcon('selling_price')}
+                      <span>{t('colBrand', 'Brand')}</span>
+                      {renderSortIcon('brand_id')}
                     </div>
                   </th>
                 )}
@@ -150,8 +150,20 @@ export const ProductTableSection: React.FC<ProductTableSectionProps> = ({
                     className="cursor-pointer hover:bg-muted/60 transition-colors group"
                   >
                     <div className="flex items-center gap-1.5">
-                      <span>{t('colStock', 'Stock')}</span>
+                      <span>{t('colStock', 'Current Stock')}</span>
                       {renderSortIcon('stock')}
+                    </div>
+                  </th>
+                )}
+
+                {visibleColumns.price && (
+                  <th
+                    onClick={() => onSort?.('selling_price')}
+                    className="cursor-pointer hover:bg-muted/60 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>{t('colPrice', 'Unit Price')}</span>
+                      {renderSortIcon('selling_price')}
                     </div>
                   </th>
                 )}
@@ -214,39 +226,77 @@ export const ProductTableSection: React.FC<ProductTableSectionProps> = ({
                       )}
                       {visibleColumns.sku && (
                         <td>
-                          <span className="font-mono text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                          <span className="font-mono text-xs text-muted-foreground font-medium">
                             {p.sku}
                           </span>
                         </td>
                       )}
                       {visibleColumns.category && (
-                        <td className="text-xs font-semibold text-foreground">
-                          {p.category?.name || 'General'}
+                        <td>
+                          <span className="inline-flex items-center rounded-md border border-transparent bg-secondary px-2.5 py-0.5 text-xs font-normal text-secondary-foreground">
+                            {p.category?.name || t('generalCategory', 'General')}
+                          </span>
                         </td>
                       )}
-                      {visibleColumns.price && (
-                        <td className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                          {formatCurrency(p.selling_price)}
+                      {visibleColumns.supplier && (
+                        <td className="text-xs font-medium text-foreground">
+                          {p.brand?.name ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+                              {p.brand.name}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-[11px]">{t('noBrand', '—')}</span>
+                          )}
                         </td>
                       )}
                       {visibleColumns.stock && (
                         <td>
                           <div
                             onClick={() => onQuickStockAdjust?.(p)}
-                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg hover:bg-muted/80 cursor-pointer transition-colors group"
+                            className="flex flex-col gap-1 cursor-pointer group w-fit"
                             title={t('quickStockAdjust', 'Quick Stock Adjust')}
                           >
-                            <span className={`font-mono text-xs font-bold ${
-                              isOutOfStock
-                                ? 'text-rose-500 font-extrabold'
-                                : isLowStock
-                                ? 'text-amber-500 font-extrabold'
-                                : 'text-foreground'
-                            }`}>
-                              {p.stock ?? 0}
-                            </span>
-                            <Edit3 size={11} className="opacity-0 group-hover:opacity-100 text-muted-foreground transition-opacity" />
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <span className="font-semibold text-foreground">
+                                {p.stock ?? 0} {t('products.units', 'units')}
+                              </span>
+                              <span className="text-muted-foreground">·</span>
+                              <span className={`font-semibold ${
+                                isOutOfStock
+                                  ? 'text-rose-600 dark:text-rose-400'
+                                  : isLowStock
+                                  ? 'text-rose-500 dark:text-rose-400'
+                                  : 'text-emerald-600 dark:text-emerald-400'
+                              }`}>
+                                {isOutOfStock ? t('stockOut', 'Out') : isLowStock ? t('stockLow', 'Low') : t('stockHigh', 'High')}
+                              </span>
+                              <Edit3 size={11} className="opacity-0 group-hover:opacity-100 text-muted-foreground transition-opacity" />
+                            </div>
+
+                            {/* Micro Progress Bar (Pixel-aligned with Shadcn Product List 1) */}
+                            <div className="h-1.5 w-24 sm:w-28 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  isOutOfStock
+                                    ? 'bg-rose-600'
+                                    : isLowStock
+                                    ? 'bg-rose-500'
+                                    : 'bg-emerald-500'
+                                }`}
+                                style={{
+                                  width: isOutOfStock
+                                    ? '0%'
+                                    : `${Math.min(100, Math.max(8, Math.round(((p.stock ?? 0) / 100) * 100)))}%`
+                                }}
+                              />
+                            </div>
                           </div>
+                        </td>
+                      )}
+                      {visibleColumns.price && (
+                        <td className="font-semibold text-xs text-foreground">
+                          {formatCurrency(p.selling_price)}
                         </td>
                       )}
                       {visibleColumns.status && (

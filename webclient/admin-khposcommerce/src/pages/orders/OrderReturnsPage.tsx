@@ -18,7 +18,7 @@ import {
   Check,
 } from 'lucide-react'
 import { orderReturnService } from '@/services/orderReturnService'
-import type { OrderReturn, ReturnStatus, ReturnFault, ConditionGrade, InventoryAction } from '@/types/orderReturn.types'
+import type { OrderReturn, ReturnStatus, ReturnFault, ConditionGrade, InventoryAction } from './types'
 import { useToast } from '@/hooks/useToast'
 import {
   Breadcrumb,

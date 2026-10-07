@@ -344,30 +344,54 @@ const POSPage: React.FC = () => {
     staleTime: 60000,
   })
 
-  // Auto-select first available store/branch/warehouse
-  useEffect(() => {
-    if (storesData && storesData.length > 0 && !selectedStoreId) {
-      const firstStore = storesData[0]
-      setSelectedStoreId(firstStore.id)
-      setSelectedStoreName(firstStore.name)
-    }
-  }, [storesData, selectedStoreId])
+  // ── Permissions & Branch/Store/Warehouse Scoping ────────────────────────
+  const isSuperAdmin = Boolean(authUser?.roles?.includes('super_admin'))
 
+  // Filter stores and warehouses by selected branch to prevent cross-branch leakage
+  const filteredStores = useMemo(() => {
+    if (!storesData) return []
+    if (!selectedBranchId) return storesData
+    const matched = storesData.filter((s: any) => !s.branch_id || s.branch_id === selectedBranchId)
+    return matched.length > 0 ? matched : storesData
+  }, [storesData, selectedBranchId])
+
+  const filteredWarehouses = useMemo(() => {
+    if (!warehousesData) return []
+    if (!selectedBranchId) return warehousesData
+    const matched = warehousesData.filter((w: any) => !w.branch_id || w.branch_id === selectedBranchId)
+    return matched.length > 0 ? matched : warehousesData
+  }, [warehousesData, selectedBranchId])
+
+  // Auto-select store/branch/warehouse scoped to user's assigned branch
   useEffect(() => {
     if (branchesData && branchesData.length > 0 && !selectedBranchId) {
-      const firstBranch = branchesData[0]
-      setSelectedBranchId(firstBranch.id)
-      setSelectedBranchName(firstBranch.name)
+      const userBranchId = authUser?.branch?.id
+      const assignedBranch = userBranchId
+        ? branchesData.find((b: any) => b.id === userBranchId)
+        : null
+      const targetBranch = assignedBranch || branchesData[0]
+      setSelectedBranchId(targetBranch.id)
+      setSelectedBranchName(targetBranch.name)
     }
-  }, [branchesData, selectedBranchId])
+  }, [branchesData, selectedBranchId, authUser?.branch?.id])
 
   useEffect(() => {
-    if (warehousesData && warehousesData.length > 0 && !selectedWarehouseId) {
-      const firstWarehouse = warehousesData[0]
-      setSelectedWarehouseId(firstWarehouse.id)
-      setSelectedWarehouseName(firstWarehouse.name)
+    if (filteredStores && filteredStores.length > 0) {
+      if (!selectedStoreId || !filteredStores.some((s: any) => s.id === selectedStoreId)) {
+        setSelectedStoreId(filteredStores[0].id)
+        setSelectedStoreName(filteredStores[0].name)
+      }
     }
-  }, [warehousesData, selectedWarehouseId])
+  }, [filteredStores, selectedStoreId])
+
+  useEffect(() => {
+    if (filteredWarehouses && filteredWarehouses.length > 0) {
+      if (!selectedWarehouseId || !filteredWarehouses.some((w: any) => w.id === selectedWarehouseId)) {
+        setSelectedWarehouseId(filteredWarehouses[0].id)
+        setSelectedWarehouseName(filteredWarehouses[0].name)
+      }
+    }
+  }, [filteredWarehouses, selectedWarehouseId])
 
   // ── Keyboard Barcode Scanner & Hotkeys ─────────────────────────────────────
 
@@ -762,15 +786,16 @@ const POSPage: React.FC = () => {
         selectedBranchName={selectedBranchName}
         selectedWarehouseId={selectedWarehouseId}
         selectedWarehouseName={selectedWarehouseName}
-        stores={storesData ?? []}
+        stores={filteredStores}
         branches={branchesData ?? []}
-        warehouses={warehousesData ?? []}
+        warehouses={filteredWarehouses}
         onStoreChange={(id, name) => { setSelectedStoreId(id); setSelectedStoreName(name) }}
         onBranchChange={(id, name) => { setSelectedBranchId(id); setSelectedBranchName(name) }}
         onWarehouseChange={(id, name) => { setSelectedWarehouseId(id); setSelectedWarehouseName(name) }}
         cashRegister={cashRegister}
         currentShift={currentShift}
         cashierName={authUser?.name || 'Cashier'}
+        isSuperAdmin={isSuperAdmin}
       />
 
       {/* ── 2. Top Summary Metrics Bar ────────────────────────────────────── */}

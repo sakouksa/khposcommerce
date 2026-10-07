@@ -1,7 +1,7 @@
 # Backend Folder Structure & Organization
 
 ```
-backend/
+backend-khposcommerce/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/

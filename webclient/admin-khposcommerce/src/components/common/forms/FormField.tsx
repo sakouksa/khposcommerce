@@ -64,8 +64,8 @@ export const getFieldClass = (
   extraClass = ''
 ): string => {
   const errorStyles = error
-    ? 'border-rose-500 dark:border-rose-500 bg-background dark:bg-slate-900/90 text-foreground dark:text-slate-100 placeholder:text-muted-foreground/70 dark:placeholder:text-slate-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-    : 'border-border/80 dark:border-slate-700/80 bg-background dark:bg-slate-900/90 text-foreground dark:text-slate-100 placeholder:text-muted-foreground/70 dark:placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary'
+    ? 'border-destructive bg-background text-foreground placeholder:text-muted-foreground/70 focus:border-destructive focus:ring-2 focus:ring-destructive/20'
+    : 'border-input bg-background text-foreground placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-accent-foreground/30'
 
   return `${baseClass} ${errorStyles} ${extraClass}`.trim()
 }

@@ -27,12 +27,12 @@ import { focusFirstInvalidField } from '@/utils/formValidation'
 import EmptyState from '@/components/shared/EmptyState'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import StatusBadge from '@/components/common/StatusBadge'
-import { FieldError, getFieldClass, TableToolbar, AddButton, ExportButton, ImportButton } from '@/components/common'
+import { FieldError, getFieldClass, TableToolbar, AddButton, ExportButton, ImportButton, HeaderActionsGroup } from '@/components/common'
+import CategoryStatsCards from './components/CategoryStatsCards'
 import { useTranslation } from 'react-i18next'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 import TableActionMenu from '@/components/shared/TableActionMenu'
-import { useThemeStore } from '@/stores/themeStore'
-import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
 
 interface Category {
@@ -54,18 +54,7 @@ interface TreeCategory extends Category {
   children?: TreeCategory[]
 }
 
-const CATEGORY_NAMES_LOCALE: Record<string, Record<string, string>> = {
-  Smartphones: { km: 'ទូរស័ព្ទស្មាតហ្វូន', zh: '智能手机', th: 'สมาร์ทโฟน', vi: 'Điện thoại thông minh', en: 'Smartphones' },
-  Laptops: { km: 'កុំព្យូទ័រយួរដៃ', zh: '笔记本电脑', th: 'แล็ปท็อป', vi: 'Máy tính xách tay', en: 'Laptops' },
-  Monitors: { km: 'អេក្រង់កុំព្យូទ័រ', zh: '显示器', th: 'จอมอนิเตอร์', vi: 'Màn hình máy tính', en: 'Monitors' },
-  Smartwatches: { km: 'នាឡិកាឆ្លាតវៃ', zh: '智能手表', th: 'สมาร์ทวอทช์', vi: 'Đồng hồ thông minh', en: 'Smartwatches' },
-  Keyboards: { km: 'ក្ដារចុច', zh: '键盘', th: 'คีย์บอร์ด', vi: 'Bàn phím', en: 'Keyboards' },
-  Audio: { km: 'ឧបករណ៍សំឡេង', zh: '音频设备', th: 'อุปกรณ์เสียง', vi: 'Thiết bị âm thanh', en: 'Audio' },
-  Cameras: { km: 'ម៉ាស៊ីនថតរូប', zh: '相机', th: 'กล้องถ่ายรูป', vi: 'Máy ảnh', en: 'Cameras' },
-  Chargers: { km: 'ឧបករណ៍សាកថ្ម', zh: '充电器', th: 'ที่ชาร์จ', vi: 'Bộ sạc', en: 'Chargers' },
-  Shoes: { km: 'ស្បែកជើង', zh: '鞋类', th: 'รองเท้า', vi: 'Giày dép', en: 'Shoes' },
-  Apparel: { km: 'សម្លៀកបំពាក់', zh: '服装', th: 'เครื่องแต่งกาย', vi: 'Quần áo', en: 'Apparel' },
-}
+
 
 const getCategoryVisuals = (name: string) => {
   const n = (name || '').toLowerCase()
@@ -103,29 +92,28 @@ const getCategoryVisuals = (name: string) => {
 }
 
 const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, triggerAdd }) => {
-  const { language } = useThemeStore()
-  const { t, i18n } = useTranslation(['products', 'common'])
+  const { t } = useTranslation(['products', 'common'])
   const navigate = useNavigate()
   const qc = useQueryClient()
   const toast = useToast()
-  const { hasPermission } = useAuthStore()
+  const { hasPermission } = usePermission()
 
-  const canCreate = hasPermission('category.create')
-  const canUpdate = hasPermission('category.update')
-  const canDelete = hasPermission('category.delete')
-  const canExport = hasPermission(['category.export', 'category.view'])
-  const canImport = hasPermission(['category.create', 'category.import'])
+  const canCreateCategory = hasPermission('category.create')
+  const canUpdateCategory = hasPermission('category.update')
+  const canDeleteCategory = hasPermission('category.delete')
+  const canExportCategory = hasPermission('category.export')
+  const canImportCategory = hasPermission('category.import')
 
   // Open add modal ONLY when parent triggers it with an active change
   const prevTriggerRef = React.useRef(triggerAdd || 0)
   React.useEffect(() => {
     if (triggerAdd && triggerAdd > 0 && triggerAdd !== prevTriggerRef.current) {
-      if (canCreate) {
+      if (canCreateCategory) {
         openCreateModal()
       }
     }
     prevTriggerRef.current = triggerAdd || 0
-  }, [triggerAdd, canCreate])
+  }, [triggerAdd, canCreateCategory])
 
   const {
     page,
@@ -488,18 +476,11 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
     setExpandedNodes(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
-  const getLocalizedName = (catName: string) => {
-    const lang = language || i18n.language || 'en'
-    if (lang === 'en') return null
-    return CATEGORY_NAMES_LOCALE[catName]?.[lang] || null
-  }
-
   // Render Row Helper
   const renderCategoryRow = (node: TreeCategory | Category, depth = 0, isTree = false) => {
     const hasChildren = (node as TreeCategory).children && (node as TreeCategory).children!.length > 0
     const isExpanded = expandedNodes[node.id] ?? true
     const visuals = getCategoryVisuals(node.name)
-    const localized = getLocalizedName(node.name)
 
     return (
       <tr key={node.id} className="group hover:bg-muted/30 border-b border-border/40 transition-colors">
@@ -550,13 +531,13 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
                 />
               </div>
 
-              {/* Name + Localized translation subtext */}
+              {/* Category Name */}
               <div className="min-w-0 flex flex-col">
                 <span className="font-semibold text-foreground text-sm leading-snug group-hover:text-primary transition-colors">
-                  {language !== 'en' && localized ? localized : node.name}
+                  {node.name}
                 </span>
                 <span className="text-[11px] text-muted-foreground/80 mt-0.5">
-                  {language !== 'en' ? node.name : t('products.colCategory', 'Category')}
+                  {t('products.colCategory', 'Category')}
                 </span>
               </div>
             </div>
@@ -633,7 +614,7 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
         <td className="py-3.5 pr-4 text-right">
           {recycleBinMode ? (
             <div className="flex items-center justify-end gap-1">
-              {canUpdate && (
+              {canUpdateCategory && (
                 <button
                   onClick={() => restoreMutation.mutate(node.id)}
                   className="p-1.5 hover:bg-muted rounded-lg text-indigo-500 hover:text-indigo-600 transition-colors"
@@ -642,7 +623,7 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
                   <RefreshCw size={14} />
                 </button>
               )}
-              {canDelete && (
+              {canDeleteCategory && (
                 <button
                   onClick={() => setDeleteTarget(node)}
                   className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-muted-foreground hover:text-red-500 transition-colors"
@@ -654,8 +635,8 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
             </div>
           ) : (
             <TableActionMenu
-              onEdit={canUpdate ? () => openEditModal(node) : undefined}
-              onDelete={canDelete ? () => setDeleteTarget(node) : undefined}
+              onEdit={canUpdateCategory ? () => openEditModal(node) : undefined}
+              onDelete={canDeleteCategory ? () => setDeleteTarget(node) : undefined}
             />
           )}
         </td>
@@ -681,57 +662,65 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
     <div className="space-y-5">
       {!isTab && (
         <>
-          <Breadcrumb items={[{ label: t('nav.group.productInventory') }, { label: t('nav.categories') }]} />
+          <Breadcrumb
+            items={[
+              { label: t('nav.productManagement', 'Products'), path: '/products' },
+              { label: t('nav.categories', 'Product Categories') },
+            ]}
+          />
 
-          <PageHeader
-            icon={<FolderTree size={24} />}
-            title={t('nav.categories')}
-            subtitle={t('pageContent.categoriesConfigured', { count: pagination.total, defaultValue: `${pagination.total} categories configured` })}
-            action={
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setRecycleBinMode(!recycleBinMode)}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border transition-colors
-                             ${recycleBinMode 
-                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20' 
-                                : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
-                >
-                  <Trash size={15} />
-                  {recycleBinMode ? t('products.recycleBin') : t('products.trash')}
-                </button>
+          {/* Hero Header */}
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+            <div className="space-y-1 min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+                {t('nav.categories', 'Product Categories')}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                {t('pageContent.categoriesConfigured', { count: pagination.total, defaultValue: 'Organize catalog products into hierarchical categories, subcategories, and departments.' })}
+              </p>
+            </div>
 
-                {canExport && (
-                  <button
-                    onClick={handleExport}
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs"
-                  >
-                    <Download size={15} />
-                    {t('products.exportCSV')}
-                  </button>
-                )}
+            <HeaderActionsGroup>
+              <button
+                type="button"
+                onClick={() => setRecycleBinMode(!recycleBinMode)}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border transition-all cursor-pointer ${
+                  recycleBinMode 
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20' 
+                    : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
+              >
+                <Trash size={15} />
+                {recycleBinMode ? t('products.recycleBin') : t('products.trash')}
+              </button>
 
-                {canImport && (
-                  <button
-                    onClick={() => setImportOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs"
-                  >
-                    <Upload size={15} />
-                    {t('products.importCSV')}
-                  </button>
-                )}
+              {canExportCategory && (
+                <ExportButton
+                  onClick={handleExport}
+                  label={t('products.exportCSV', 'Export CSV')}
+                />
+              )}
 
-                {canCreate && (
-                  <button
-                    onClick={openCreateModal}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
-                               bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm"
-                  >
-                    <Plus size={16} />
-                    {t('products.addCategory')}
-                  </button>
-                )}
-              </div>
-            }
+              {canImportCategory && (
+                <ImportButton
+                  onClick={() => setImportOpen(true)}
+                  label={t('products.importCSV', 'Import CSV')}
+                />
+              )}
+
+              {canCreateCategory && (
+                <AddButton
+                  onClick={openCreateModal}
+                  label={t('products.addCategory', 'Add Category')}
+                />
+              )}
+            </HeaderActionsGroup>
+          </div>
+
+          {/* Stats Cards */}
+          <CategoryStatsCards
+            categories={categories}
+            total={pagination.total}
+            isLoading={isLoading}
           />
         </>
       )}
@@ -746,7 +735,7 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
           <div className="flex items-center gap-2">
             {recycleBinMode ? (
               <>
-                {canUpdate && (
+                {canUpdateCategory && (
                   <button
                     onClick={() => bulkRestoreMutation.mutate(selectedRows)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-500 transition-colors shadow-xs"
@@ -755,7 +744,7 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
                     {t('products.restoreSelected')}
                   </button>
                 )}
-                {canDelete && (
+                {canDeleteCategory && (
                   <button
                     onClick={() => {
                       if (confirm('Permanently delete selected categories? This cannot be undone.')) {
@@ -771,7 +760,7 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
                 )}
               </>
             ) : (
-              canDelete && (
+              canDeleteCategory && (
                 <button
                   onClick={() => setBulkDeleteConfirmOpen(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 cursor-pointer transition-colors shadow-xs"
@@ -1069,7 +1058,7 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
                           src={imagePreview}
                           alt="Preview"
                           className="w-full h-full object-contain"
-                          wrapperClassName="w-full h-full flex items-center justify-center cursor-pointer"
+                          rootClassName="w-full h-full flex items-center justify-center cursor-pointer"
                           fallback={DEFAULT_CATEGORY_IMAGE}
                         />
                       ) : (
@@ -1242,10 +1231,10 @@ const CategoriesPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ is
       {/* Unified Delete Confirmation Dialog */}
       <ConfirmDialog
         open={!!deleteTarget}
-        title="categories.deleteTitle"
+        title={t('products.categories.deleteTitle', 'Delete Category')}
         itemName={deleteTarget?.name}
-        confirmText="common.confirmDelete"
-        cancelText="common.cancel"
+        confirmText={t('common.confirmDelete', 'Confirm Delete')}
+        cancelText={t('common.cancel', 'Cancel')}
         onConfirm={() => {
           if (deleteTarget) {
             if (recycleBinMode) {

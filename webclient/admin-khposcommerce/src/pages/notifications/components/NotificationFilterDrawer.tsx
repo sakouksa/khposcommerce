@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Filter, X, RotateCcw, Check, Calendar, Shield, Building2, Layers, Radio } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { CloseButton, ResetButton, ActionButton, EnterpriseDatePicker } from '@/components/common'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 
 interface NotificationFilterDrawerProps {
   open: boolean

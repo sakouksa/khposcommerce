@@ -80,10 +80,10 @@ export const ModernSelect: React.FC<ModernSelectProps> = ({
           value={currentValue}
           disabled={disabled}
           onChange={(e) => onChange?.(e.target.value)}
-          className={`w-full ${heightClass} font-medium rounded-lg border text-foreground focus:outline-none transition-all pr-8 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-background dark:bg-slate-900/90 dark:text-slate-100 ${
+          className={`w-full ${heightClass} font-medium rounded-lg border text-foreground focus:outline-none transition-all pr-8 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-card dark:bg-slate-800/80 text-foreground dark:text-slate-100 shadow-2xs ${
             error
               ? 'border-rose-500 dark:border-rose-500 ring-2 ring-rose-500/20'
-              : 'border-border/80 dark:border-slate-800 focus:ring-2 focus:ring-primary/20 focus:border-primary'
+              : 'border-border/80 dark:border-slate-700/80 hover:border-muted-foreground/40 dark:hover:border-slate-600 focus:ring-2 focus:ring-primary/20 focus:border-primary'
           } ${displayIcon ? 'pl-9' : 'pl-3.5'} ${selectClassName} ${buttonClassName}`}
         >
           {placeholder && !options.some((o) => String(o.value) === '') && (

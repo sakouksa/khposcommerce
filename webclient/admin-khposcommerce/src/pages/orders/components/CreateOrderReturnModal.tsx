@@ -18,7 +18,7 @@ import { orderReturnService } from '@/services/orderReturnService'
 import { useToast } from '@/hooks/useToast'
 import { focusFirstInvalidField } from '@/utils/formValidation'
 import { GlobalFormat } from '@/utils/formatters'
-import type { ReturnFault } from '@/types/orderReturn.types'
+import type { ReturnFault } from '../types'
 
 interface CreateOrderReturnModalProps {
   isOpen: boolean

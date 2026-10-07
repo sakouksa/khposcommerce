@@ -810,5 +810,125 @@
     "Oct": "តុលា",
     "Nov": "វិច្ឆិកា",
     "Dec": "ធ្នូ"
-  }
+  },
+  "stock_alert_cards": {
+    "total_items": "ទំនិញសរុប",
+    "all_catalog": "មុខទំនិញក្នុងប្រព័ន្ធ",
+    "out_of_stock": "ដាច់ស្តុក",
+    "immediate_reorder": "ត្រូវការបញ្ជាទិញបន្ទាន់",
+    "no_out_of_stock": "គ្មានទំនិញដាច់ស្តុកទេ",
+    "low_stock": "ស្តុកតិច",
+    "qty_under_threshold": "បរិមាណ ≤ {{threshold}} ឯកតា",
+    "stock_healthy": "ស្តុកមានតុល្យភាពល្អ",
+    "in_stock": "មានក្នុងស្តុក",
+    "normal_levels": "កម្រិតស្តុកធម្មតា",
+    "high_stock": "ស្តុកច្រើន",
+    "optimal_capacity": "ស្តុកពេញលេញ",
+    "filter_all": "ទាំងអស់",
+    "filter_out_of_stock": "ដាច់ស្តុក",
+    "filter_low_stock": "ស្តុកតិច",
+    "filter_in_stock": "មានក្នុងស្តុក",
+    "filter_high_stock": "ស្តុកច្រើន",
+    "refresh": "ទាញយកឡើងវិញ"
+  },
+  "submenus": {
+    "levels": {
+      "title": "កម្រិតស្តុក & ការជូនដំណឹង",
+      "subtitle": "ត្រួតពិនិត្យចំនួនស្តុកទំនិញតាមឃ្លាំង តាមដានទំនិញជិតអស់ស្តុក និងការជូនដំណឹងស្វ័យប្រវត្តិ។"
+    },
+    "movements": {
+      "title": "ចលនាស្តុកទំនិញ",
+      "subtitle": "ប្រវត្តិលម្អិតនៃបំលាស់ប្តូរស្តុកទំនិញ (នាំចូល នាំចេញ លក់ចេញ ការកែសម្រួល និងការផ្ទេរ)"
+    },
+    "transfers": {
+      "title": "ការផ្ទេរស្តុកទំនិញ",
+      "subtitle": "គ្រប់គ្រង និងតាមដានដំណើរការផ្ទេរទំនិញរវាងឃ្លាំង និងសាខា"
+    },
+    "adjustments": {
+      "title": "ការកែសម្រួលស្តុក",
+      "subtitle": "កត់ត្រា និងអនុម័តការកែតម្រូវចំនួនស្តុក ករណីខូចខាត បាត់បង់ ឬកែតម្រូវជាក់ស្តែង"
+    },
+    "opnames": {
+      "title": "ការត្រួតពិនិត្យស្តុក (Stock Opname)",
+      "subtitle": "បង្កើត និងផ្ទៀងផ្ទាត់បញ្ជីរាប់ស្តុកទំនិញជាក់ស្តែងតាមឃ្លាំង (Cycle Count & Reconciliation)"
+    },
+    "dashboard": {
+      "title": "ការវិភាគ & របាយការណ៍សារពើភ័ណ្ឌ",
+      "subtitle": "ទិដ្ឋភាពទូទៅនៃតម្លៃស្តុកទំនិញ អត្រាប្រើប្រាស់ឃ្លាំង និងសូចនាករសារពើភ័ណ្ឌ"
+    }
+  },
+  "telegram_alert": {
+    "button": "ការជូនដំណឹង Telegram",
+    "sending": "កំពុងផ្ញើ...",
+    "tooltip": "ផ្ញើសារដំណឹងស្តុកទៅកាន់ Telegram",
+    "success": "បានផ្ញើដំណឹងស្តុកទៅកាន់ Telegram ដោយជោគជ័យ",
+    "error": "បរាជ័យក្នុងការផ្ញើដំណឹងទៅ Telegram"
+  },
+  "alertConfigSaved": "បានរក្សាទុកការកំណត់ Alert",
+  "thresholdsApplied": "បានអនុវត្តកម្រិតស្តុកថ្មី",
+  "stock_out_of_stock": "ដាច់ស្តុក",
+  "stock_low_stock": "ស្តុកតិច",
+  "stock_in_stock": "មានក្នុងស្តុក",
+  "stock_high_stock": "ស្តុកច្រើន",
+  "stock_all": "ទាំងអស់",
+  "stock_total_items": "ទំនិញសរុប",
+  "stock_all_catalog": "មុខទំនិញក្នុងប្រព័ន្ធ",
+  "stock_immediate_reorder": "ត្រូវការបញ្ជាទិញបន្ទាន់",
+  "stock_no_out_of_stock": "គ្មានទំនិញដាច់ស្តុកទេ",
+  "stock_healthy": "ស្តុកមានតុល្យភាពល្អ",
+  "stock_normal_levels": "កម្រិតស្តុកធម្មតា",
+  "stock_optimal_capacity": "ស្តុកពេញលេញ",
+  "stock_refresh": "ទាញយកឡើងវិញ",
+  "telegram_alert_btn": "ការជូនដំណឹង Telegram",
+  "telegram_alert_sending": "កំពុងផ្ញើ...",
+  "telegram_alert_tooltip": "ផ្ញើសារដំណឹងស្តុកទៅកាន់ Telegram",
+  "telegram_alert_success": "បានផ្ញើដំណឹងស្តុកទំនិញទៅកាន់ Telegram Bot រួចរាល់!",
+  "telegram_alert_error": "បរាជ័យក្នុងការផ្ញើដំណឹងទៅ Telegram",
+  "telegram_alert_mock": "ដំណឹងស្តុកបានតេស្តផ្ញើ (Mock Mode)។ កំណត់ Bot Token ក្នុង Settings ដើម្បីទទួលសារផ្ទាល់។",
+  "stock_alert_notified": "⚠️ ដំណឹងស្តុក: មានទំនិញដាច់ស្តុក ឬជិតអស់ស្តុក!",
+  "submenu_levels_title": "កម្រិតស្តុក & ការជូនដំណឹង",
+  "submenu_levels_subtitle": "ត្រួតពិនិត្យចំនួនស្តុកទំនិញតាមឃ្លាំង តាមដានទំនិញជិតអស់ស្តុក និងការជូនដំណឹងស្វ័យប្រវត្តិ។",
+  "submenu_movements_title": "ចលនាស្តុកទំនិញ",
+  "submenu_movements_subtitle": "ប្រវត្តិលម្អិតនៃបំលាស់ប្តូរស្តុកទំនិញ (នាំចូល នាំចេញ លក់ចេញ ការកែសម្រួល និងការផ្ទេរ)",
+  "submenu_transfers_title": "ការផ្ទេរស្តុកទំនិញ",
+  "submenu_transfers_subtitle": "គ្រប់គ្រង និងតាមដានដំណើរការផ្ទេរទំនិញរវាងឃ្លាំង និងសាខា",
+  "submenu_adjustments_title": "ការកែសម្រួលស្តុក",
+  "submenu_adjustments_subtitle": "កត់ត្រា និងអនុម័តការកែតម្រូវចំនួនស្តុក ករណីខូចខាត បាត់បង់ ឬកែតម្រូវជាក់ស្តែង",
+  "submenu_opnames_title": "ការត្រួតពិនិត្យស្តុក (Stock Opname)",
+  "submenu_opnames_subtitle": "បង្កើត និងផ្ទៀងផ្ទាត់បញ្ជីរាប់ស្តុកទំនិញជាក់ស្តែងតាមឃ្លាំង (Cycle Count & Reconciliation)",
+  "submenu_dashboard_title": "ការវិភាគ & របាយការណ៍សារពើភ័ណ្ឌ",
+  "submenu_dashboard_subtitle": "ទិដ្ឋភាពទូទៅនៃតម្លៃស្តុកទំនិញ អត្រាប្រើប្រាស់ឃ្លាំង និងសូចនាករសារពើភ័ណ្ឌ",
+  "qty_under_threshold": "បរិមាណ ≤ {{threshold}} ឯកតា",
+  "modal_stock_alert_title": "ការកំណត់ប្រព័ន្ធ Alert ស្តុក & Telegram Bot",
+  "modal_stock_alert_subtitle": "គ្រប់គ្រងការជូនដំណឹងស្តុកទាបស្វ័យប្រវត្តិ និងភ្ជាប់ជាមួយ Telegram Bot ផ្ទាល់ខ្លួន",
+  "telegram_bot_credentials": "ព័ត៌មាន Telegram Bot API",
+  "telegram_hide_guide": "បិទការណែនាំ",
+  "telegram_show_guide": "របៀបបង្កើត Bot",
+  "telegram_guide_title": "📌 ជំហានងាយៗក្នុងការបង្កើត Telegram Bot ផ្ទាល់ខ្លួន:",
+  "telegram_guide_step1": "1. ចូល Telegram ស្វែងរក @BotFather ហើយចុច /newbot ដើម្បីបង្កើត Bot យក Bot Token",
+  "telegram_guide_step2": "2. ស្វែងរក @userinfobot ឬបន្ថែម Bot ទៅក្នុង Group/Channel ដើម្បីទទួលបាន Chat ID",
+  "telegram_guide_step3": "3. បញ្ចូល Token និង Chat ID ខាងក្រោម រួចចុច \"តេស្តផ្ញើ Telegram\" ដើម្បីផ្ទៀងផ្ទាត់",
+  "telegram_bot_token": "Telegram Bot Token",
+  "telegram_chat_id": "Admin / Channel Chat ID",
+  "telegram_chat_id_hint": "អាចប្រើ Chat ID ផ្ទាល់ខ្លួន ឬ Group ID (ឧ. -100xxxxxxxxxx) សម្រាប់ផ្ញើដំណឹងជាក្រុម",
+  "telegram_testing": "កំពុងតេស្ត...",
+  "telegram_test_btn": "តេស្តផ្ញើ Telegram",
+  "telegram_test_success": "បានផ្ញើសារសាកល្បងទៅកាន់ Telegram Bot ដោយជោគជ័យ!",
+  "telegram_test_failed": "បរាជ័យក្នុងការតេស្ត Telegram Bot",
+  "telegram_test_simulated": "តេស្ត Telegram Bot (Simulated) ជោគជ័យ! បញ្ចូល Chat ID ដើម្បីទទួលសារជាក់ស្តែង",
+  "stock_alert_triggers": "ការកំណត់ Alert ស្វ័យប្រវត្តិតាមស្តុក",
+  "low_stock_threshold_label": "កម្រិតព្រមានស្តុកទាប (≤ Threshold Units)",
+  "low_stock_threshold_hint": "នៅពេលទំនិញមានស្តុកស្មើ ឬតិចជាងចំនួននេះ ប្រព័ន្ធនឹងចាត់ទុកជា Low Stock",
+  "auto_telegram_alert": "Alert ស្វ័យប្រវត្តិតាម Telegram Bot",
+  "auto_telegram_alert_hint": "ផ្ញើសារដំណឹងស្វ័យប្រវត្តិទៅកាន់ Telegram ភ្លាមៗពេលមានទំនិញដាច់ស្តុក",
+  "auto_inapp_alert": "Alert Notification ក្នុងប្រព័ន្ធ (In-App)",
+  "auto_inapp_alert_hint": "បង្ហាញសារជូនដំណឹងរំលឹក (Toast / Banner) នៅលើអេក្រង់ពេលចូលមកកាន់ប្រព័ន្ធ",
+  "sound_alert_label": "សំឡេង Alert ស្តុក (Chime Audio)",
+  "sound_alert_hint": "បន្លឺសំឡេងរោទិ៍ស្រាលៗដើម្បីដាស់តឿនបុគ្គលិកនៅពេលមានទំនិញធ្លាក់ដល់កម្រិតព្រមាន",
+  "open_global_settings": "ទៅកាន់ការកំណត់ទូទៅ (Settings)",
+  "save_and_apply": "យល់ព្រម & រក្សាទុក",
+  "saved_local_preferences": "បានរក្សាទុកការកំណត់ក្នុងឧបករណ៍នេះ",
+  "alert_config_saved_applied": "បានរក្សាទុក និងអនុវត្តការកំណត់ Alert រួចរាល់"
 }
+
+

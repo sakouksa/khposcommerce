@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertCircle, ShoppingCart, ShoppingBag, DollarSign,
   ShieldAlert, Settings, Star, Layers, X, Radio, Send, Bell, Code, Mail, Smartphone
 } from 'lucide-react'
-import { Input, Modal, Tooltip, Switch } from 'antd'
+import SearchInput from '@/components/shared/SearchInput'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
@@ -13,7 +13,7 @@ import type { NotificationTemplateItem } from './types/notification.types'
 import { useToast } from '@/hooks/useToast'
 import { sound } from '@/utils/sound'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import PageHeader from '@/components/common/PageHeader'
+import { HeaderActionsGroup, AddButton } from '@/components/common'
 import DeleteConfirmDialog from '@/components/common/DeleteConfirmDialog'
 import Pagination from '@/components/shared/Pagination'
 import TemplateEditorModal from './components/TemplateEditorModal'
@@ -292,13 +292,34 @@ const NotificationTemplateListPage: React.FC = () => {
   return (
     <div className="space-y-5 print:p-0">
       {/* ── 1. BREADCRUMB ─────────────────────────────────────────────────── */}
-      <Breadcrumb items={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Notification Templates' }]} />
-
-      <PageHeader
-        icon={<FileText size={24} />}
-        title={t('notifications.templatesTitle', 'Notification Templates')}
-        subtitle={t('notifications.templatesSubtitle', 'Manage message presets, automated triggers, and localized notification copy')}
+      <Breadcrumb
+        items={[
+          { label: t('nav.notifications', 'Notifications'), path: '/notifications' },
+          { label: t('nav.notificationTemplates', 'Notification Templates') },
+        ]}
       />
+
+      {/* ── 2. FRAMELESS HERO HEADER ────────────────────────────────────────── */}
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+        <div className="space-y-1 min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+            {t('notifications.templatesTitle', 'Notification Templates')}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+            {t('notifications.templatesSubtitle', 'Manage message presets, automated triggers, and localized notification copy')}
+          </p>
+        </div>
+
+        <HeaderActionsGroup>
+          <AddButton
+            onClick={() => {
+              setEditingTemplate(null)
+              setCreateModalOpen(true)
+            }}
+            label={t('notifications.newTemplate', 'New Template')}
+          />
+        </HeaderActionsGroup>
+      </div>
 
       {/* ── 2. TOP 4 SIMPLE YET ELEGANT METRIC CARDS ──────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -465,14 +486,14 @@ const NotificationTemplateListPage: React.FC = () => {
       <div className="bg-card border border-border/80 rounded-[24px] p-4 shadow-sm space-y-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 flex-1 max-w-lg">
-            <Input
+            <SearchInput
               placeholder="Search by code or template name..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onPressEnter={() => fetchTemplates()}
-              prefix={<Search className="w-4 h-4 text-muted-foreground" />}
-              allowClear
-              className="rounded-xl text-xs py-1.5"
+              onChange={(val) => setSearch(val)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') fetchTemplates()
+              }}
+              className="flex-1"
             />
             <button
               onClick={handleResetFilters}
@@ -598,41 +619,37 @@ const NotificationTemplateListPage: React.FC = () => {
 
 
                   <div className="flex items-center gap-0.5 bg-muted/40 dark:bg-muted/30 p-1 rounded-xl border border-border/60">
-                    <Tooltip title="Preview Template">
-                      <button
-                        onClick={() => setPreviewTemplate(record)}
-                        className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200 cursor-pointer"
-                      >
-                        <Eye size={14} />
-                      </button>
-                    </Tooltip>
-                    <Tooltip title="Edit Template">
-                      <button
-                        onClick={() => {
-                          setEditingTemplate(record)
-                          setCreateModalOpen(true)
-                        }}
-                        className="p-1.5 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 rounded-lg transition-all duration-200 cursor-pointer"
-                      >
-                        <Edit2 size={14} />
-                      </button>
-                    </Tooltip>
-                    <Tooltip title="Duplicate Preset">
-                      <button
-                        onClick={() => handleDuplicate(record.id)}
-                        className="p-1.5 text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg transition-all duration-200 cursor-pointer"
-                      >
-                        <Copy size={14} />
-                      </button>
-                    </Tooltip>
-                    <Tooltip title="Delete Template">
-                      <button
-                        onClick={() => handleConfirmDelete(record)}
-                        className="p-1.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all duration-200 cursor-pointer"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </Tooltip>
+                    <button
+                      onClick={() => setPreviewTemplate(record)}
+                      title="Preview Template"
+                      className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all duration-200 cursor-pointer"
+                    >
+                      <Eye size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingTemplate(record)
+                        setCreateModalOpen(true)
+                      }}
+                      title="Edit Template"
+                      className="p-1.5 text-muted-foreground hover:text-amber-500 hover:bg-amber-500/10 rounded-lg transition-all duration-200 cursor-pointer"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDuplicate(record.id)}
+                      title="Duplicate Preset"
+                      className="p-1.5 text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-lg transition-all duration-200 cursor-pointer"
+                    >
+                      <Copy size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleConfirmDelete(record)}
+                      title="Delete Template"
+                      className="p-1.5 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all duration-200 cursor-pointer"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
               </motion.div>

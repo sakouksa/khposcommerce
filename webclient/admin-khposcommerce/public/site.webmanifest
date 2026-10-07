@@ -1,7 +1,7 @@
 {
-  "name": "NexTech Enterprise — Tech Store & POS",
-  "short_name": "NexTech",
-  "description": "Authentic electronics, laptops, smartphones, POS hardware and tech gear in Cambodia.",
+  "name": "KHPosCommerce — Enterprise POS & Omni-Channel Commerce",
+  "short_name": "KHPosCommerce",
+  "description": "Enterprise POS, Multi-branch inventory and commerce management system.",
   "icons": [
     {
       "src": "/favicon-16x16.png",
@@ -36,7 +36,7 @@
       "purpose": "any maskable"
     }
   ],
-  "theme_color": "#e11d48",
+  "theme_color": "#0284c7",
   "background_color": "#ffffff",
   "display": "standalone",
   "start_url": "/"

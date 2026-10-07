@@ -17,7 +17,8 @@ import { useAuthStore } from '@/stores/authStore'
 import SalesReportPage from './SalesReportPage'
 import PurchaseReportPage from './PurchaseReportPage'
 import InventoryReportPage from './InventoryReportPage'
-import { EnterpriseDatePicker } from '@/components/common'
+import { EnterpriseDatePicker, HeaderActionsGroup, ExportButton } from '@/components/common'
+import Breadcrumb from '@/components/common/Breadcrumb'
 
 interface ReportFilters {
   date_from: string
@@ -118,33 +119,42 @@ const ReportsPage: React.FC<{ type?: string }> = ({ type = 'sales' }) => {
   const canExport = hasPermission('report.export')
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">{title}</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">Analyze store metrics and export results</p>
+    <div className="space-y-5 print:p-0">
+      <Breadcrumb
+        items={[
+          { label: t('title', 'Reports'), path: '/reports/sales' },
+          { label: title },
+        ]}
+      />
+
+      {/* Hero Header */}
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+        <div className="space-y-1 min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">{title}</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            {currentType === 'profit-loss'
+              ? 'Analyze gross revenue, operating costs, net profits, and financial margins over selected periods.'
+              : 'Analyze store metrics and export results.'}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
+        <HeaderActionsGroup>
           {canExport && (
-            <button
+            <ExportButton
               onClick={handleExcelExport}
               disabled={exporting}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground border border-border
-                         rounded-lg hover:bg-muted transition-colors font-medium disabled:opacity-60"
-            >
-              {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-              Excel Export
-            </button>
+              label={exporting ? 'Exporting...' : 'Export Excel'}
+            />
           )}
           <button
+            type="button"
             onClick={() => refetch()}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground border border-border
-                       rounded-lg hover:bg-muted transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-muted-foreground border border-border rounded-xl hover:bg-muted transition-colors cursor-pointer"
+            title="Refresh Report Data"
           >
-            <RefreshCw size={14} />
+            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
+            <span>Refresh</span>
           </button>
-        </div>
+        </HeaderActionsGroup>
       </div>
 
       {/* Date Range Filter */}

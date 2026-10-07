@@ -71,7 +71,7 @@ export const ExpenseVoucherPrintModal: React.FC<ExpenseVoucherPrintModalProps> =
                     {expense.title || `Expense #${expense.id}`}
                   </div>
                   <div className="text-slate-500 mt-0.5 text-[11px] leading-relaxed">
-                    {expense.description || 'Regular business operational expense outlay recorded into the corporate general ledger.'}
+                    {expense.description || t('finance.default_regular_desc', 'Regular business operational expense outlay recorded into the corporate general ledger.')}
                   </div>
                 </td>
                 <td className="py-3 px-4 border-r border-slate-200/80">
@@ -112,7 +112,7 @@ export const ExpenseVoucherPrintModal: React.FC<ExpenseVoucherPrintModalProps> =
               {t('finance.payment_method', 'Payment Method')}:
             </span>
             <span className="font-bold text-slate-800 text-xs mt-0.5 block">
-              {expense.payment_method?.name || 'Cash / Corporate Account'}
+              {expense.payment_method?.name || t('finance.cash_corporate_account', 'Cash / Corporate Account')}
             </span>
           </div>
           <div>
@@ -138,17 +138,17 @@ export const ExpenseVoucherPrintModal: React.FC<ExpenseVoucherPrintModalProps> =
         signatures={[
           {
             titleLocalized: t('finance.prepared_by', 'Prepared By'),
-            name: expense.created_by_user?.name || 'Staff Member',
+            name: expense.created_by_user?.name || t('finance.staff_member', 'Staff Member'),
             role: t('finance.applicant_role', 'Applicant / Staff'),
           },
           {
             titleLocalized: t('finance.verified_by', 'Verified By'),
-            name: authUser?.name || 'Super Admin',
+            name: authUser?.name || t('finance.super_admin', 'Super Admin'),
             role: t('finance.accountant_role', 'Finance Officer / Cashier'),
           },
           {
             titleLocalized: t('finance.authorized_by', 'Authorized By'),
-            name: 'Finance Director',
+            name: t('finance.finance_director', 'Finance Director'),
             role: t('finance.manager_role', 'Managing Director / Approver'),
           },
         ]}

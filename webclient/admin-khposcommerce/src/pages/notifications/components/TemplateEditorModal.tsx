@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Switch, Tooltip } from 'antd'
 import {
-  FileText, Sparkles, Monitor, Smartphone, Save, Eye, X,
-  Tag, Layers, Bell, CheckCircle2, AlertTriangle, Info, Code, Send
+  FileText, Sparkles, Monitor, Save, X,
+  Bell, Info
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -10,7 +9,11 @@ import type { NotificationTemplateItem } from '../types/notification.types'
 import notificationService from '@/services/notificationService'
 import { useToast } from '@/hooks/useToast'
 import { sound } from '@/utils/sound'
-import ModernSelect from '@/pages/pos/components/ModernSelect'
+import ModernSelect from '@/components/shared/ModernSelect'
+import { Input } from '@/components/common/forms/Input'
+import { Textarea } from '@/components/ui/textarea'
+import { FieldLabel, FieldError } from '@/components/common/forms/FormField'
+import ToggleSwitch from '@/components/common/ToggleSwitch'
 
 interface TemplateEditorModalProps {
   open: boolean
@@ -52,21 +55,19 @@ const SAMPLE_DATA: Record<string, string> = {
 }
 
 const TYPE_OPTIONS = [
-  { value: 'system', label: 'System Alerts', subtitle: 'Automated system triggers' },
-  { value: 'inventory', label: 'Inventory Presets', subtitle: 'Low stock & movements' },
-  { value: 'sales', label: 'Sales Presets', subtitle: 'Orders & checkout alerts' },
-  { value: 'purchase', label: 'Purchase Presets', subtitle: 'PO & supplier receipts' },
-  { value: 'finance', label: 'Finance & Expense', subtitle: 'Payments & cash flow' },
-  { value: 'employee', label: 'Employee & Attendance', subtitle: 'Late check-in & shifts' },
-  { value: 'security', label: 'Security & Audit', subtitle: 'Login & permission alerts' },
-  { value: 'marketing', label: 'Marketing Presets', subtitle: 'Promotions & announcements' },
+  { value: 'system', label: 'System Alerts' },
+  { value: 'inventory', label: 'Inventory Presets' },
+  { value: 'sales', label: 'Sales Presets' },
+  { value: 'purchase', label: 'Purchase Presets' },
+  { value: 'finance', label: 'Finance & Expense' },
+  { value: 'employee', label: 'Employee & Attendance' },
 ]
 
 const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Low Priority', badge: 'LOW' },
-  { value: 'normal', label: 'Normal Priority', badge: 'NORMAL' },
-  { value: 'high', label: 'High Priority', badge: 'HIGH' },
-  { value: 'critical', label: 'Critical Priority', badge: 'CRITICAL' },
+  { value: 'low', label: 'Low Priority' },
+  { value: 'normal', label: 'Normal Priority' },
+  { value: 'high', label: 'High Priority' },
+  { value: 'critical', label: 'Critical Priority' },
 ]
 
 const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
@@ -77,40 +78,61 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
 }) => {
   const { t } = useTranslation()
   const toast = useToast()
-  const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor')
   const [activeDevice, setActiveDevice] = useState<'desktop' | 'mobile'>('desktop')
 
-  const [titleTemplate, setTitleTemplate] = useState('')
-  const [messageTemplate, setMessageTemplate] = useState('')
-  const [isActiveStatus, setIsActiveStatus] = useState(true)
+  const [formData, setFormData] = useState<Record<string, any>>({
+    code: '',
+    name: '',
+    type: 'system',
+    priority: 'normal',
+    title_template: '',
+    message_template: '',
+    is_active: true,
+  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (open) {
       if (template) {
-        form.setFieldsValue(template)
-        setTitleTemplate(template.title_template || '')
-        setMessageTemplate(template.message_template || '')
-        setIsActiveStatus(!!template.is_active)
+        setFormData({
+          code: template.code || '',
+          name: template.name || '',
+          type: template.type || 'system',
+          priority: template.priority || 'normal',
+          title_template: template.title_template || '',
+          message_template: template.message_template || '',
+          is_active: template.is_active !== false,
+        })
       } else {
-        form.resetFields()
-        const initialVal = { priority: 'normal', type: 'system', is_active: true }
-        form.setFieldsValue(initialVal)
-        setTitleTemplate('')
-        setMessageTemplate('')
-        setIsActiveStatus(true)
+        setFormData({
+          code: '',
+          name: '',
+          type: 'system',
+          priority: 'normal',
+          title_template: '',
+          message_template: '',
+          is_active: true,
+        })
       }
+      setErrors({})
     }
-  }, [open, template, form])
+  }, [open, template])
 
   if (!open) return null
 
+  const handleFieldChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: '' }))
+    }
+  }
+
   const handleInsertVariable = (variable: string) => {
-    const currentMsg = form.getFieldValue('message_template') || ''
+    const currentMsg = formData.message_template || ''
     const updated = currentMsg ? `${currentMsg} ${variable}` : variable
-    form.setFieldsValue({ message_template: updated })
-    setMessageTemplate(updated)
+    handleFieldChange('message_template', updated)
   }
 
   const renderLiveText = (tmpl: string) => {
@@ -122,19 +144,37 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     return rendered
   }
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields()
-      setLoading(true)
+  const validate = () => {
+    const newErrors: Record<string, string> = {}
+    if (!formData.code?.trim()) newErrors.code = 'Please enter template code'
+    if (!formData.name?.trim()) newErrors.name = 'Please enter template name'
+    if (!formData.type) newErrors.type = 'Please select preset category'
+    if (!formData.priority) newErrors.priority = 'Please select priority'
+    if (!formData.title_template?.trim()) newErrors.title_template = 'Please enter title template'
+    if (!formData.message_template?.trim()) newErrors.message_template = 'Please enter message template payload'
 
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    if (!validate()) {
+      sound.playError()
+      toast.error('Please fill in all required fields.')
+      return
+    }
+
+    try {
+      setLoading(true)
       let resultItem: NotificationTemplateItem | null = null
 
       if (template) {
-        resultItem = await notificationService.updateTemplate(template.id, values)
+        resultItem = await notificationService.updateTemplate(template.id, formData)
         sound.playSuccess()
         toast.success('Notification template updated successfully!')
       } else {
-        resultItem = await notificationService.createTemplate(values)
+        resultItem = await notificationService.createTemplate(formData)
         sound.playSuccess()
         toast.success('Notification template created successfully!')
       }
@@ -161,7 +201,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
           className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
         />
 
-        {/* Slide-over Drawer Panel matching Inventory & Preview Drawers */}
+        {/* Slide-over Drawer Panel */}
         <motion.div
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
@@ -219,230 +259,218 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
 
           {/* ── 3. DRAWER BODY ───────────────────────────────────────────────── */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            <Form
-              form={form}
-              layout="vertical"
-              onValuesChange={(_, all) => {
-                setTitleTemplate(all.title_template || '')
-                setMessageTemplate(all.message_template || '')
-                setIsActiveStatus(all.is_active !== false)
-              }}
-            >
-              {activeTab === 'editor' ? (
-                <div className="space-y-5">
-                  {/* SECTION 1: BASIC IDENTIFICATION */}
-                  <div className="p-4 bg-muted/30 border border-border/70 rounded-2xl space-y-4 shadow-2xs">
-                    <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-2">
-                      BASIC IDENTIFICATION
-                    </h4>
+            {activeTab === 'editor' ? (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* SECTION 1: BASIC IDENTIFICATION */}
+                <div className="p-4 bg-muted/30 border border-border/70 rounded-2xl space-y-4 shadow-2xs">
+                  <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-2">
+                    BASIC IDENTIFICATION
+                  </h4>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Form.Item
-                        label={<span className="text-xs font-bold text-foreground">Template Code</span>}
-                        name="code"
-                        rules={[{ required: true, message: 'Please enter template code' }]}
-                        className="mb-0"
-                      >
-                        <Input
-                          placeholder="e.g. ATTENDANCE_LATE"
-                          disabled={!!template}
-                          className="rounded-xl text-xs h-[38px] font-mono font-bold border-border/80 focus:border-primary"
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={<span className="text-xs font-bold text-foreground">Template Name</span>}
-                        name="name"
-                        rules={[{ required: true, message: 'Please enter template name' }]}
-                        className="mb-0"
-                      >
-                        <Input
-                          placeholder="e.g. Late Attendance Alert"
-                          className="rounded-xl text-xs h-[38px] font-semibold border-border/80 focus:border-primary"
-                        />
-                      </Form.Item>
-                    </div>
-                  </div>
-
-                  {/* SECTION 2: CATEGORIZATION & PRIORITY (USING MODERNSELECT) */}
-                  <div className="p-4 bg-muted/30 border border-border/70 rounded-2xl space-y-4 shadow-2xs">
-                    <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-2">
-                      CATEGORIZATION & PRIORITY
-                    </h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Form.Item
-                        label={<span className="text-xs font-bold text-foreground">Preset Category (Type)</span>}
-                        name="type"
-                        rules={[{ required: true, message: 'Please select preset category' }]}
-                        className="mb-0"
-                      >
-                        <ModernSelect
-                          placeholder="Select category type..."
-                          options={TYPE_OPTIONS}
-                          size="md"
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        label={<span className="text-xs font-bold text-foreground">Priority Level</span>}
-                        name="priority"
-                        rules={[{ required: true, message: 'Please select priority' }]}
-                        className="mb-0"
-                      >
-                        <ModernSelect
-                          placeholder="Select priority..."
-                          options={PRIORITY_OPTIONS}
-                          size="md"
-                        />
-                      </Form.Item>
-                    </div>
-                  </div>
-
-                  {/* SECTION 3: NOTIFICATION PAYLOAD CONTENT */}
-                  <div className="p-4 bg-muted/30 border border-border/70 rounded-2xl space-y-4 shadow-2xs">
-                    <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-2">
-                      NOTIFICATION PAYLOAD CONTENT
-                    </h4>
-
-                    <Form.Item
-                      label={<span className="text-xs font-bold text-foreground">Title Template (Subject)</span>}
-                      name="title_template"
-                      rules={[{ required: true, message: 'Please enter title template' }]}
-                    >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <FieldLabel label="Template Code" required />
                       <Input
-                        placeholder="e.g. Late Attendance Alert: {employee_name}"
-                        className="rounded-xl text-xs h-[38px] font-semibold border-border/80 focus:border-primary"
+                        placeholder="e.g. ATTENDANCE_LATE"
+                        disabled={!!template}
+                        value={formData.code}
+                        onChange={(e) => handleFieldChange('code', e.target.value)}
+                        error={errors.code}
+                        className="font-mono font-bold"
                       />
-                    </Form.Item>
-
-                    {/* Dynamic Variable Insertion Bar */}
-                    <div className="space-y-1.5">
-                      <span className="text-[11px] font-bold text-muted-foreground block">
-                        Click Variable to Insert into Payload Message:
-                      </span>
-                      <div className="flex flex-wrap gap-1.5 p-3 bg-card rounded-xl border border-border/70 shadow-2xs">
-                        {SUPPORTED_VARIABLES.map((v) => (
-                          <button
-                            type="button"
-                            key={v}
-                            onClick={() => handleInsertVariable(v)}
-                            className="text-[11px] font-mono font-bold px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white transition-all cursor-pointer shadow-2xs"
-                          >
-                            {v}
-                          </button>
-                        ))}
-                      </div>
+                      <FieldError error={errors.code} />
                     </div>
 
-                    <Form.Item
-                      label={<span className="text-xs font-bold text-foreground">Message Payload Template</span>}
-                      name="message_template"
-                      rules={[{ required: true, message: 'Please enter message template payload' }]}
-                      className="mb-0"
-                    >
-                      <Input.TextArea
-                        rows={4}
-                        placeholder="e.g. Employee {employee_name} checked in late at {check_in_time}."
-                        className="rounded-xl text-xs py-2 leading-relaxed font-sans"
+                    <div className="space-y-1">
+                      <FieldLabel label="Template Name" required />
+                      <Input
+                        placeholder="e.g. Late Attendance Alert"
+                        value={formData.name}
+                        onChange={(e) => handleFieldChange('name', e.target.value)}
+                        error={errors.name}
+                        className="font-semibold"
                       />
-                    </Form.Item>
-                  </div>
-
-                  {/* SECTION 4: ACTIVATION & STATUS TOGGLE */}
-                  <div className="p-4 bg-muted/30 border border-border/70 rounded-2xl flex items-center justify-between shadow-2xs">
-                    <div>
-                      <span className="text-xs font-bold text-foreground block">Preset Active Status</span>
-                      <span className="text-[11px] text-muted-foreground">Enable this template for real-time system dispatch</span>
+                      <FieldError error={errors.name} />
                     </div>
-
-                    <Form.Item name="is_active" valuePropName="checked" className="mb-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-bold ${isActiveStatus ? 'text-primary' : 'text-muted-foreground'}`}>
-                          {isActiveStatus ? 'Active' : 'Off'}
-                        </span>
-                        <Switch
-                          checked={isActiveStatus}
-                          onChange={(checked) => setIsActiveStatus(checked)}
-                          style={{ backgroundColor: isActiveStatus ? 'hsl(var(--primary))' : undefined }}
-                        />
-                      </div>
-                    </Form.Item>
                   </div>
                 </div>
-              ) : (
-                /* LIVE PREVIEW TAB */
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between pb-2 border-b border-border/40">
-                    <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-                      <Eye size={16} className="text-primary" />
-                      <span>Live Multi-Channel Dispatch Preview</span>
+
+                {/* SECTION 2: CATEGORIZATION & PRIORITY */}
+                <div className="p-4 bg-muted/30 border border-border/70 rounded-2xl space-y-4 shadow-2xs">
+                  <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-2">
+                    CATEGORIZATION & PRIORITY
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <FieldLabel label="Preset Category (Type)" required />
+                      <ModernSelect
+                        placeholder="Select category type..."
+                        options={TYPE_OPTIONS}
+                        value={formData.type}
+                        onChange={(val) => handleFieldChange('type', val)}
+                        error={errors.type}
+                        size="md"
+                      />
+                      <FieldError error={errors.type} />
                     </div>
 
-                    <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setActiveDevice('desktop')}
-                        className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                          activeDevice === 'desktop' ? 'bg-card text-primary shadow-2xs font-bold' : 'text-muted-foreground'
-                        }`}
-                      >
-                        <Monitor size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveDevice('mobile')}
-                        className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                          activeDevice === 'mobile' ? 'bg-card text-primary shadow-2xs font-bold' : 'text-muted-foreground'
-                        }`}
-                      >
-                        <Smartphone size={15} />
-                      </button>
+                    <div className="space-y-1">
+                      <FieldLabel label="Priority Level" required />
+                      <ModernSelect
+                        placeholder="Select priority..."
+                        options={PRIORITY_OPTIONS}
+                        value={formData.priority}
+                        onChange={(val) => handleFieldChange('priority', val)}
+                        error={errors.priority}
+                        size="md"
+                      />
+                      <FieldError error={errors.priority} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 3: NOTIFICATION PAYLOAD CONTENT */}
+                <div className="p-4 bg-muted/30 border border-border/70 rounded-2xl space-y-4 shadow-2xs">
+                  <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-2">
+                    NOTIFICATION PAYLOAD CONTENT
+                  </h4>
+
+                  <div className="space-y-1">
+                    <FieldLabel label="Title Template (Subject)" required />
+                    <Input
+                      placeholder="e.g. Late Attendance Alert: {employee_name}"
+                      value={formData.title_template}
+                      onChange={(e) => handleFieldChange('title_template', e.target.value)}
+                      error={errors.title_template}
+                      className="font-semibold"
+                    />
+                    <FieldError error={errors.title_template} />
+                  </div>
+
+                  {/* Dynamic Variable Insertion Bar */}
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-bold text-muted-foreground block">
+                      Click Variable to Insert into Payload Message:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5 p-3 bg-card rounded-xl border border-border/70 shadow-2xs">
+                      {SUPPORTED_VARIABLES.map((v) => (
+                        <button
+                          type="button"
+                          key={v}
+                          onClick={() => handleInsertVariable(v)}
+                          title={`Insert ${v}`}
+                          className="text-[11px] font-mono font-bold px-2 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white transition-all cursor-pointer shadow-2xs"
+                        >
+                          {v}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  {activeDevice === 'desktop' ? (
-                    /* Desktop Toast Preview */
-                    <div className="p-6 bg-slate-900 rounded-3xl border border-slate-800 flex items-center justify-center min-h-[240px]">
-                      <div className="w-full max-w-sm bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-2xl space-y-2">
-                        <div className="flex items-center justify-between border-b border-slate-700/60 pb-2">
-                          <div className="flex items-center gap-2">
-                            <Bell className="w-4 h-4 text-sky-400" />
-                            <span className="text-xs font-bold text-slate-200">Enterprise POS</span>
-                          </div>
-                          <span className="text-[10px] text-slate-400">Just now</span>
+                  <div className="space-y-1">
+                    <FieldLabel label="Message Payload Template" required />
+                    <Textarea
+                      rows={4}
+                      placeholder="e.g. Employee {employee_name} checked in late at {check_in_time}."
+                      value={formData.message_template}
+                      onChange={(e) => handleFieldChange('message_template', e.target.value)}
+                      className="rounded-xl text-xs py-2 leading-relaxed"
+                    />
+                    <FieldError error={errors.message_template} />
+                  </div>
+                </div>
+
+                {/* SECTION 4: ACTIVATION & STATUS TOGGLE */}
+                <div className="p-4 bg-muted/30 border border-border/70 rounded-2xl flex items-center justify-between shadow-2xs">
+                  <div>
+                    <span className="text-xs font-bold text-foreground block">Preset Active Status</span>
+                    <span className="text-[11px] text-muted-foreground">Enable this template for real-time system dispatch</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-bold ${formData.is_active ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {formData.is_active ? 'Active' : 'Off'}
+                    </span>
+                    <ToggleSwitch
+                      checked={Boolean(formData.is_active)}
+                      onChange={(checked) => handleFieldChange('is_active', checked)}
+                    />
+                  </div>
+                </div>
+              </form>
+            ) : (
+              /* LIVE PREVIEW TAB */
+              <div className="space-y-6">
+                <div className="flex items-center justify-between pb-2 border-b border-border/40">
+                  <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                    <Eye size={16} className="text-primary" />
+                    <span>Live Multi-Channel Dispatch Preview</span>
+                  </div>
+
+                  <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setActiveDevice('desktop')}
+                      className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                        activeDevice === 'desktop' ? 'bg-card text-primary shadow-2xs font-bold' : 'text-muted-foreground'
+                      }`}
+                    >
+                      <Monitor size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDevice('mobile')}
+                      className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                        activeDevice === 'mobile' ? 'bg-card text-primary shadow-2xs font-bold' : 'text-muted-foreground'
+                      }`}
+                    >
+                      <Bell size={15} />
+                    </button>
+                  </div>
+                </div>
+
+                {activeDevice === 'desktop' ? (
+                  /* Desktop Toast Preview */
+                  <div className="p-6 bg-slate-900 rounded-3xl border border-slate-800 flex items-center justify-center min-h-[240px]">
+                    <div className="w-full max-w-sm bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 shadow-2xl space-y-2">
+                      <div className="flex items-center justify-between border-b border-slate-700/60 pb-2">
+                        <div className="flex items-center gap-2">
+                          <Bell className="w-4 h-4 text-sky-400" />
+                          <span className="text-xs font-bold text-slate-200">Enterprise POS</span>
                         </div>
-                        <h5 className="font-bold text-sm text-white">
-                          {renderLiveText(titleTemplate) || 'Notification Subject Preview'}
-                        </h5>
-                        <p className="text-xs text-slate-300 leading-relaxed">
-                          {renderLiveText(messageTemplate) || 'Template payload content will render dynamically here...'}
+                        <span className="text-[10px] text-slate-400">Just now</span>
+                      </div>
+                      <h5 className="font-bold text-sm text-white">
+                        {renderLiveText(formData.title_template) || 'Notification Subject Preview'}
+                      </h5>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {renderLiveText(formData.message_template) || 'Template payload content will render dynamically here...'}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  /* Mobile Screen Push Preview */
+                  <div className="flex justify-center p-4 bg-muted/20 rounded-3xl border border-border/40">
+                    <div className="w-64 h-[320px] bg-slate-950 border-4 border-slate-700 rounded-[32px] p-3 shadow-2xl flex flex-col space-y-3 relative overflow-hidden">
+                      <div className="w-16 h-2 bg-slate-800 rounded-full mx-auto" />
+                      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px] text-slate-400">
+                          <span className="font-bold text-sky-400">Enterprise POS</span>
+                          <span>now</span>
+                        </div>
+                        <h6 className="font-bold text-xs text-white leading-tight">
+                          {renderLiveText(formData.title_template) || 'Mobile Push Subject'}
+                        </h6>
+                        <p className="text-[11px] text-slate-300 line-clamp-3 leading-snug">
+                          {renderLiveText(formData.message_template) || 'Mobile notification preview message...'}
                         </p>
                       </div>
                     </div>
-                  ) : (
-                    /* Mobile Screen Push Preview */
-                    <div className="flex justify-center p-4 bg-muted/20 rounded-3xl border border-border/40">
-                      <div className="w-64 h-[320px] bg-slate-950 border-4 border-slate-700 rounded-[32px] p-3 shadow-2xl flex flex-col space-y-3 relative overflow-hidden">
-                        <div className="w-16 h-2 bg-slate-800 rounded-full mx-auto" />
-                        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg space-y-1.5">
-                          <div className="flex items-center justify-between text-[10px] text-slate-400">
-                            <span className="font-bold text-sky-400">Enterprise POS</span>
-                            <span>now</span>
-                          </div>
-                          <h6 className="font-bold text-xs text-white leading-tight">
-                            {renderLiveText(titleTemplate) || 'Mobile Push Subject'}
-                          </h6>
-                          <p className="text-[11px] text-slate-300 line-clamp-3 leading-snug">
-                            {renderLiveText(messageTemplate) || 'Mobile notification preview message...'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </Form>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* ── 4. STICKY FOOTER ────────────────────────────────────────────── */}
@@ -462,7 +490,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
               </button>
               <button
                 type="button"
-                onClick={handleSubmit}
+                onClick={() => handleSubmit()}
                 disabled={loading}
                 className="flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-primary text-white hover:opacity-90 transition-all cursor-pointer shadow-md"
               >

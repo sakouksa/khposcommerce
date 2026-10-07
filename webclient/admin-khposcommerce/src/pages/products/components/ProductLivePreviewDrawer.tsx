@@ -84,7 +84,7 @@ export const ProductLivePreviewDrawer: React.FC<ProductLivePreviewDrawerProps> =
                       src={allImages[selectedImageIndex] || allImages[0]}
                       alt="Preview"
                       className="w-full h-full object-cover"
-                      wrapperClassName="w-full h-full flex items-center justify-center cursor-pointer"
+                      rootClassName="w-full h-full flex items-center justify-center cursor-pointer"
                       fallback={DEFAULT_PRODUCT_IMAGE}
                       preview={{
                         mask: (

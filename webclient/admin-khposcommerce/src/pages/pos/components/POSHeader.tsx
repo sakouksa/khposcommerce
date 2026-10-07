@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Store, Building2, Warehouse, Monitor, Clock, Wifi, WifiOff, User, ShieldCheck } from 'lucide-react'
+import { Store, Building2, Warehouse, Monitor, Clock, Wifi, WifiOff, User, ShieldCheck, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { ModernSelect } from './ModernSelect'
 
@@ -27,6 +27,7 @@ interface POSHeaderProps {
   currentShift: string
   // Auth
   cashierName: string
+  isSuperAdmin?: boolean
 }
 
 export const POSHeader: React.FC<POSHeaderProps> = ({
@@ -45,6 +46,7 @@ export const POSHeader: React.FC<POSHeaderProps> = ({
   cashRegister,
   currentShift,
   cashierName,
+  isSuperAdmin = false,
 }) => {
   const { t } = useTranslation(['pos', 'common'])
   const [isOnline, setIsOnline] = useState(navigator.onLine)
@@ -82,6 +84,11 @@ export const POSHeader: React.FC<POSHeaderProps> = ({
   const warehouseOptions = warehouses.length > 0
     ? warehouses.map(w => ({ value: w.id, label: w.name }))
     : [{ value: selectedWarehouseId ?? 0, label: selectedWarehouseName || t('warehouse', 'Warehouse') }]
+
+  // Permissions: Only Super Admin with multiple branches can switch branches
+  const canSwitchBranch = Boolean(isSuperAdmin && branches.length > 1)
+  const canSwitchStore = Boolean(isSuperAdmin && stores.length > 1)
+  const canSwitchWarehouse = warehouses.length > 1
 
   return (
     <div className="bg-card border border-border/80 rounded-3xl p-3.5 sm:p-4 md:p-5 shadow-2xs backdrop-blur-md space-y-3 sm:space-y-3.5">
@@ -129,6 +136,22 @@ export const POSHeader: React.FC<POSHeaderProps> = ({
             <span className="font-bold text-primary font-mono">{timeStr}</span>
           </div>
 
+          {/* Branch & Register Compact Badges for Branch Staff/Admin when cards are hidden */}
+          {!isSuperAdmin && (
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <Building2 size={13} />
+                <span className="truncate max-w-[130px] sm:max-w-[220px]" title={selectedBranchName || branchOptions[0]?.label}>
+                  {selectedBranchName || branchOptions[0]?.label}
+                </span>
+              </div>
+              <div className="hidden sm:flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-xl text-xs font-semibold text-purple-600 dark:text-purple-400">
+                <Monitor size={13} />
+                <span>{cashRegister} • {currentShift}</span>
+              </div>
+            </div>
+          )}
+
           {/* Cashier Badge — dynamic from auth */}
           <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/20 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-xs font-semibold text-primary">
             <User size={13} />
@@ -137,64 +160,113 @@ export const POSHeader: React.FC<POSHeaderProps> = ({
         </div>
       </div>
 
-      {/* Selectors Bar: Store, Branch, Warehouse, Register */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 text-xs">
-        <div className="flex items-center gap-2 bg-muted/20 border border-border/70 hover:border-primary/40 transition-colors rounded-2xl px-3 py-2">
-          <Store size={15} className="text-primary shrink-0" />
-          <div className="flex-1 min-w-0">
-            <span className="text-[10px] text-muted-foreground block leading-tight font-medium">{t('store', 'Store')}</span>
-            <ModernSelect
-              value={selectedStoreId ?? storeOptions[0]?.value}
-              onChange={(val) => {
-                const found = stores.find(s => String(s.id) === String(val))
-                if (found) onStoreChange(found.id, found.name)
-              }}
-              options={storeOptions}
-              buttonClassName="border-none bg-transparent p-0 shadow-none text-xs font-bold text-foreground hover:bg-transparent"
-            />
+      {/* Selectors Bar: Only visible to Super Admin (Hidden for Branch Admin / Staff) */}
+      {isSuperAdmin && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 text-xs">
+          {/* Store Box */}
+          <div className="flex items-center gap-2 bg-muted/20 border border-border/70 rounded-2xl px-3 py-2">
+            <Store size={15} className="text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-[10px] text-muted-foreground block leading-tight font-medium">{t('store', 'Store')}</span>
+                {!canSwitchStore && (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-primary bg-primary/10 px-1.5 py-0.2 rounded-full border border-primary/20">
+                    <Lock size={8} /> {t('fixed', 'កំណត់ដាច់ខាត')}
+                  </span>
+                )}
+              </div>
+              {canSwitchStore ? (
+                <ModernSelect
+                  value={selectedStoreId ?? storeOptions[0]?.value}
+                  onChange={(val) => {
+                    const found = stores.find(s => String(s.id) === String(val))
+                    if (found) onStoreChange(found.id, found.name)
+                  }}
+                  options={storeOptions}
+                  buttonClassName="border-none bg-transparent p-0 shadow-none text-xs font-bold text-foreground hover:bg-transparent"
+                />
+              ) : (
+                <div className="font-bold text-xs text-foreground truncate" title={selectedStoreName || storeOptions[0]?.label}>
+                  {selectedStoreName || storeOptions[0]?.label || t('store', 'Store')}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 bg-muted/20 border border-border/70 hover:border-primary/40 transition-colors rounded-2xl px-3 py-2">
-          <Building2 size={15} className="text-emerald-500 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <span className="text-[10px] text-muted-foreground block leading-tight font-medium">{t('branch', 'Branch')}</span>
-            <ModernSelect
-              value={selectedBranchId ?? branchOptions[0]?.value}
-              onChange={(val) => {
-                const found = branches.find(b => String(b.id) === String(val))
-                if (found) onBranchChange(found.id, found.name)
-              }}
-              options={branchOptions}
-              buttonClassName="border-none bg-transparent p-0 shadow-none text-xs font-bold text-foreground hover:bg-transparent"
-            />
+          {/* Branch Box with Strict Security Lock */}
+          <div className="flex items-center gap-2 bg-muted/20 border border-border/70 rounded-2xl px-3 py-2">
+            <Building2 size={15} className="text-emerald-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-[10px] text-muted-foreground block leading-tight font-medium">{t('branch', 'Branch')}</span>
+                {!canSwitchBranch ? (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                    <Lock size={8} /> {t('lockedBranch', 'កំណត់តាមសាខា')}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-1.5 py-0.5 rounded-full border border-blue-500/20">
+                    Super Admin
+                  </span>
+                )}
+              </div>
+              {canSwitchBranch ? (
+                <ModernSelect
+                  value={selectedBranchId ?? branchOptions[0]?.value}
+                  onChange={(val) => {
+                    const found = branches.find(b => String(b.id) === String(val))
+                    if (found) onBranchChange(found.id, found.name)
+                  }}
+                  options={branchOptions}
+                  buttonClassName="border-none bg-transparent p-0 shadow-none text-xs font-bold text-foreground hover:bg-transparent"
+                />
+              ) : (
+                <div className="font-bold text-xs text-foreground truncate" title={selectedBranchName || branchOptions[0]?.label}>
+                  {selectedBranchName || branchOptions[0]?.label || t('branch', 'Branch')}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 bg-muted/20 border border-border/70 hover:border-primary/40 transition-colors rounded-2xl px-3 py-2">
-          <Warehouse size={15} className="text-amber-500 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <span className="text-[10px] text-muted-foreground block leading-tight font-medium">{t('warehouse', 'Warehouse')}</span>
-            <ModernSelect
-              value={selectedWarehouseId ?? warehouseOptions[0]?.value}
-              onChange={(val) => {
-                const found = warehouses.find(w => String(w.id) === String(val))
-                if (found) onWarehouseChange(found.id, found.name)
-              }}
-              options={warehouseOptions}
-              buttonClassName="border-none bg-transparent p-0 shadow-none text-xs font-bold text-foreground hover:bg-transparent"
-            />
+          {/* Warehouse Box */}
+          <div className="flex items-center gap-2 bg-muted/20 border border-border/70 rounded-2xl px-3 py-2">
+            <Warehouse size={15} className="text-amber-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-[10px] text-muted-foreground block leading-tight font-medium">{t('warehouse', 'Warehouse')}</span>
+                {!canSwitchWarehouse && (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-500/20">
+                    <Lock size={8} /> {t('fixed', 'កំណត់ដាច់ខាត')}
+                  </span>
+                )}
+              </div>
+              {canSwitchWarehouse ? (
+                <ModernSelect
+                  value={selectedWarehouseId ?? warehouseOptions[0]?.value}
+                  onChange={(val) => {
+                    const found = warehouses.find(w => String(w.id) === String(val))
+                    if (found) onWarehouseChange(found.id, found.name)
+                  }}
+                  options={warehouseOptions}
+                  buttonClassName="border-none bg-transparent p-0 shadow-none text-xs font-bold text-foreground hover:bg-transparent"
+                />
+              ) : (
+                <div className="font-bold text-xs text-foreground truncate" title={selectedWarehouseName || warehouseOptions[0]?.label}>
+                  {selectedWarehouseName || warehouseOptions[0]?.label || t('warehouse', 'Warehouse')}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 bg-muted/20 border border-border/70 rounded-2xl px-3 py-2">
-          <Monitor size={15} className="text-purple-500 shrink-0" />
-          <div className="flex-1 min-w-0">
-            <span className="text-[10px] text-muted-foreground block leading-tight font-medium">{t('registerAndShift', 'Register & Shift')}</span>
-            <div className="font-bold text-foreground truncate">{cashRegister} • {currentShift}</div>
+          {/* Cash Register & Shift Box */}
+          <div className="flex items-center gap-2 bg-muted/20 border border-border/70 rounded-2xl px-3 py-2">
+            <Monitor size={15} className="text-purple-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className="text-[10px] text-muted-foreground block leading-tight font-medium">{t('registerAndShift', 'Register & Shift')}</span>
+              <div className="font-bold text-xs text-foreground truncate mt-0.5">{cashRegister} • {currentShift}</div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -131,8 +131,18 @@ export const notificationService = {
     return response.data
   },
 
-  testTelegram: async (): Promise<{ message: string }> => {
-    const response = await api.post('/notification-settings/test-telegram')
+  testTelegram: async (payload?: { chat_id?: string; bot_token?: string }): Promise<{ message: string; mock?: boolean; status?: string }> => {
+    const response = await api.post('/notification-settings/test-telegram', payload)
+    return response.data
+  },
+
+  sendStockAlert: async (payload: {
+    out_of_stock: number
+    low_stock: number
+    warehouse_name?: string
+    items?: Array<{ name: string; sku?: string; quantity: number }>
+  }): Promise<{ message: string; mock?: boolean; status?: string }> => {
+    const response = await api.post('/notification-settings/send-stock-alert', payload)
     return response.data
   },
 

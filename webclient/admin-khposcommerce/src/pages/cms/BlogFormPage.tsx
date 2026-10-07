@@ -107,11 +107,11 @@ export const BlogFormPage: React.FC = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['blogs'] })
       qc.invalidateQueries({ queryKey: ['cms-stats'] })
-      toast.success(t('cms.createdSuccess', 'Content created successfully.'))
-      navigate('/cms?tab=blogs')
+      toast.success(t('cms.createdSuccess'))
+      navigate('/cms/blogs')
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || t('cms.createFailed', 'Failed to create article.'))
+      toast.error(err?.response?.data?.message || t('cms.createFailed'))
     },
   })
 
@@ -121,11 +121,11 @@ export const BlogFormPage: React.FC = () => {
       qc.invalidateQueries({ queryKey: ['blogs'] })
       qc.invalidateQueries({ queryKey: ['cms-stats'] })
       qc.invalidateQueries({ queryKey: ['blog-detail', blogId] })
-      toast.success(t('cms.updatedSuccess', 'Content updated successfully.'))
-      navigate('/cms?tab=blogs')
+      toast.success(t('cms.updatedSuccess'))
+      navigate('/cms/blogs')
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.message || t('cms.updateFailed', 'Failed to update article.'))
+      toast.error(err?.response?.data?.message || t('cms.updateFailed'))
     },
   })
 
@@ -133,7 +133,7 @@ export const BlogFormPage: React.FC = () => {
 
   const handleTelegramBroadcast = async () => {
     if (!title.trim()) {
-      const newErrors = { title: t('cms.titleRequired', 'Please enter article title first') }
+      const newErrors = { title: t('cms.titleRequired') }
       setErrors(newErrors)
       focusFirstInvalidField(newErrors)
       return
@@ -148,7 +148,7 @@ export const BlogFormPage: React.FC = () => {
 
       const categoryName = categories.find((c: any) => c.id?.toString() === categoryId?.toString())?.name || ''
       const activeLocale = (i18n.language || 'en').startsWith('km') ? 'km' : 'en'
-      const readTimeFormatted = activeLocale === 'km' ? `~${stats.readTimeMin} នាទី` : `~${stats.readTimeMin} min read`
+      const readTimeFormatted = t('cms.readingTimeMin', { min: stats.readTimeMin })
 
       const res = await cmsService.broadcastToTelegram({
         title: title.trim(),
@@ -161,12 +161,12 @@ export const BlogFormPage: React.FC = () => {
         locale: activeLocale,
       })
       if (res?.data?.is_configured === false) {
-        toast.warning(t('cms.telegramNotConfigured', 'Simulated: Please add TELEGRAM_BOT_TOKEN in backend .env to send live to @nextech_cambodia'))
+        toast.warning(t('cms.telegramNotConfigured'))
       } else {
-        toast.success(t('cms.telegramBroadcastSuccess', 'Article broadcasted to Telegram Channel (@nextech_cambodia) successfully!'))
+        toast.success(t('cms.telegramBroadcastSuccess'))
       }
     } catch (err: any) {
-      const errMsg = err?.response?.data?.message || err?.message || t('cms.telegramBroadcastFailed', 'Failed to broadcast to Telegram.')
+      const errMsg = err?.response?.data?.message || err?.message || t('cms.telegramBroadcastFailed')
       toast.error(errMsg)
     } finally {
       setIsBroadcasting(false)
@@ -176,7 +176,7 @@ export const BlogFormPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim()) {
-      const newErrors = { title: t('cms.titleRequired', 'Please enter article title first') }
+      const newErrors = { title: t('cms.titleRequired') }
       setErrors(newErrors)
       focusFirstInvalidField(newErrors)
       return
@@ -215,7 +215,7 @@ export const BlogFormPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] w-full">
         <LoadingSpinner />
-        <p className="text-xs text-muted-foreground mt-3">{t('common.loading', 'Loading data...')}</p>
+        <p className="text-xs text-muted-foreground mt-3">{t('common.loading')}</p>
       </div>
     )
   }
@@ -224,8 +224,8 @@ export const BlogFormPage: React.FC = () => {
     return (
       <div className="p-6">
         <CustomErrorMessage
-          title={t('common.errorLoading', 'Failed to load article data')}
-          message={(detailError as any)?.message || t('common.error', 'An error occurred')}
+          title={t('common.errorLoading')}
+          message={(detailError as any)?.message || t('common.error')}
           onRetry={refetchDetail}
         />
       </div>
@@ -242,33 +242,33 @@ export const BlogFormPage: React.FC = () => {
           isEdit={isEdit}
           title={
             isEdit
-              ? t('cms.editBlogTitle', 'Edit Article: {{title}}', { title: title || '' })
-              : t('cms.addBlog', 'Add New Article')
+              ? t('cms.editBlogTitle', { title: title || '' })
+              : t('cms.addBlog')
           }
-          subtitle={t('cms.formBlogSubtitle', 'Fill in article details, content, cover image, and SEO settings')}
+          subtitle={t('cms.formBlogSubtitle')}
           breadcrumbs={[
-            { label: t('cms.contentManagement', 'Content Management'), href: '/cms?tab=blogs' },
+            { label: t('cms.contentManagement'), href: '/cms/blogs' },
             {
-              label: isEdit ? t('cms.editBlog', 'Edit Article') : t('cms.addBlog', 'Add New Article'),
+              label: isEdit ? t('cms.editBlog') : t('cms.addBlog'),
             },
           ]}
-          backPath="/cms?tab=blogs"
-          backLabel={t('common.back', 'Back')}
+          backPath="/cms/blogs"
+          backLabel={t('common.back')}
           showSubmit={false}
         />
       }
       footer={
         <FormFooter
-          cancelPath="/cms?tab=blogs"
-          cancelLabel={t('common.cancel', 'Cancel')}
+          cancelPath="/cms/blogs"
+          cancelLabel={t('common.cancel')}
           isEdit={isEdit}
           isSubmitting={isSubmitting}
           submitLabel={
             isEdit
-              ? t('cms.saveChanges', 'Save Changes')
-              : t('cms.saveContent', 'Save Article')
+              ? t('cms.saveChanges')
+              : t('cms.saveContent')
           }
-          onCancel={() => navigate('/cms?tab=blogs')}
+          onCancel={() => navigate('/cms/blogs')}
         />
       }
     >
@@ -277,8 +277,8 @@ export const BlogFormPage: React.FC = () => {
         <div className="lg:col-span-8 space-y-6">
           {/* 1. Basic Info */}
           <FormCard
-            title={t('cms.sectionBasicInfo', 'General Info & Title')}
-            subtitle={t('cms.basicInfoHelp', 'Enter primary title and article slug URL')}
+            title={t('cms.sectionBasicInfo')}
+            subtitle={t('cms.basicInfoHelp')}
             badge={
               <span className="text-xs text-muted-foreground font-medium bg-muted/60 dark:bg-slate-800/60 px-2.5 py-0.5 rounded-full border border-border/50">
                 ~{stats.readTimeMin} min read • {stats.words} words
@@ -287,7 +287,7 @@ export const BlogFormPage: React.FC = () => {
             contentClassName="space-y-4"
           >
             <FormField
-              label={t('cms.formArticleHeadline', 'Article Headline')}
+              label={t('cms.formArticleHeadline')}
               required
               error={errors.title}
             >
@@ -303,12 +303,12 @@ export const BlogFormPage: React.FC = () => {
                     setSlug(generateSlug(e.target.value))
                   }
                 }}
-                placeholder={t('cms.formArticleHeadlinePlaceholder', 'e.g. Top 10 Tips for Modern Retail Management')}
+                placeholder={t('cms.formArticleHeadlinePlaceholder')}
                 className={getFieldClass(errors.title)}
               />
             </FormField>
 
-            <FormField label={t('cms.colSlug', 'Slug URL')}>
+            <FormField label={t('cms.colSlug')}>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground font-mono text-xs select-none">
                   /blogs/
@@ -326,25 +326,25 @@ export const BlogFormPage: React.FC = () => {
 
           {/* 2. Article Body & Rich Editor */}
           <FormCard
-            title={t('cms.sectionContent', 'Body & Content')}
-            subtitle={t('cms.contentHelp', 'Summary excerpt and full rich text')}
+            title={t('cms.sectionContent')}
+            subtitle={t('cms.contentHelp')}
             contentClassName="space-y-4"
           >
-            <FormField label={t('cms.formExcerpt', 'Excerpt Summary')}>
+            <FormField label={t('cms.formExcerpt')}>
               <textarea
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
-                placeholder={t('cms.formExcerptPlaceholder', 'Brief summary for display cards and search results...')}
+                placeholder={t('cms.formExcerptPlaceholder')}
                 rows={2}
                 className={`${getFieldClass()} h-auto py-2.5 resize-none`}
               />
             </FormField>
 
-            <FormField label={t('cms.formFullContent', 'Full Article Body')}>
+            <FormField label={t('cms.formFullContent')}>
               <RichTextEditor
                 value={content}
                 onChange={setContent}
-                placeholder={t('cms.formFullContentPlaceholder', 'Write your complete article content here...')}
+                placeholder={t('cms.formFullContentPlaceholder')}
                 articleTitle={title}
                 featuredImage={featuredImage}
                 minHeight="380px"
@@ -354,12 +354,12 @@ export const BlogFormPage: React.FC = () => {
 
           {/* 3. SEO Settings & SERP Preview */}
           <FormCard
-            title={t('cms.sectionSeoPublish', 'SEO & Search Engine Preview')}
-            subtitle={t('cms.seoHelp', 'Optimize search engine discovery and social card appearance')}
+            title={t('cms.sectionSeoPublish')}
+            subtitle={t('cms.seoHelp')}
             contentClassName="space-y-4"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField label={t('cms.formSeoTitle', 'SEO Meta Title')}>
+              <FormField label={t('cms.formSeoTitle')}>
                 <input
                   type="text"
                   value={metaTitle}
@@ -369,7 +369,7 @@ export const BlogFormPage: React.FC = () => {
                 />
               </FormField>
 
-              <FormField label={t('cms.metaDescription', 'SEO Meta Description')}>
+              <FormField label={t('cms.metaDescription')}>
                 <input
                   type="text"
                   value={metaDescription}
@@ -383,7 +383,7 @@ export const BlogFormPage: React.FC = () => {
             {/* Clean Google SERP Snippet Preview Card */}
             <div className="p-4 rounded-xl bg-muted/20 border border-border/70 space-y-1.5">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Google Search Result Snippet
+                {t('cms.googlePreview')}
               </span>
               <div>
                 <p className="text-xs text-muted-foreground font-mono">
@@ -404,37 +404,37 @@ export const BlogFormPage: React.FC = () => {
         <div className="lg:col-span-4 space-y-6">
           {/* 4. Publication Settings */}
           <FormCard
-            title={t('cms.publicationSettings', 'Publication Settings')}
+            title={t('cms.publicationSettings')}
             contentClassName="space-y-4"
           >
-            <FormField label={t('cms.colStatus', 'Publishing Status')}>
+            <FormField label={t('cms.colStatus')}>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 className={getFieldClass()}
               >
-                <option value="published">{t('cms.publishedLive', 'Published (Live)')}</option>
-                <option value="draft">{t('cms.draftWip', 'Draft (WIP)')}</option>
-                <option value="scheduled">{t('cms.scheduled', 'Scheduled Publishing')}</option>
-                <option value="archived">{t('cms.archivedHidden', 'Archived')}</option>
+                <option value="published">{t('cms.publishedLive')}</option>
+                <option value="draft">{t('cms.draftWip')}</option>
+                <option value="scheduled">{t('cms.scheduled')}</option>
+                <option value="archived">{t('cms.archivedHidden')}</option>
               </select>
             </FormField>
 
-            <FormField label={t('cms.schedulePublish', 'Publish Date & Time')}>
+            <FormField label={t('cms.schedulePublish')}>
               <EnterpriseDateTimePicker
                 value={publishedAt}
                 onChange={(val) => setPublishedAt(val)}
-                placeholder={t('cms.schedulePublish', 'Publish Date & Time')}
+                placeholder={t('cms.schedulePublish')}
               />
             </FormField>
 
-            <FormField label={t('cms.colCategory', 'Category')}>
+            <FormField label={t('cms.colCategory')}>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className={getFieldClass()}
               >
-                <option value="">{t('cms.generalUncategorized', 'General / Uncategorized')}</option>
+                <option value="">{t('cms.generalUncategorized')}</option>
                 {categories.map((c: any) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -444,8 +444,8 @@ export const BlogFormPage: React.FC = () => {
 
           {/* 5. Featured Cover Photo */}
           <FormCard
-            title={t('cms.formCoverImage', 'Cover Image')}
-            subtitle={t('cms.formUploadHint', 'PNG, JPG, WebP up to 5MB')}
+            title={t('cms.formCoverImage')}
+            subtitle={t('cms.formUploadHint')}
             contentClassName="space-y-4"
           >
             <FileUpload
@@ -462,8 +462,8 @@ export const BlogFormPage: React.FC = () => {
 
           {/* 6. Telegram Channel Broadcast */}
           <FormCard
-            title={t('cms.telegramBroadcast', 'Telegram Broadcast')}
-            subtitle={t('cms.telegramBroadcastDesc', 'Send new post instant notification to your subscribers')}
+            title={t('cms.telegramBroadcast')}
+            subtitle={t('cms.telegramBroadcastDesc')}
             contentClassName="space-y-3.5"
           >
             <div className="p-3 rounded-xl bg-sky-50/70 dark:bg-sky-950/30 border border-sky-200/60 dark:border-sky-800/40 text-xs space-y-2">
@@ -476,14 +476,14 @@ export const BlogFormPage: React.FC = () => {
                   href="https://t.me/nextech_cambodia"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[11px] text-sky-600 dark:text-sky-400 hover:underline flex items-center gap-1 inline-flex font-mono"
+                  className="text-[11px] text-sky-600 dark:text-sky-400 hover:underline inline-flex items-center gap-1 font-mono"
                 >
                   <span>@nextech_cambodia</span>
                   <ExternalLink size={11} />
                 </a>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                {t('cms.telegramAutoFeedHint', 'Instant alert with rich banner, teaser, and direct link to the storefront article.')}
+                {t('cms.telegramAutoFeedHint')}
               </p>
             </div>
 
@@ -496,12 +496,12 @@ export const BlogFormPage: React.FC = () => {
               {isBroadcasting ? (
                 <>
                   <Loader2 size={13} className="animate-spin" />
-                  <span>{t('common.sending', 'Broadcasting to Telegram...')}</span>
+                  <span>{t('common.sending')}</span>
                 </>
               ) : (
                 <>
                   <Send size={13} />
-                  <span>{t('cms.broadcastNow', 'Broadcast to Channel')}</span>
+                  <span>{t('cms.broadcastNow')}</span>
                 </>
               )}
             </button>

@@ -15,7 +15,7 @@ import ResetButton from '@/components/shared/ResetButton'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import { downloadCsv } from '@/utils/export'
 import { useTranslation } from 'react-i18next'
-import { TableToolbar } from '@/components/common'
+import { TableToolbar, InlineFilterSelect, HeaderActionsGroup, AddButton, ExportButton, ImportButton } from '@/components/common'
 import { usePermission } from '@/hooks/usePermission'
 
 import { UserStatsCards } from './components/UserStatsCards'
@@ -479,63 +479,83 @@ const UsersPage: React.FC = () => {
 
   return (
     <div className="space-y-5 print:p-0">
-      <Breadcrumb items={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'User Directory & Access Management' }]} />
+      <Breadcrumb
+        items={[
+          { label: t('nav.administration', 'Administration'), path: '/users' },
+          { label: t('users.usersTitle', 'User Directory & Access Management') },
+        ]}
+      />
 
-      {/* Frameless Header */}
+      {/* Frameless Hero Header */}
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
         <div className="space-y-1 min-w-0 flex-1">
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
-            User Management & Security Access
+            {t('users.userManagement', 'User Management & Security Access')}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
-            Manage system administrators, staff members, RBAC security roles, authentication credentials, and user activity accounts.
+            {t('users.userSubtitle', 'Manage system administrators, staff members, RBAC security roles, authentication credentials, and user activity accounts.')}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto xl:justify-end shrink-0">
+        <HeaderActionsGroup>
           {canCreate && (
-            <button
+            <ImportButton
               onClick={() => setImportModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-xs"
-            >
-              <Upload size={15} />
-              <span>Import CSV</span>
-            </button>
+              label={t('common.importCsv', 'Import CSV')}
+            />
           )}
           {canExport && (
-            <button
+            <ExportButton
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-xs"
-            >
-              <Download size={15} />
-              <span>Export CSV</span>
-            </button>
+              label={t('common.exportCsv', 'Export CSV')}
+            />
           )}
           {canCreate && (
-            <button
+            <AddButton
               onClick={openCreateModal}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-xs"
-            >
-              <Plus size={16} />
-              <span>Add New User</span>
-            </button>
+              label={t('users.addUser', 'Add New User')}
+            />
           )}
-        </div>
+        </HeaderActionsGroup>
       </div>
 
       {/* Stats Cards */}
       <UserStatsCards analytics={analytics} />
 
-      {/* Global Standard Table Toolbar */}
+      {/* Global Standard Table Toolbar with Shadcn Inline Quick Filters */}
       <TableToolbar
         search={search}
         onSearchChange={(val) => { setSearch(val); setPage(1); }}
         searchPlaceholder={t('users.searchPlaceholder', 'Search user name, email, phone number...')}
-        onFilterClick={() => setFilterDrawerOpen(true)}
+        hideFilterButton={true}
         isFilterActive={hasActiveFilters}
         onReset={resetAllFilters}
         onRefresh={() => qc.invalidateQueries({ queryKey: ['users'] })}
         refreshLoading={isFetching}
+        filters={
+          <>
+            <InlineFilterSelect
+              label={t('users.role', 'Role')}
+              value={filterRole === 'all' ? '' : filterRole}
+              onChange={(val) => { setFilterRole(val || 'all'); setPage(1); }}
+              allLabel={t('users.allRoles', 'All roles')}
+              options={(roles || []).map((r: any) => ({
+                label: r.name,
+                value: (r.name || '').toLowerCase(),
+              }))}
+            />
+            <InlineFilterSelect
+              label={t('common.status', 'Status')}
+              value={filterStatus === 'all' ? '' : filterStatus}
+              onChange={(val) => { setFilterStatus(val || 'all'); setPage(1); }}
+              allLabel={t('common.allStatus', 'All status')}
+              options={[
+                { label: t('common.active', 'Active'), value: 'active' },
+                { label: t('common.inactive', 'Inactive'), value: 'inactive' },
+              ]}
+            />
+          </>
+        }
         columns={[
           { key: 'avatar', label: t('users.avatar', 'Avatar') },
           { key: 'userInfo', label: t('users.userInfo', 'User Info & Contact') },

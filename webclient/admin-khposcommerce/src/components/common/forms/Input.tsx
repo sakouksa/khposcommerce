@@ -42,9 +42,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     const sizeClasses = {
-      sm: 'h-8 min-h-[32px] text-xs px-2.5 rounded-lg',
-      md: 'h-10 min-h-[40px] text-xs sm:text-[13px] px-3.5 rounded-xl',
-      lg: 'h-11 min-h-[44px] text-sm px-4 rounded-xl',
+      sm: 'h-8 min-h-[32px] max-h-[32px] text-xs px-2.5 rounded-md box-border leading-normal',
+      md: 'h-10 min-h-[40px] max-h-[40px] text-sm px-3.5 rounded-lg box-border leading-normal',
+      lg: 'h-12 min-h-[48px] max-h-[48px] text-base px-4 rounded-xl box-border leading-normal',
     }
 
     const hasError = Boolean(error)
@@ -59,8 +59,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     `
 
     const stateStyles = hasError
-      ? 'border-rose-500 dark:border-rose-500 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-      : 'border-border/80 dark:border-slate-700/80 focus:border-primary focus:ring-2 focus:ring-primary/20 dark:hover:border-slate-600'
+      ? 'border-destructive focus:border-destructive focus:ring-2 focus:ring-destructive/20'
+      : 'border-input focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-accent-foreground/30'
 
     const paddingStyles = `
       ${icon || prefix ? (size === 'sm' ? 'pl-8' : 'pl-10') : ''}
@@ -68,7 +68,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     `
 
     return (
-      <div className={`relative w-full ${containerClassName}`}>
+      <div className={`relative w-full flex items-center ${containerClassName}`}>
         {/* Leading Icon or Prefix */}
         {(icon || prefix) && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground dark:text-slate-400 text-xs shrink-0 z-1">

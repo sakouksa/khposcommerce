@@ -16,10 +16,20 @@ import {
 import { companyService } from '@/services/companyService'
 import { useToast } from '@/hooks/useToast'
 import { focusFirstInvalidField } from '@/utils/formValidation'
-import PageHeader from '@/components/common/PageHeader'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import { StatusBadge, CloseButton, FieldError, getFieldClass, TableToolbar } from '@/components/common'
+import {
+  StatusBadge,
+  CloseButton,
+  FieldError,
+  getFieldClass,
+  TableToolbar,
+  HeaderActionsGroup,
+  AddButton,
+  ExportButton,
+} from '@/components/common'
 import TableActionMenu from '@/components/shared/TableActionMenu'
+import { BranchStatsCards } from './components/BranchStatsCards'
+import { downloadCsv } from '@/utils/export'
 
 interface Branch {
   id:          number
@@ -203,26 +213,65 @@ const BranchesPage: React.FC<{ isTab?: boolean }> = ({ isTab }) => {
     }
   }
 
+  const handleExportCSV = () => {
+    const list = data?.data ?? []
+    if (!list.length) {
+      toast.info(t('common.noDataToExport', 'No branch data to export.'))
+      return
+    }
+    const headers = ['ID', 'Name', 'Code', 'Phone', 'Email', 'City', 'Province', 'Is Main', 'Status']
+    const rows = list.map((b: Branch) => [
+      b.id,
+      b.name,
+      b.code,
+      b.phone || '',
+      b.email || '',
+      b.city || '',
+      b.province || '',
+      b.is_main ? 'Yes' : 'No',
+      b.is_active ? 'Active' : 'Inactive',
+    ])
+    downloadCsv('company_branches', headers, rows)
+    toast.success(t('common.exportSuccess', 'Branches exported successfully.'))
+  }
+
   return (
     <div className="space-y-5">
       {!isTab && (
         <>
-          <Breadcrumb items={[{ label: 'Company' }, { label: 'Branches' }]} />
+          <Breadcrumb
+            items={[
+              { label: t('nav.companyManagement', 'Company Management'), path: '/company' },
+              { label: t('nav.branches', 'Branches') },
+            ]}
+          />
 
-          <PageHeader
-            icon={<Building2 size={24} />}
-            title="Branches"
-            subtitle="Manage corporate office and store branch coordinates"
-            action={
-              <button
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+            <div className="space-y-1 min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+                {t('branches.title', 'Branches')}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                {t('branches.subtitle', 'Manage corporate office and store branch coordinates across regions')}
+              </p>
+            </div>
+
+            <HeaderActionsGroup>
+              <ExportButton
+                onClick={handleExportCSV}
+                label={t('common.exportCsv', 'Export CSV')}
+              />
+              <AddButton
                 onClick={openCreateModal}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white
-                           bg-gradient-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
-              >
-                <Plus size={16} />
-                Add Branch
-              </button>
-            }
+                label={t('branches.addBranch', 'Add Branch')}
+              />
+            </HeaderActionsGroup>
+          </div>
+
+          <BranchStatsCards
+            branches={data?.data ?? []}
+            total={data?.pagination?.total ?? data?.total}
+            isLoading={isLoading}
           />
         </>
       )}
@@ -231,20 +280,16 @@ const BranchesPage: React.FC<{ isTab?: boolean }> = ({ isTab }) => {
       <TableToolbar
         search={search}
         onSearchChange={(val) => { setSearch(val); setPage(1); }}
-        searchPlaceholder="Search branches..."
+        searchPlaceholder={t('branches.searchPlaceholder', 'Search branches...')}
         onReset={reset}
         onRefresh={() => qc.invalidateQueries({ queryKey: ['branches'] })}
         refreshLoading={isFetching}
         rightActions={
           isTab ? (
-            <button
+            <AddButton
               onClick={openCreateModal}
-              className="flex items-center gap-1.5 px-4 h-10 min-h-[40px] text-xs sm:text-[13px] font-semibold text-white
-                         bg-gradient-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
-            >
-              <Plus size={15} />
-              Add Branch
-            </button>
+              label={t('branches.addBranch', 'Add Branch')}
+            />
           ) : undefined
         }
       />

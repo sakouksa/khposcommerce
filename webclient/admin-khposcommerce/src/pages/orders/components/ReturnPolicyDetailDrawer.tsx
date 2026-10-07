@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
 import { CloseButton, ActionButton } from '@/components/common'
 import { GlobalFormat } from '@/utils/formatters'
-import type { ReturnPolicy } from '@/types/orderReturn.types'
+import type { ReturnPolicy } from '../types'
 import {
   getLocalizedPolicyName,
   getConditionBadge,

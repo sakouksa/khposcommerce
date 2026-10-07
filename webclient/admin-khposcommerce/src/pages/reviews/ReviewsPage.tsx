@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Search, Trash2, RefreshCw, Star, CheckCircle, XCircle, MessageSquare, Loader2, Filter } from 'lucide-react'
 import { reviewService } from '@/services/reviewService'
 import { useToast } from '@/hooks/useToast'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 import Pagination from '@/components/shared/Pagination'
 import { useServerPagination } from '@/hooks/useServerPagination'
 import TableWrapper from '@/components/shared/TableWrapper'
@@ -14,7 +14,7 @@ import LoadingSkeleton from '@/components/shared/LoadingSkeleton'
 import EmptyState from '@/components/shared/EmptyState'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import StatusBadge from '@/components/common/StatusBadge'
-import { TableToolbar } from '@/components/common'
+import { TableToolbar, InlineFilterSelect } from '@/components/common'
 import { useTranslation } from 'react-i18next'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 
@@ -131,32 +131,33 @@ const ReviewsPage: React.FC = () => {
         search={search}
         onSearchChange={(val) => { setSearch(val); setPage(1) }}
         searchPlaceholder={t('reviews.searchPlaceholder', 'Search reviews, products, users...')}
+        isFilterActive={Boolean(statusFilter || ratingFilter)}
         onReset={resetFilters}
-        leftActions={
+        filters={
           <>
-            <ModernSelect
+            <InlineFilterSelect
+              label={t('common.status', 'Status')}
               value={statusFilter}
-              onChange={(val) => { setStatusFilter(String(val)); setPage(1) }}
+              onChange={(val) => { setStatusFilter(val); setPage(1) }}
+              allLabel="All status"
               options={[
-                { value: '', label: 'All Status' },
-                { value: 'pending', label: 'Pending' },
-                { value: 'approved', label: 'Approved' },
-                { value: 'rejected', label: 'Rejected' },
+                { label: 'Pending', value: 'pending' },
+                { label: 'Approved', value: 'approved' },
+                { label: 'Rejected', value: 'rejected' },
               ]}
-              placeholder="All Status"
             />
-            <ModernSelect
+            <InlineFilterSelect
+              label="Rating"
               value={ratingFilter}
-              onChange={(val) => { setRatingFilter(String(val)); setPage(1) }}
+              onChange={(val) => { setRatingFilter(val); setPage(1) }}
+              allLabel="All ratings"
               options={[
-                { value: '', label: 'All Ratings' },
-                { value: '5', label: '5 Stars' },
-                { value: '4', label: '4 Stars' },
-                { value: '3', label: '3 Stars' },
-                { value: '2', label: '2 Stars' },
-                { value: '1', label: '1 Star' },
+                { label: '5 Stars ★★★★★', value: '5' },
+                { label: '4 Stars ★★★★☆', value: '4' },
+                { label: '3 Stars ★★★☆☆', value: '3' },
+                { label: '2 Stars ★★☆☆☆', value: '2' },
+                { label: '1 Star ★☆☆☆☆', value: '1' },
               ]}
-              placeholder="All Ratings"
             />
           </>
         }

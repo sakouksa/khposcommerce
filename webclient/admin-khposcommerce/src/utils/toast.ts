@@ -5,14 +5,14 @@ export type ToastParam = string | (Omit<ToastOptions, 'type'> & { message: strin
 
 export function normalizeToastOptions(
   param: ToastParam,
-  type: 'success' | 'error' | 'warning' | 'info',
+  type: 'success' | 'error' | 'warning' | 'info' | 'loading',
   duration?: number
 ): ToastOptions {
   if (typeof param === 'string') {
     return {
       type,
       message: translateString(param),
-      duration,
+      duration: duration !== undefined ? duration : (type === 'loading' ? 0 : undefined),
     }
   }
   return {
@@ -21,7 +21,7 @@ export function normalizeToastOptions(
     title: param.title ? translateString(param.title) : undefined,
     message: translateString(param.message),
     description: param.description ? translateString(param.description) : undefined,
-    duration: param.duration ?? duration,
+    duration: param.duration ?? (duration !== undefined ? duration : (type === 'loading' ? 0 : undefined)),
   }
 }
 
@@ -34,6 +34,8 @@ export const showToast = {
     useToastStore.getState().addToast(normalizeToastOptions(param, 'warning', duration)),
   info: (param: ToastParam, duration?: number) =>
     useToastStore.getState().addToast(normalizeToastOptions(param, 'info', duration)),
+  loading: (param: ToastParam, duration?: number) =>
+    useToastStore.getState().addToast(normalizeToastOptions(param, 'loading', duration ?? 0)),
   custom: (options: ToastOptions) => useToastStore.getState().addToast(options),
   dismiss: (id?: string) =>
     id ? useToastStore.getState().removeToast(id) : useToastStore.getState().clearToasts(),

@@ -23,7 +23,7 @@ import TableWrapper from '@/components/shared/TableWrapper'
 import Pagination from '@/components/shared/Pagination'
 import BulkSelectionBanner from '@/components/shared/BulkSelectionBanner'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
-import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
 import type { ColumnOption } from '@/components/shared/ColumnSettingsPopover'
 import type { HolidayItem } from '../types/employee.types'
 
@@ -40,11 +40,11 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
   const isKhmer = i18n.language === 'km'
   const toast = useToast()
   const qc = useQueryClient()
-  const { hasPermission } = useAuthStore()
+  const { hasPermission } = usePermission()
 
-  const canCreate = hasPermission('holiday.create')
-  const canUpdate = hasPermission('holiday.update')
-  const canDelete = hasPermission('holiday.delete')
+  const canCreateHoliday = hasPermission('holiday.create')
+  const canUpdateHoliday = hasPermission('holiday.update')
+  const canDeleteHoliday = hasPermission('holiday.delete')
 
   // Pagination & Filtering
   const [page, setPage] = useState(1)
@@ -356,7 +356,7 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
       />
 
       {/* ─── Bulk actions banner ─── */}
-      {canDelete && (
+      {canDeleteHoliday && (
         <BulkSelectionBanner
           selectedCount={selectedRows.length}
           onDelete={() => setBulkDeleteConfirmOpen(true)}
@@ -523,9 +523,9 @@ export const HolidaysTab: React.FC<HolidaysTabProps> = ({
                           variant="inline"
                           buttonSize="sm"
                           align="right"
-                          onEdit={canUpdate ? () => openEditModal(item) : undefined}
+                          onEdit={canUpdateHoliday ? () => openEditModal(item) : undefined}
                           editLabel={t('common.edit', 'Edit')}
-                          onDelete={canDelete ? () => {
+                          onDelete={canDeleteHoliday ? () => {
                             sound.playDelete()
                             setDeleteTarget(item)
                           } : undefined}

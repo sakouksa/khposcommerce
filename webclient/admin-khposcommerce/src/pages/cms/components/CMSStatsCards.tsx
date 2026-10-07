@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { AnimatedCounter } from '@/components/shared/AnimatedCounter'
 import { useTranslation } from 'react-i18next'
+import { EnterpriseStatsGrid, EnterpriseStatsCard, type StatsCardVariant } from '@/components/common'
 import type { Tab } from '../types/cms.types'
 
 interface CMSStatsData {
@@ -93,13 +94,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       return [
         {
           key: 'total-blogs',
-          title: t('cms.cardTotalBlogs', 'Total Articles'),
+          title: t('cms.cardTotalBlogs'),
           value: total,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">{published} {t('cms.published', 'Published')}</span>
+              <span className="text-emerald-500 font-bold">{published} {t('cms.published')}</span>
               <span>•</span>
-              <span className="text-amber-500 font-bold">{draft} {t('cms.drafts', 'Drafts')}</span>
+              <span className="text-amber-500 font-bold">{draft} {t('cms.drafts')}</span>
             </>
           ),
           icon: FileText,
@@ -107,13 +108,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'published-blogs',
-          title: t('cms.cardPublishedBlogs', 'Published Content'),
+          title: t('cms.cardPublishedBlogs'),
           value: published,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">{publishRate}% {t('cms.ofTotal', 'of total')}</span>
+              <span className="text-emerald-500 font-bold">{publishRate}% {t('cms.ofTotal')}</span>
               <span>•</span>
-              <span className="text-indigo-500 font-bold">{withImages} {t('cms.withImage', 'with cover')}</span>
+              <span className="text-indigo-500 font-bold">{withImages} {t('cms.withImage')}</span>
             </>
           ),
           icon: Sparkles,
@@ -121,13 +122,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'views-readtime',
-          title: t('cms.cardTotalViews', 'Total Article Impressions'),
+          title: t('cms.cardTotalViews'),
           value: totalViews,
           subtext: (
             <>
-              <span className="text-purple-500 font-bold">~{avgWords} {t('cms.words', 'words')}/art</span>
+              <span className="text-purple-500 font-bold">~{avgWords} {t('cms.words')}/art</span>
               <span>•</span>
-              <span className="text-slate-400">~{avgReadTime}m {t('cms.avgRead', 'avg read')}</span>
+              <span className="text-slate-400">~{avgReadTime}m {t('cms.avgRead')}</span>
             </>
           ),
           icon: Eye,
@@ -135,13 +136,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'taxonomy-breakdown',
-          title: t('cms.cardTaxonomy', 'Categories & Tags'),
+          title: t('cms.cardTaxonomy'),
           value: stats?.categories?.total ?? records.length,
           subtext: (
             <>
-              <span className="text-teal-500 font-bold">{stats?.tags?.total ?? 0} {t('cms.tabTags', 'Tags')}</span>
+              <span className="text-teal-500 font-bold">{stats?.tags?.total ?? 0} {t('cms.tabTags')}</span>
               <span>•</span>
-              <span className="text-emerald-500 font-bold">{stats?.categories?.active ?? 0} {t('cms.active', 'Active')}</span>
+              <span className="text-emerald-500 font-bold">{stats?.categories?.active ?? 0} {t('cms.active')}</span>
             </>
           ),
           icon: Layers,
@@ -159,13 +160,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       return [
         {
           key: 'total-banners',
-          title: t('cms.cardTotalBanners', 'Total Banners'),
+          title: t('cms.cardTotalBanners'),
           value: total,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">{active} Active</span>
+              <span className="text-emerald-500 font-bold">{active} {t('cms.active')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">{total - active} Inactive</span>
+              <span className="text-muted-foreground">{total - active} {t('cms.inactive')}</span>
             </>
           ),
           icon: ImageIcon,
@@ -173,11 +174,11 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'hero-sliders',
-          title: t('cms.cardHeroSliders', 'Hero Top Sliders'),
+          title: t('cms.cardHeroSliders'),
           value: hero,
           subtext: (
             <>
-              <span className="text-indigo-500 font-bold">Homepage Top Carousel</span>
+              <span className="text-indigo-500 font-bold">{t('cms.homepageTopCarousel')}</span>
             </>
           ),
           icon: Layers,
@@ -185,11 +186,11 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'spotlight-grid',
-          title: t('cms.cardSpotlightDeals', 'Spotlight Deals'),
+          title: t('cms.cardSpotlightDeals'),
           value: spotlight,
           subtext: (
             <>
-              <span className="text-teal-500 font-bold">4-Grid Promo Section</span>
+              <span className="text-teal-500 font-bold">{t('cms.promoSection4Grid')}</span>
             </>
           ),
           icon: Sparkles,
@@ -197,12 +198,12 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'banner-health',
-          title: t('cms.cardActiveRate', 'Placement Coverage'),
+          title: t('cms.cardActiveRate'),
           value: 100,
           suffix: '%',
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">Storefront Optimized</span>
+              <span className="text-emerald-500 font-bold">{t('cms.storefrontOptimized')}</span>
             </>
           ),
           icon: CheckCircle2,
@@ -220,16 +221,16 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       return [
         {
           key: 'announcement-status',
-          title: t('cms.cardAnnouncementBar', 'Header Announcement Strip'),
+          title: t('cms.cardAnnouncementBar'),
           value: isEnabled ? 1 : 0,
           subtext: (
             <>
               <span className={isEnabled ? 'text-emerald-500 font-bold' : 'text-rose-500 font-bold'}>
-                {isEnabled ? t('common.active', 'Active') : t('common.disabled', 'Disabled')}
+                {isEnabled ? t('common.active') : t('common.disabled')}
               </span>
               <span>•</span>
               <span className="text-muted-foreground truncate max-w-[140px] inline-block align-bottom">
-                {activeRecord?.title || t('cms.visibleToUsers', 'Storefront header')}
+                {activeRecord?.title || t('cms.visibleToUsers')}
               </span>
             </>
           ),
@@ -238,13 +239,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'total-campaigns',
-          title: 'Database Campaigns',
+          title: t('cms.databaseCampaigns'),
           value: totalCampaigns,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">1 Active</span>
+              <span className="text-emerald-500 font-bold">1 {t('cms.active')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">{totalCampaigns > 1 ? `${totalCampaigns - 1} Standby` : 'In Database'}</span>
+              <span className="text-muted-foreground">{totalCampaigns > 1 ? `${totalCampaigns - 1} ${t('cms.standby')}` : t('cms.inDatabase')}</span>
             </>
           ),
           icon: Layers,
@@ -252,13 +253,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'announcement-coupon',
-          title: t('cms.cardPromoCoupon', 'Voucher Highlight'),
+          title: t('cms.cardPromoCoupon'),
           value: coupon ? 1 : 0,
           subtext: (
             <>
               <span className="text-purple-500 font-bold font-mono">{coupon}</span>
               <span>•</span>
-              <span className="text-muted-foreground">1-Click Apply</span>
+              <span className="text-muted-foreground">{t('cms.oneClickApply')}</span>
             </>
           ),
           icon: Sparkles,
@@ -266,13 +267,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'language-support',
-          title: t('cms.cardLanguages', 'Multilingual Support'),
+          title: t('cms.cardLanguages'),
           value: 2,
           subtext: (
             <>
               <span className="text-blue-500 font-bold">🇰🇭 Khmer + 🇺🇸 English</span>
               <span>•</span>
-              <span className="text-emerald-500 font-bold">Bilingual</span>
+              <span className="text-emerald-500 font-bold">{t('cms.bilingual')}</span>
             </>
           ),
           icon: BookOpen,
@@ -292,13 +293,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       return [
         {
           key: 'total-testimonials',
-          title: t('cms.cardTotalTestimonials', 'Total Testimonials'),
+          title: t('cms.cardTotalTestimonials'),
           value: total,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">{featured} Featured</span>
+              <span className="text-emerald-500 font-bold">{featured} {t('cms.featured')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">{total - featured} Standard</span>
+              <span className="text-muted-foreground">{total - featured} {t('cms.standard')}</span>
             </>
           ),
           icon: Quote,
@@ -306,27 +307,27 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'avg-rating',
-          title: t('cms.cardAvgRating', 'Customer Satisfaction'),
+          title: t('cms.cardAvgRating'),
           value: Number(avgRating),
           suffix: ' ⭐',
-          subtext: <span className="text-amber-500 font-bold">Out of 5.0 Stars</span>,
+          subtext: <span className="text-amber-500 font-bold">{t('cms.outOfFiveStars')}</span>,
           icon: Star,
           colorClass: 'bg-amber-500/10 text-amber-500',
         },
         {
           key: 'featured-homepage',
-          title: t('cms.cardFeaturedHome', 'Homepage Showcase'),
+          title: t('cms.cardFeaturedHome'),
           value: featured,
-          subtext: <span className="text-indigo-500 font-bold">Visible on Home Page</span>,
+          subtext: <span className="text-indigo-500 font-bold">{t('cms.visibleOnHome')}</span>,
           icon: Sparkles,
           colorClass: 'bg-indigo-500/10 text-indigo-500',
         },
         {
           key: 'trust-score',
-          title: t('cms.cardTrustScore', 'Social Proof Health'),
+          title: t('cms.cardTrustScore'),
           value: 98,
           suffix: '%',
-          subtext: <span className="text-teal-500 font-bold">High Buyer Trust</span>,
+          subtext: <span className="text-teal-500 font-bold">{t('cms.highBuyerTrust')}</span>,
           icon: ShieldCheck,
           colorClass: 'bg-teal-500/10 text-teal-500',
         },
@@ -338,35 +339,35 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       return [
         {
           key: 'total-media',
-          title: t('cms.cardTotalMedia', 'Total Digital Assets'),
+          title: t('cms.cardTotalMedia'),
           value: total,
-          subtext: <span className="text-indigo-500 font-bold">Images, Logos & Documents</span>,
+          subtext: <span className="text-indigo-500 font-bold">{t('cms.digitalAssetsDesc')}</span>,
           icon: ImageIcon,
           colorClass: 'bg-blue-500/10 text-blue-500',
         },
         {
           key: 'storage-health',
-          title: t('cms.cardStorageHealth', 'Storage Optimization'),
+          title: t('cms.cardStorageHealth'),
           value: 100,
           suffix: '%',
-          subtext: <span className="text-emerald-500 font-bold">WebP Optimized CDN</span>,
+          subtext: <span className="text-emerald-500 font-bold">{t('cms.webpOptimizedCdn')}</span>,
           icon: CheckCircle2,
           colorClass: 'bg-emerald-500/10 text-emerald-500',
         },
         {
           key: 'media-types',
-          title: t('cms.cardMediaTypes', 'Asset Categories'),
+          title: t('cms.cardMediaTypes'),
           value: 4,
-          subtext: <span className="text-teal-500 font-bold">Images, Icons, Banners, PDFs</span>,
+          subtext: <span className="text-teal-500 font-bold">{t('cms.assetCategoriesDesc')}</span>,
           icon: FolderOpen,
           colorClass: 'bg-teal-500/10 text-teal-500',
         },
         {
           key: 'asset-availability',
-          title: t('cms.cardAssetAvailability', 'Direct Link Ready'),
+          title: t('cms.cardAssetAvailability'),
           value: 100,
           suffix: '%',
-          subtext: <span className="text-purple-500 font-bold">Instant Copy & Paste URL</span>,
+          subtext: <span className="text-purple-500 font-bold">{t('cms.instantCopyUrl')}</span>,
           icon: UploadCloud,
           colorClass: 'bg-purple-500/10 text-purple-500',
         },
@@ -385,13 +386,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       return [
         {
           key: 'total-categories',
-          title: t('cms.cardTotalCategories', 'Total Categories'),
+          title: t('cms.cardTotalCategories'),
           value: total,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">{active} {t('cms.active', 'Active')}</span>
+              <span className="text-emerald-500 font-bold">{active} {t('cms.active')}</span>
               <span>•</span>
-              <span className="text-amber-500 font-bold">{inactive} {t('cms.inactive', 'Inactive')}</span>
+              <span className="text-amber-500 font-bold">{inactive} {t('cms.inactive')}</span>
             </>
           ),
           icon: FolderOpen,
@@ -399,13 +400,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'active-categories',
-          title: t('cms.cardActiveCategories', 'Operational Status'),
+          title: t('cms.cardActiveCategories'),
           value: active,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">{activeRate}% {t('cms.operational', 'operational')}</span>
+              <span className="text-emerald-500 font-bold">{activeRate}% {t('cms.operational')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">{t('cms.visibleToUsers', 'visible to users')}</span>
+              <span className="text-muted-foreground">{t('cms.visibleToUsers')}</span>
             </>
           ),
           icon: CheckCircle2,
@@ -413,13 +414,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'linked-articles',
-          title: t('cms.cardLinkedArticles', 'Total Articles Linked'),
+          title: t('cms.cardLinkedArticles'),
           value: totalBlogs,
           subtext: (
             <>
-              <span className="text-indigo-500 font-bold">{avgBlogs} {t('cms.articlesPerCat', 'articles/cat')}</span>
+              <span className="text-indigo-500 font-bold">{avgBlogs} {t('cms.articlesPerCat')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">{t('cms.tabBlogs', 'Blogs')}</span>
+              <span className="text-muted-foreground">{t('cms.tabBlogs')}</span>
             </>
           ),
           icon: FileText,
@@ -427,13 +428,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'category-descriptions',
-          title: t('cms.cardCategoryDescriptions', 'SEO & Descriptions'),
+          title: t('cms.cardCategoryDescriptions'),
           value: withDesc,
           subtext: (
             <>
-              <span className="text-teal-500 font-bold">{total > 0 ? Math.round((withDesc / total) * 100) : 100}% {t('cms.withDescription', 'with desc')}</span>
+              <span className="text-teal-500 font-bold">{total > 0 ? Math.round((withDesc / total) * 100) : 100}% {t('cms.withDescription')}</span>
               <span>•</span>
-              <span className="text-emerald-500 font-bold">{t('cms.seoReady', 'SEO ready')}</span>
+              <span className="text-emerald-500 font-bold">{t('cms.seoReady')}</span>
             </>
           ),
           icon: Sparkles,
@@ -451,13 +452,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       return [
         {
           key: 'total-tags',
-          title: t('cms.cardTotalTags', 'Total Content Tags'),
+          title: t('cms.cardTotalTags'),
           value: total,
           subtext: (
             <>
-              <span className="text-purple-500 font-bold">{total} {t('cms.tabTags', 'Tags')}</span>
+              <span className="text-purple-500 font-bold">{total} {t('cms.tabTags')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">Taxonomy keywords</span>
+              <span className="text-muted-foreground">{t('cms.taxonomyKeywords')}</span>
             </>
           ),
           icon: Tag,
@@ -465,13 +466,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'indexed-articles',
-          title: t('cms.cardIndexedArticles', 'Total Articles Indexed'),
+          title: t('cms.cardIndexedArticles'),
           value: totalArticles,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">{publishedArticles} {t('cms.published', 'Published')}</span>
+              <span className="text-emerald-500 font-bold">{publishedArticles} {t('cms.published')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">{t('cms.tabBlogs', 'Articles')}</span>
+              <span className="text-muted-foreground">{t('cms.tabBlogs')}</span>
             </>
           ),
           icon: FileText,
@@ -479,13 +480,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'available-categories',
-          title: t('cms.cardAvailableCategories', 'Content Categories'),
+          title: t('cms.cardAvailableCategories'),
           value: totalCategories,
           subtext: (
             <>
-              <span className="text-teal-500 font-bold">{stats?.categories?.active ?? totalCategories} {t('cms.active', 'Active')}</span>
+              <span className="text-teal-500 font-bold">{stats?.categories?.active ?? totalCategories} {t('cms.active')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">{t('cms.tabCategories', 'Categories')}</span>
+              <span className="text-muted-foreground">{t('cms.tabCategories')}</span>
             </>
           ),
           icon: FolderOpen,
@@ -493,14 +494,14 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'tag-health',
-          title: t('cms.cardTaxonomyHealth', 'SEO Slugs & Health'),
+          title: t('cms.cardTaxonomyHealth'),
           value: 100,
           suffix: '%',
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">100% {t('cms.seoReady', 'SEO ready')}</span>
+              <span className="text-emerald-500 font-bold">100% {t('cms.seoReady')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">Clean URL slugs</span>
+              <span className="text-muted-foreground">{t('cms.cleanUrlSlugs')}</span>
             </>
           ),
           icon: ShieldCheck,
@@ -520,13 +521,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       return [
         {
           key: 'total-pages',
-          title: t('cms.cardTotalPages', 'Total Landing Pages'),
+          title: t('cms.cardTotalPages'),
           value: total,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">{published} {t('cms.published', 'Published')}</span>
+              <span className="text-emerald-500 font-bold">{published} {t('cms.published')}</span>
               <span>•</span>
-              <span className="text-amber-500 font-bold">{draft} {t('cms.drafts', 'Drafts')}</span>
+              <span className="text-amber-500 font-bold">{draft} {t('cms.drafts')}</span>
             </>
           ),
           icon: FileCode,
@@ -534,13 +535,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'published-pages',
-          title: t('cms.cardPublishedPages', 'Live Pages & Policies'),
+          title: t('cms.cardPublishedPages'),
           value: published,
           subtext: (
             <>
-              <span className="text-emerald-500 font-bold">{publishedRate}% {t('cms.operational', 'live')}</span>
+              <span className="text-emerald-500 font-bold">{publishedRate}% {t('cms.operational')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">{t('cms.visibleToUsers', 'visible')}</span>
+              <span className="text-muted-foreground">{t('cms.visibleToUsers')}</span>
             </>
           ),
           icon: CheckCircle2,
@@ -548,13 +549,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'draft-pages',
-          title: t('cms.cardDraftPages', 'Draft / Inactive Pages'),
+          title: t('cms.cardDraftPages'),
           value: draft,
           subtext: (
             <>
-              <span className="text-amber-500 font-bold">{draft} {t('cms.drafts', 'WIP')}</span>
+              <span className="text-amber-500 font-bold">{draft} {t('cms.drafts')}</span>
               <span>•</span>
-              <span className="text-muted-foreground">Pending publishing</span>
+              <span className="text-muted-foreground">{t('cms.pendingPublishing')}</span>
             </>
           ),
           icon: Clock,
@@ -562,13 +563,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
         },
         {
           key: 'page-seo',
-          title: t('cms.cardPageSeo', 'SEO & Metadata'),
+          title: t('cms.cardPageSeo'),
           value: withSeo,
           subtext: (
             <>
-              <span className="text-indigo-500 font-bold">{seoRate}% {t('cms.withSeo', 'with SEO')}</span>
+              <span className="text-indigo-500 font-bold">{seoRate}% {t('cms.withSeo')}</span>
               <span>•</span>
-              <span className="text-emerald-500 font-bold">{t('cms.seoReady', 'SEO ready')}</span>
+              <span className="text-emerald-500 font-bold">{t('cms.seoReady')}</span>
             </>
           ),
           icon: Sparkles,
@@ -589,13 +590,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
     return [
       {
         key: 'total-faqs',
-        title: t('cms.cardTotalFaqs', 'Total FAQs & Help'),
+        title: t('cms.cardTotalFaqs'),
         value: total,
         subtext: (
           <>
-            <span className="text-emerald-500 font-bold">{active} {t('cms.active', 'Active')}</span>
+            <span className="text-emerald-500 font-bold">{active} {t('cms.active')}</span>
             <span>•</span>
-            <span className="text-amber-500 font-bold">{inactive} {t('cms.inactive', 'Inactive')}</span>
+            <span className="text-amber-500 font-bold">{inactive} {t('cms.inactive')}</span>
           </>
         ),
         icon: HelpCircle,
@@ -603,13 +604,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       },
       {
         key: 'active-faqs',
-        title: t('cms.cardActiveFaqs', 'Active Knowledgebase'),
+        title: t('cms.cardActiveFaqs'),
         value: active,
         subtext: (
           <>
-            <span className="text-emerald-500 font-bold">{activeRate}% {t('cms.operational', 'active')}</span>
+            <span className="text-emerald-500 font-bold">{activeRate}% {t('cms.operational')}</span>
             <span>•</span>
-            <span className="text-muted-foreground">{t('cms.visibleToUsers', 'visible')}</span>
+            <span className="text-muted-foreground">{t('cms.visibleToUsers')}</span>
           </>
         ),
         icon: CheckCircle2,
@@ -617,13 +618,13 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       },
       {
         key: 'faq-topics',
-        title: t('cms.cardFaqCategories', 'FAQ Topics & Categories'),
+        title: t('cms.cardFaqCategories'),
         value: distinctCategories,
         subtext: (
           <>
-            <span className="text-indigo-500 font-bold">{distinctCategories} {t('cms.tabCategories', 'Topics')}</span>
+            <span className="text-indigo-500 font-bold">{distinctCategories} {t('cms.tabCategories')}</span>
             <span>•</span>
-            <span className="text-muted-foreground">Categorized help</span>
+            <span className="text-muted-foreground">{t('cms.categorizedHelp')}</span>
           </>
         ),
         icon: BookOpen,
@@ -631,14 +632,14 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
       },
       {
         key: 'faq-completeness',
-        title: t('cms.cardFaqCompleteness', 'Answer Completeness'),
+        title: t('cms.cardFaqCompleteness'),
         value: 100,
         suffix: '%',
         subtext: (
           <>
-            <span className="text-emerald-500 font-bold">100% {t('cms.fullyAnswered', 'answered')}</span>
+            <span className="text-emerald-500 font-bold">100% {t('cms.fullyAnswered')}</span>
             <span>•</span>
-            <span className="text-muted-foreground">Direct customer support</span>
+            <span className="text-muted-foreground">{t('cms.directCustomerSupport')}</span>
           </>
         ),
         icon: ShieldCheck,
@@ -647,40 +648,34 @@ export const CMSStatsCards: React.FC<CMSStatsCardsProps> = ({
     ]
   }, [activeTab, records, stats, pagination, t])
 
+  const getCardVariant = (card: any): StatsCardVariant => {
+    if (card.variant) return card.variant
+    const c = card.colorClass || ''
+    if (c.includes('emerald')) return 'emerald'
+    if (c.includes('blue')) return 'blue'
+    if (c.includes('purple')) return 'purple'
+    if (c.includes('amber')) return 'amber'
+    if (c.includes('indigo')) return 'indigo'
+    if (c.includes('teal') || c.includes('cyan') || c.includes('sky')) return 'cyan'
+    if (c.includes('rose') || c.includes('red')) return 'rose'
+    return 'primary'
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 print:hidden">
-      <AnimatePresence>
-        {tabCards.map((card, idx) => {
-          const Icon = card.icon
-          return (
-            <motion.div
-              key={`${activeTab}-${card.key}`}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.18, delay: idx * 0.04 }}
-              className="bg-card border border-border p-5 rounded-2xl flex items-center justify-between shadow-xs hover:shadow-md transition-all duration-200"
-            >
-              <div className="space-y-1 min-w-0 pr-2">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider truncate">
-                  {card.title}
-                </p>
-                <div className="text-2xl font-extrabold text-foreground tracking-tight font-mono truncate flex items-baseline gap-0.5">
-                  <AnimatedCounter value={card.value} />
-                  {(card as any).suffix && <span className="text-lg font-bold">{(card as any).suffix}</span>}
-                </div>
-                <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap truncate">
-                  {card.subtext}
-                </div>
-              </div>
-              <div className={`p-3.5 rounded-xl shrink-0 ${card.colorClass}`}>
-                <Icon size={22} />
-              </div>
-            </motion.div>
-          )
-        })}
-      </AnimatePresence>
-    </div>
+    <EnterpriseStatsGrid columns={4} className="print:hidden">
+      {tabCards.map((card, idx) => (
+        <EnterpriseStatsCard
+          key={`${activeTab}-${card.key}`}
+          title={card.title}
+          value={card.value}
+          suffix={(card as any).suffix || ''}
+          subtitle={card.subtext}
+          icon={card.icon}
+          variant={getCardVariant(card)}
+          delay={idx * 0.04}
+        />
+      ))}
+    </EnterpriseStatsGrid>
   )
 }
 

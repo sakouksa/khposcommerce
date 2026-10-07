@@ -33,23 +33,27 @@ import {
   Image as ImageIcon,
   Camera,
   QrCode,
+  Send,
+  Bot,
 } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { settingsService } from '@/services/settingsService'
 import { useTranslation } from 'react-i18next'
 import { useToast } from '@/hooks/useToast'
 import { useCompanyStore } from '@/stores/companyStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { getAbsoluteImageUrl } from '@/utils/image'
 import BrandLogo from '@/components/common/BrandLogo'
 import AppearanceSettings from './AppearanceSettings'
 import BakongSettings from './BakongSettings'
+import TelegramAlertSettings from './TelegramAlertSettings'
 import Pagination from '@/components/shared/Pagination'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import SearchInput from '@/components/shared/SearchInput'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { useServerPagination } from '@/hooks/useServerPagination'
 import { usePageTab } from '@/hooks/usePageTab'
-import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
 import i18n from '@/lib/i18n'
 
 interface SettingItem {
@@ -59,23 +63,24 @@ interface SettingItem {
   type: string
 }
 
-type MainTab = 'store' | 'payments' | 'appearance' | 'taxes_units' | 'locations'
+type MainTab = 'store' | 'payments' | 'telegram' | 'appearance' | 'taxes_units' | 'locations'
 
 const SettingsPage: React.FC = () => {
+  const { language } = useThemeStore()
   const { t } = useTranslation(['settings', 'common'])
   const toast = useToast()
   const qc = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { hasPermission } = useAuthStore()
+  const { hasPermission } = usePermission()
 
-  const canUpdate = hasPermission(['setting.update', 'setting.manage'])
-  const canCreate = hasPermission(['setting.create', 'setting.manage'])
-  const canDelete = hasPermission(['setting.delete', 'setting.manage'])
+  const canUpdateSetting = hasPermission(['setting.update', 'setting.manage'])
+  const canCreateSetting = hasPermission(['setting.create', 'setting.manage'])
+  const canDeleteSetting = hasPermission(['setting.delete', 'setting.manage'])
 
   const [activeTab, setActiveTabRaw] = usePageTab<MainTab>({
     storageKey: 'settings_active_tab',
     defaultTab: 'store',
-    validTabs: ['store', 'payments', 'appearance', 'taxes_units', 'locations'],
+    validTabs: ['store', 'payments', 'telegram', 'appearance', 'taxes_units', 'locations'],
   })
 
   const setActiveTab = (tab: MainTab) => {
@@ -395,7 +400,7 @@ const SettingsPage: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canUpdate) {
+    if (!canUpdateSetting) {
       toast.error('Permission denied. You do not have permission to update settings.')
       return
     }
@@ -444,7 +449,7 @@ const SettingsPage: React.FC = () => {
   }
 
   const handlePaperSizeChange = async (size: '80mm' | '58mm') => {
-    if (!canUpdate) {
+    if (!canUpdateSetting) {
       toast.error('Permission denied. You do not have permission to update settings.')
       return
     }
@@ -473,7 +478,7 @@ const SettingsPage: React.FC = () => {
       e.preventDefault()
       e.stopPropagation()
     }
-    if (!canUpdate) {
+    if (!canUpdateSetting) {
       toast.error('Permission denied. You do not have permission to update settings.')
       return
     }
@@ -573,7 +578,7 @@ const SettingsPage: React.FC = () => {
 
   // Modal Handlers
   const handleOpenCreate = () => {
-    if (!canCreate) {
+    if (!canCreateSetting) {
       toast.error('Permission denied. You do not have permission to create setting items.')
       return
     }
@@ -595,7 +600,7 @@ const SettingsPage: React.FC = () => {
   }
 
   const handleOpenEdit = (item: any) => {
-    if (!canUpdate) {
+    if (!canUpdateSetting) {
       toast.error('Permission denied. You do not have permission to update setting items.')
       return
     }
@@ -627,11 +632,11 @@ const SettingsPage: React.FC = () => {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (editingItem && !canUpdate) {
+    if (editingItem && !canUpdateSetting) {
       toast.error('Permission denied.')
       return
     }
-    if (!editingItem && !canCreate) {
+    if (!editingItem && !canCreateSetting) {
       toast.error('Permission denied.')
       return
     }
@@ -658,7 +663,7 @@ const SettingsPage: React.FC = () => {
   }
 
   const triggerDelete = (id: number) => {
-    if (!canDelete) {
+    if (!canDeleteSetting) {
       toast.error('Permission denied. You do not have permission to delete setting items.')
       return
     }
@@ -667,7 +672,7 @@ const SettingsPage: React.FC = () => {
   }
 
   const confirmDelete = () => {
-    if (!canDelete) {
+    if (!canDeleteSetting) {
       toast.error('Permission denied.')
       return
     }
@@ -699,6 +704,7 @@ const SettingsPage: React.FC = () => {
           {[
             { id: 'store', label: t('settings.tabStoreProfile', 'Store Profile'), icon: Store },
             { id: 'payments', label: t('settings.tabPayments', 'Bakong & ACLEDA Bank'), icon: QrCode },
+            { id: 'telegram', label: (i18n.language === 'km' || language === 'kh') ? 'Telegram & ដំណឹងស្តុក' : 'Telegram & Stock Alert', icon: Send },
             { id: 'appearance', label: t('settings.tabAppearance', 'Appearance'), icon: Palette },
             { id: 'taxes_units', label: t('settings.tabTaxesUnits', 'Taxes & Units'), icon: Percent },
             { id: 'locations', label: t('settings.tabLocations', 'Locations'), icon: MapPin },
@@ -915,7 +921,7 @@ const SettingsPage: React.FC = () => {
                   </div>
                   <button
                     type="submit"
-                    disabled={!canUpdate || updateSettingsMutation.isPending || isUploadingLogo}
+                    disabled={!canUpdateSetting || updateSettingsMutation.isPending || isUploadingLogo}
                     className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-md cursor-pointer disabled:opacity-50"
                   >
                     {(updateSettingsMutation.isPending || isUploadingLogo) ? (
@@ -1057,7 +1063,7 @@ const SettingsPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleSaveReceiptSettings}
-                      disabled={!canUpdate || isSavingReceipt || updateSettingsMutation.isPending}
+                      disabled={!canUpdateSetting || isSavingReceipt || updateSettingsMutation.isPending}
                       className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-md cursor-pointer disabled:opacity-50"
                     >
                       {isSavingReceipt ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
@@ -1074,7 +1080,10 @@ const SettingsPage: React.FC = () => {
       {/* TAB 2: BAKONG & ACLEDA BANK PAYMENT GATEWAY */}
       {activeTab === 'payments' && <BakongSettings />}
 
-      {/* TAB 3: APPEARANCE */}
+      {/* TAB 3: TELEGRAM BOT & STOCK ALERTS */}
+      {activeTab === 'telegram' && <TelegramAlertSettings />}
+
+      {/* TAB 4: APPEARANCE */}
       {activeTab === 'appearance' && <AppearanceSettings />}
 
       {/* TAB 3: TAXES & MEASUREMENT UNITS */}
@@ -1119,7 +1128,7 @@ const SettingsPage: React.FC = () => {
                 />
               </div>
 
-              {canCreate && (
+              {canCreateSetting && (
                 <button
                   onClick={handleOpenCreate}
                   className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-md cursor-pointer shrink-0"
@@ -1131,7 +1140,7 @@ const SettingsPage: React.FC = () => {
           </div>
 
           {/* Bulk actions banner */}
-          {canDelete && selectedRows.length > 0 && (
+          {canDeleteSetting && selectedRows.length > 0 && (
             <div className="flex items-center justify-between p-3.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-2xl animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="flex items-center gap-2 text-xs text-rose-700 dark:text-rose-300 font-bold">
                 <AlertCircle size={16} />
@@ -1210,8 +1219,8 @@ const SettingsPage: React.FC = () => {
                             </td>
                             <td className="p-3.5 pr-6 text-right">
                               <TableActionMenu
-                                onEdit={canUpdate ? () => handleOpenEdit(tItem) : undefined}
-                                onDelete={canDelete ? () => triggerDelete(tItem.id) : undefined}
+                                onEdit={canUpdateSetting ? () => handleOpenEdit(tItem) : undefined}
+                                onDelete={canDeleteSetting ? () => triggerDelete(tItem.id) : undefined}
                               />
                             </td>
                           </tr>
@@ -1281,8 +1290,8 @@ const SettingsPage: React.FC = () => {
                             </td>
                             <td className="p-3.5 pr-6 text-right">
                               <TableActionMenu
-                                onEdit={canUpdate ? () => handleOpenEdit(u) : undefined}
-                                onDelete={canDelete ? () => triggerDelete(u.id) : undefined}
+                                onEdit={canUpdateSetting ? () => handleOpenEdit(u) : undefined}
+                                onDelete={canDeleteSetting ? () => triggerDelete(u.id) : undefined}
                               />
                             </td>
                           </tr>
@@ -1355,7 +1364,7 @@ const SettingsPage: React.FC = () => {
                 />
               </div>
 
-              {canCreate && (
+              {canCreateSetting && (
                 <button
                   onClick={handleOpenCreate}
                   className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-md cursor-pointer shrink-0"
@@ -1367,7 +1376,7 @@ const SettingsPage: React.FC = () => {
           </div>
 
           {/* Bulk actions banner for Locations */}
-          {canDelete && selectedRows.length > 0 && (
+          {canDeleteSetting && selectedRows.length > 0 && (
             <div className="flex items-center justify-between p-3.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 rounded-2xl animate-in fade-in slide-in-from-top-1 duration-150">
               <div className="flex items-center gap-2 text-xs text-rose-700 dark:text-rose-300 font-bold">
                 <AlertCircle size={16} />
@@ -1443,8 +1452,8 @@ const SettingsPage: React.FC = () => {
                             </td>
                             <td className="p-3.5 pr-6 text-right">
                               <TableActionMenu
-                                onEdit={canUpdate ? () => handleOpenEdit(c) : undefined}
-                                onDelete={canDelete ? () => triggerDelete(c.id) : undefined}
+                                onEdit={canUpdateSetting ? () => handleOpenEdit(c) : undefined}
+                                onDelete={canDeleteSetting ? () => triggerDelete(c.id) : undefined}
                               />
                             </td>
                           </tr>
@@ -1508,8 +1517,8 @@ const SettingsPage: React.FC = () => {
                             <td className="p-3.5 text-foreground font-semibold">{p.country?.name ?? 'Cambodia'}</td>
                             <td className="p-3.5 pr-6 text-right">
                               <TableActionMenu
-                                onEdit={canUpdate ? () => handleOpenEdit(p) : undefined}
-                                onDelete={canDelete ? () => triggerDelete(p.id) : undefined}
+                                onEdit={canUpdateSetting ? () => handleOpenEdit(p) : undefined}
+                                onDelete={canDeleteSetting ? () => triggerDelete(p.id) : undefined}
                               />
                             </td>
                           </tr>
@@ -1575,8 +1584,8 @@ const SettingsPage: React.FC = () => {
                             <td className="p-3.5 text-foreground font-semibold">{ci.province?.name ?? 'Phnom Penh'}</td>
                             <td className="p-3.5 pr-6 text-right">
                               <TableActionMenu
-                                onEdit={canUpdate ? () => handleOpenEdit(ci) : undefined}
-                                onDelete={canDelete ? () => triggerDelete(ci.id) : undefined}
+                                onEdit={canUpdateSetting ? () => handleOpenEdit(ci) : undefined}
+                                onDelete={canDeleteSetting ? () => triggerDelete(ci.id) : undefined}
                               />
                             </td>
                           </tr>
@@ -1743,7 +1752,7 @@ const SettingsPage: React.FC = () => {
                   <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 text-xs font-semibold border border-border rounded-xl hover:bg-muted cursor-pointer transition-colors">
                     {t('common.cancel', 'Cancel')}
                   </button>
-                  <button type="submit" disabled={(!editingItem && !canCreate) || (editingItem && !canUpdate) || createMutation.isPending || updateMutation.isPending} className="px-4 py-2 text-xs font-bold bg-primary text-white rounded-xl flex items-center gap-1.5 hover:opacity-90 cursor-pointer shadow-sm transition-all disabled:opacity-50">
+                  <button type="submit" disabled={(!editingItem && !canCreateSetting) || (editingItem && !canUpdateSetting) || createMutation.isPending || updateMutation.isPending} className="px-4 py-2 text-xs font-bold bg-primary text-white rounded-xl flex items-center gap-1.5 hover:opacity-90 cursor-pointer shadow-sm transition-all disabled:opacity-50">
                     {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="animate-spin" size={14} />}
                     {t('common.save', 'Save Configuration')}
                   </button>

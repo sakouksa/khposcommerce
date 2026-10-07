@@ -11,7 +11,7 @@ import {
 import { useToast } from '@/hooks/useToast'
 import { useServerPagination } from '@/hooks/useServerPagination'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import { CloseButton, CancelButton, ResetButton, EnterpriseDatePicker } from '@/components/common'
+import { CloseButton, CancelButton, ResetButton, EnterpriseDatePicker, HeaderActionsGroup, ExportButton } from '@/components/common'
 import SearchInput from '@/components/shared/SearchInput'
 import TableWrapper from '@/components/shared/TableWrapper'
 import LoadingSkeleton from '@/components/shared/LoadingSkeleton'
@@ -507,47 +507,41 @@ const ActivityLogsPage: React.FC = () => {
   ]
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
-      
-      {/* ── Breadcrumb & Title ──────────────────────────────────────────────── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <Breadcrumb
-            items={[
-              { label: t('nav.administration', 'Administration'), path: '/users' },
-              { label: t('nav.activityLogs', 'Activity Logs'), path: '/activity-logs' },
-            ]}
-          />
-          <div className="space-y-1 mt-2 min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight break-words">
-              {t('activityLogs.page_title', 'System Audit & Activity Logs')}
-            </h1>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed max-w-3xl">
-              {t('activityLogs.page_subtitle', 'Comprehensive audit trails for administrative security, data modifications, and system events.')}
-            </p>
-          </div>
+    <div className="space-y-5 print:p-0">
+      <Breadcrumb
+        items={[
+          { label: t('nav.systemManagement', 'Activity & Logs'), path: '/activity-logs' },
+          { label: t('nav.activityLogs', 'Activity Logs') },
+        ]}
+      />
+
+      {/* Hero Header */}
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+        <div className="space-y-1 min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+            {t('activityLogs.page_title', 'System Audit & Activity Logs')}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+            {t('activityLogs.page_subtitle', 'Comprehensive audit trails for administrative security, data modifications, and system events.')}
+          </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 flex-wrap w-full xl:w-auto xl:justify-end shrink-0">
+        <HeaderActionsGroup>
+          <ExportButton
+            onClick={handleExportCSV}
+            label={t('common.exportCsv', 'Export CSV')}
+          />
           <button
+            type="button"
             onClick={() => refetch()}
             disabled={isFetchingLogs}
-            className="px-3.5 py-2 text-xs font-semibold rounded-xl border border-border bg-card hover:bg-muted text-foreground flex items-center gap-2 shadow-sm transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-muted-foreground border border-border rounded-xl hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
             title="Refresh logs"
           >
             <RefreshCw size={14} className={isFetchingLogs ? 'animate-spin text-primary' : ''} />
             <span>{t('common.refresh', 'Refresh')}</span>
           </button>
-
-          <button
-            onClick={handleExportCSV}
-            className="px-4 py-2 text-xs font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 shadow-sm shadow-primary/20 transition-all"
-          >
-            <Download size={14} />
-            <span>{t('common.export', 'Export CSV')}</span>
-          </button>
-        </div>
+        </HeaderActionsGroup>
       </div>
 
       {/* ── Metric KPI Stats Cards ──────────────────────────────────────────── */}

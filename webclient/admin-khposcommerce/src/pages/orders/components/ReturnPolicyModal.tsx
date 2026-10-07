@@ -22,7 +22,7 @@ import {
 } from '@/components/common'
 import { orderReturnService } from '@/services/orderReturnService'
 import { useToast } from '@/hooks/useToast'
-import type { ReturnPolicy } from '@/types/orderReturn.types'
+import type { ReturnPolicy } from '../types'
 import { getCategoryDisplayName } from '../ReturnPoliciesPage'
 
 export interface ReturnPolicyModalProps {

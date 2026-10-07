@@ -29,10 +29,11 @@ import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
-import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
-import { TableToolbar, AddButton, ExportButton, ImportButton } from '@/components/common'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { TableToolbar, AddButton, ExportButton, ImportButton, HeaderActionsGroup } from '@/components/common'
+import BrandStatsCards from './components/BrandStatsCards'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 
 interface Brand {
   id: number
@@ -69,24 +70,24 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
   const navigate = useNavigate()
   const qc = useQueryClient()
   const toast = useToast()
-  const { hasPermission } = useAuthStore()
+  const { hasPermission } = usePermission()
 
-  const canCreate = hasPermission('brand.create')
-  const canUpdate = hasPermission('brand.update')
-  const canDelete = hasPermission('brand.delete')
-  const canExport = hasPermission(['brand.export', 'brand.view'])
-  const canImport = hasPermission(['brand.create', 'brand.import'])
+  const canCreateBrand = hasPermission('brand.create')
+  const canUpdateBrand = hasPermission('brand.update')
+  const canDeleteBrand = hasPermission('brand.delete')
+  const canExportBrand = hasPermission('brand.export')
+  const canImportBrand = hasPermission('brand.import')
 
   // Open add modal ONLY when parent triggers it with a positive change
   const prevTriggerRef = React.useRef(triggerAdd || 0)
   React.useEffect(() => {
     if (triggerAdd && triggerAdd > 0 && triggerAdd !== prevTriggerRef.current) {
-      if (canCreate) {
+      if (canCreateBrand) {
         openCreateModal()
       }
     }
     prevTriggerRef.current = triggerAdd || 0
-  }, [triggerAdd, canCreate])
+  }, [triggerAdd, canCreateBrand])
 
   const {
     page,
@@ -383,57 +384,65 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
     <div className="space-y-5">
       {!isTab && (
         <>
-          <Breadcrumb items={[{ label: t('dashboard.title') || 'Dashboard', path: '/dashboard' }, { label: t('products.tabBrands') }]} />
+          <Breadcrumb
+            items={[
+              { label: t('nav.productManagement', 'Products'), path: '/products' },
+              { label: t('nav.brands', 'Brands') },
+            ]}
+          />
 
-          <PageHeader
-            icon={<Tag size={24} />}
-            title={t('products.tabBrands')}
-            subtitle={t('products.heroSubtitle')}
-            action={
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setRecycleBinMode(!recycleBinMode)}
-                  className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border transition-colors
-                             ${recycleBinMode 
-                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20' 
-                                : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
-                >
-                  <Trash size={15} />
-                  {recycleBinMode ? t('products.recycleBin') : t('products.trash')}
-                </button>
+          {/* Hero Header */}
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+            <div className="space-y-1 min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+                {t('products.tabBrands', 'Product Brands')}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                {t('products.heroSubtitle', 'Manage manufacturer brands, partner logos, and product brand assignments.')}
+              </p>
+            </div>
 
-                {canExport && (
-                  <button
-                    onClick={handleExport}
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs cursor-pointer"
-                  >
-                    <Download size={15} />
-                    {t('products.exportCSV')}
-                  </button>
-                )}
+            <HeaderActionsGroup>
+              <button
+                type="button"
+                onClick={() => setRecycleBinMode(!recycleBinMode)}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold rounded-xl border transition-all cursor-pointer ${
+                  recycleBinMode 
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20' 
+                    : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
+              >
+                <Trash size={15} />
+                {recycleBinMode ? t('products.recycleBin') : t('products.trash')}
+              </button>
 
-                {canImport && (
-                  <button
-                    onClick={() => setImportOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground transition-colors shadow-2xs cursor-pointer"
-                  >
-                    <Upload size={15} />
-                    {t('products.importCSV')}
-                  </button>
-                )}
+              {canExportBrand && (
+                <ExportButton
+                  onClick={handleExport}
+                  label={t('products.exportCSV', 'Export CSV')}
+                />
+              )}
 
-                {canCreate && (
-                  <button
-                    onClick={openCreateModal}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
-                               bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
-                  >
-                    <Plus size={16} />
-                    {t('products.addBrand')}
-                  </button>
-                )}
-              </div>
-            }
+              {canImportBrand && (
+                <ImportButton
+                  onClick={() => setImportOpen(true)}
+                  label={t('products.importCSV', 'Import CSV')}
+                />
+              )}
+
+              {canCreateBrand && (
+                <AddButton
+                  onClick={openCreateModal}
+                  label={t('products.addBrand', 'Add Brand')}
+                />
+              )}
+            </HeaderActionsGroup>
+          </div>
+
+          {/* Stats Cards */}
+          <BrandStatsCards
+            brands={brands}
+            total={pagination.total}
+            isLoading={isLoading}
           />
         </>
       )}
@@ -448,7 +457,7 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
           <div className="flex items-center gap-2">
             {recycleBinMode ? (
               <>
-                {canUpdate && (
+                {canUpdateBrand && (
                   <button
                     onClick={() => bulkRestoreMutation.mutate(selectedRows)}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-500 transition-colors shadow-xs cursor-pointer"
@@ -457,7 +466,7 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
                     {t('products.restoreSelected')}
                   </button>
                 )}
-                {canDelete && (
+                {canDeleteBrand && (
                   <button
                     onClick={() => {
                       if (confirm('Permanently delete selected brands? This cannot be undone.')) {
@@ -473,7 +482,7 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
                 )}
               </>
             ) : (
-              canDelete && (
+              canDeleteBrand && (
                 <button
                   onClick={() => setBulkDeleteConfirmOpen(true)}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-xl hover:bg-red-500 cursor-pointer transition-colors shadow-xs"
@@ -701,7 +710,7 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
                       <td className="py-3.5 pr-4 text-right">
                         {recycleBinMode ? (
                           <div className="flex items-center justify-end gap-1">
-                            {canUpdate && (
+                            {canUpdateBrand && (
                               <button
                                 onClick={() => restoreMutation.mutate(brand.id)}
                                 className="p-1.5 hover:bg-muted rounded-lg text-indigo-500 hover:text-indigo-600 transition-colors cursor-pointer"
@@ -710,7 +719,7 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
                                 <RefreshCw size={14} />
                               </button>
                             )}
-                            {canDelete && (
+                            {canDeleteBrand && (
                               <button
                                 onClick={() => setDeleteTarget(brand)}
                                 className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-muted-foreground hover:text-red-500 transition-colors cursor-pointer"
@@ -722,8 +731,8 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
                           </div>
                         ) : (
                           <TableActionMenu
-                            onEdit={canUpdate ? () => openEditModal(brand) : undefined}
-                            onDelete={canDelete ? () => setDeleteTarget(brand) : undefined}
+                            onEdit={canUpdateBrand ? () => openEditModal(brand) : undefined}
+                            onDelete={canDeleteBrand ? () => setDeleteTarget(brand) : undefined}
                           />
                         )}
                       </td>
@@ -823,7 +832,7 @@ const BrandsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab,
                           src={logoPreview}
                           alt="Preview"
                           className="w-full h-full object-contain"
-                          wrapperClassName="w-full h-full flex items-center justify-center cursor-pointer"
+                          rootClassName="w-full h-full flex items-center justify-center cursor-pointer"
                           fallback={DEFAULT_BRAND_IMAGE}
                         />
                       ) : (

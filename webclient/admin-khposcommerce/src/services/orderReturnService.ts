@@ -6,7 +6,7 @@ import type {
   ReturnShipment,
   ReturnInspection,
   ExchangeOrder,
-} from '@/types/orderReturn.types'
+} from '@/pages/orders/types'
 
 export const orderReturnService = {
   // Returns List & Detail

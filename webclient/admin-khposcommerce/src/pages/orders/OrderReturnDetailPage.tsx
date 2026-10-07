@@ -23,7 +23,7 @@ import type {
   ReturnFault,
   ConditionGrade,
   InventoryAction,
-} from '@/types/orderReturn.types'
+} from './types'
 import { useToast } from '@/hooks/useToast'
 import { useThemeStore } from '@/stores/themeStore'
 import { sound } from '@/utils/sound'

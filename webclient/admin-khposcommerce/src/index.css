@@ -11,6 +11,8 @@
     --foreground:  222 47% 11%;
     --card:        0 0% 100%;
     --card-foreground: 222 47% 11%;
+    --popover:     0 0% 100%;
+    --popover-foreground: 222 47% 11%;
     --border:      214 32% 91%;
     --input:       214 32% 91%;
     --ring:        221 83% 53%;
@@ -32,6 +34,8 @@
     --foreground:  210 40% 98%;
     --card:        222 47% 11%;
     --card-foreground: 210 40% 98%;
+    --popover:     222 47% 11%;
+    --popover-foreground: 210 40% 98%;
     --border:      217 33% 17%;
     --input:       217 33% 17%;
     --ring:        224 71% 60%;
@@ -154,18 +158,18 @@
     @apply bg-card rounded-xl p-6 shadow-card border border-border hover:shadow-card-lg transition-shadow duration-200;
   }
 
-  /* Table styles — Flutter Flatten Admin Global Standard */
+  /* Table styles — Modern Enterprise Admin Standard */
   .data-table {
     @apply w-full border-collapse text-left text-xs;
   }
   .data-table thead {
-    @apply bg-[#e6f4f8] dark:bg-cyan-950/30 border-b border-cyan-100 dark:border-cyan-900/40;
+    @apply bg-muted/60 dark:bg-slate-900/80 border-b border-border/80;
   }
   .data-table th {
-    @apply text-[11px] font-bold text-[#0f5b78] dark:text-cyan-300 uppercase tracking-wider px-4 py-3.5 bg-[#e6f4f8] dark:bg-cyan-950/30 text-left whitespace-nowrap align-middle border-b border-cyan-100 dark:border-cyan-900/40 select-none;
+    @apply text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3 bg-muted/60 dark:bg-slate-900/80 text-left whitespace-nowrap align-middle border-b border-border/80 select-none;
   }
   .data-table td {
-    @apply px-4 py-3 text-xs text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800/80 whitespace-nowrap align-middle transition-colors;
+    @apply px-4 py-3 text-xs text-foreground/90 border-b border-border/60 whitespace-nowrap align-middle transition-colors;
   }
   .data-table th.text-right,
   .data-table td.text-right,
@@ -180,14 +184,14 @@
     text-align: center;
   }
   .data-table tbody tr {
-    @apply bg-white dark:bg-slate-900 transition-colors duration-150;
+    @apply bg-card transition-colors duration-150;
   }
   .data-table tbody tr:hover td {
-    @apply bg-cyan-50/40 dark:bg-cyan-950/20 text-slate-900 dark:text-white;
+    @apply bg-muted/50 dark:bg-slate-800/50 text-foreground;
   }
   .data-table tbody tr.is-selected td,
   .data-table tbody tr[aria-selected="true"] td {
-    @apply bg-cyan-50/80 dark:bg-cyan-950/40 text-cyan-900 dark:text-cyan-100;
+    @apply bg-primary/10 text-primary font-medium;
   }
 
   /* Badge variants */

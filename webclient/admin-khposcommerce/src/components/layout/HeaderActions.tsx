@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { Zap } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/authStore'
+import TenantContextSwitcher from './TenantContextSwitcher'
 import QuickActionDropdown from './QuickActionDropdown'
 import LanguageDropdown from './LanguageDropdown'
 import ThemeSwitcher from './ThemeSwitcher'
@@ -19,6 +20,9 @@ const HeaderActions: React.FC = () => {
 
   return (
     <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2.5 flex-shrink-0">
+      {/* Tenant Scope & Branch Context Switcher */}
+      <TenantContextSwitcher />
+
       {/* POS Quick Link */}
       {hasPermission('sale.create') && (
         <Link

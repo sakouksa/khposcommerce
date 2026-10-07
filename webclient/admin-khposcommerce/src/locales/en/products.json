@@ -1083,5 +1083,34 @@
     "attrNameRequired": "Please enter attribute name",
     "taxNameRequired": "Please enter tax name",
     "taxRateRequired": "Please enter valid tax rate"
-  }
+  },
+  "permanentDelete": "Permanent Delete",
+  "clickToUploadCSV": "Click to upload CSV file",
+  "categoriesImportInstruction": "CSV format: Name, Parent Category, Description, Sort Order",
+  "categories": {
+    "deleteTitle": "Delete Category",
+    "bulkDeleteTitle": "Delete Selected Categories",
+    "confirmBulkDeleteMessage": "Are you sure you want to delete {{count}} selected categories? This action cannot be undone."
+  },
+
+  "colSupplier": "Supplier",
+  "allSuppliers": "All Suppliers",
+  "stockHigh": "High",
+  "stockLow": "Low",
+  "stockOut": "Out",
+  "manageTable": "Manage Table",
+  "allInStock": "All in stock",
+  "activeLabel": "Active",
+  "costLabel": "Cost",
+  "profitLabel": "Profit",
+  "retailLabel": "Retail",
+  "generalCategory": "General",
+  "noBrand": "—",
+  "printBarcode": "Print Label",
+  "stockRequiresRestock": "Requires restock",
+  "stockOptimalLevels": "Optimal stock levels",
+  "totalProductsTooltip": "Total system products",
+  "inventoryValueTooltip": "Total retail stock value & potential profit",
+  "salesPerformanceTooltip": "Total units sold & catalog variety",
+  "lowStockTooltip": "Products reaching low stock threshold"
 }

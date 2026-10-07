@@ -57,6 +57,17 @@ const TOAST_THEMES = {
     progress: 'bg-gradient-to-r from-indigo-400 to-indigo-600',
     glow: 'shadow-indigo-500/10',
   },
+  loading: {
+    bg: 'bg-white/95 dark:bg-slate-900/95',
+    border: 'border-blue-500/30 dark:border-blue-500/40',
+    title: 'text-blue-950 dark:text-blue-100',
+    body: 'text-blue-800/90 dark:text-blue-200/80',
+    iconBg: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+    icon: <RefreshCw className="w-5 h-5 text-blue-500 flex-shrink-0 animate-spin" />,
+    badgeBg: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+    progress: 'bg-gradient-to-r from-blue-400 to-blue-600',
+    glow: 'shadow-blue-500/10',
+  },
 }
 
 const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
@@ -97,6 +108,7 @@ const ToastItem: React.FC<{ toast: Toast }> = ({ toast }) => {
     error: t('common.error', 'កំហុស'),
     warning: t('common.warning', 'ការព្រមាន'),
     info: t('common.info', 'ព័ត៌មាន'),
+    loading: t('common.loading', 'ដំណើរការ...'),
   }
 
   // Dynamically translate all toast contents based on the active language

@@ -19,6 +19,8 @@ export function useToast() {
         addToast(normalizeToastOptions(param, 'warning', duration)),
       info: (param: ToastParam, duration?: number) =>
         addToast(normalizeToastOptions(param, 'info', duration)),
+      loading: (param: ToastParam, duration?: number) =>
+        addToast(normalizeToastOptions(param, 'loading', duration ?? 0)),
       custom: (options: ToastOptions) => addToast(options),
       remove: (id: string) => removeToast(id),
       dismiss: (id?: string) => (id ? removeToast(id) : clearToasts()),

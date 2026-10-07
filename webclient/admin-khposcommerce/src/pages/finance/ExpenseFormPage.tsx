@@ -85,10 +85,17 @@ export const ExpenseFormPage: React.FC = () => {
   })
 
   // Fetch categories for dropdown
-  const { data: categories = [] } = useQuery({
+  // NOTE: This queryKey is shared with ExpensesSpendingPage which may cache the full
+  // paginated response object. Always normalise to an array before using.
+  const { data: categoriesRaw } = useQuery({
     queryKey: ['expense-categories-dropdown'],
     queryFn: () => expenseService.getCategories({ per_page: 100 }).then(r => r.data ?? []),
   })
+  const categories: any[] = Array.isArray(categoriesRaw)
+    ? categoriesRaw
+    : Array.isArray(categoriesRaw?.data)
+    ? categoriesRaw.data
+    : []
 
   // Fetch branches for dropdown
   const { data: branches = [] } = useQuery({
@@ -159,7 +166,7 @@ export const ExpenseFormPage: React.FC = () => {
           ? t('finance.update_success', 'Expense updated successfully.')
           : t('finance.save_success', 'Expense recorded successfully.')
       )
-      navigate('/expenses?tab=expenses')
+      navigate('/finance/expenses')
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.message || t('finance.save_error', 'Failed to save expense.'))
@@ -230,11 +237,11 @@ export const ExpenseFormPage: React.FC = () => {
         title={isEdit ? t('finance.edit_expense', 'Edit Expense') : t('finance.create_expense', 'Record New Expense')}
         subtitle={t('finance.expense_form_sub', 'Fill in operational expense details, financial outlay, reference number, and attach digital invoices.')}
         isEdit={isEdit}
-        backPath="/expenses?tab=expenses"
+        backPath="/finance/expenses"
         backLabel={t('finance.back_to_expenses', 'Back to Expenses')}
         breadcrumbs={[
-          { label: t('nav.financeManagement', 'Finance'), href: '/expenses' },
-          { label: t('finance.expenses', 'Expenses'), href: '/expenses?tab=expenses' },
+          { label: t('nav.financeManagement', 'Finance'), href: '/finance/expenses' },
+          { label: t('finance.expenses', 'Expenses'), href: '/finance/expenses' },
           { label: isEdit ? `${t('common.edit', 'Edit')} #${formData.reference_number || expenseId}` : t('finance.create_expense', 'Record New Expense') },
         ]}
         statusBadge={
@@ -599,7 +606,7 @@ export const ExpenseFormPage: React.FC = () => {
 
       {/* ─── Clean Form Footer ─── */}
       <FormFooter
-        cancelPath="/expenses?tab=expenses"
+        cancelPath="/finance/expenses"
         cancelLabel={t('common.cancel', 'Cancel')}
         isEdit={isEdit}
         isSubmitting={saveMutation.isPending}
@@ -610,4 +617,5 @@ export const ExpenseFormPage: React.FC = () => {
   )
 }
 
+export const FinanceExpenseFormPage = ExpenseFormPage
 export default ExpenseFormPage

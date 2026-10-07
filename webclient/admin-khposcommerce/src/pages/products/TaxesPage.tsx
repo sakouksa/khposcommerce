@@ -27,7 +27,7 @@ import { FieldError, getFieldClass } from '@/components/common'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
 import { TableToolbar } from '@/components/common'
 

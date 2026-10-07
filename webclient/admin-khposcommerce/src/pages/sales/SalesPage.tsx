@@ -22,6 +22,7 @@ import { SalesDetailDrawer } from './components/SalesDetailDrawer'
 import { ProcessRefundModal } from './components/ProcessRefundModal'
 import { SalesReceiptModal, type Sale } from './components/SalesReceiptModal'
 import { SalesTableSection } from './components/SalesTableSection'
+import { SalesStatsCards } from './components/SalesStatsCards'
 import { AnimatePresence } from 'framer-motion'
 import { useThemeStore } from '@/stores/themeStore'
 import { downloadCsv, getDateRangeBounds } from '@/utils/export'
@@ -365,7 +366,14 @@ const SalesPage: React.FC = () => {
         </HeaderActionsGroup>
       </div>
 
-      {/* ── 2. WORKSPACE TABS NAVIGATION ──────────────────────────────────────── */}
+      {/* ── 2. EXECUTIVE KPI SUMMARY METRICS ──────────────────────────────────── */}
+      <SalesStatsCards
+        sales={salesList}
+        total={pagination.total}
+        isLoading={isLoading}
+      />
+
+      {/* ── 3. WORKSPACE TABS NAVIGATION ──────────────────────────────────────── */}
       <WorkspaceTabs
         tabs={tabs}
         activeTab={activeTab}

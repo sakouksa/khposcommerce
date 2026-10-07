@@ -12,13 +12,20 @@ import {
   Plus, Search, Edit2, Trash2, RefreshCw, X, Store,
   ToggleLeft, ToggleRight, Eye, Mail, Phone, MapPin, Globe, Loader2, BookOpen
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { companyService } from '@/services/companyService'
 import { useToast } from '@/hooks/useToast'
-import PageHeader from '@/components/common/PageHeader'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import StatusBadge from '@/components/common/StatusBadge'
-import { TableToolbar } from '@/components/common'
+import {
+  TableToolbar,
+  HeaderActionsGroup,
+  AddButton,
+  ExportButton,
+} from '@/components/common'
 import TableActionMenu from '@/components/shared/TableActionMenu'
+import { StoreStatsCards } from './components/StoreStatsCards'
+import { downloadCsv } from '@/utils/export'
 
 interface StoreItem {
   id:          number
@@ -37,9 +44,10 @@ interface StoreItem {
 }
 
 const StoresPage: React.FC<{ isTab?: boolean }> = ({ isTab }) => {
+  const { t } = useTranslation(['settings', 'common'])
   const qc = useQueryClient()
   const toast = useToast()
-    const {
+  const {
     page,
     setPage,
     perPage,
@@ -181,26 +189,65 @@ const StoresPage: React.FC<{ isTab?: boolean }> = ({ isTab }) => {
     }
   }
 
+  const handleExportCSV = () => {
+    const list = data?.data ?? []
+    if (!list.length) {
+      toast.info(t('common.noDataToExport', 'No store data to export.'))
+      return
+    }
+    const headers = ['ID', 'Name', 'Code', 'Branch', 'Type', 'Domain', 'Phone', 'Email', 'Status']
+    const rows = list.map((s: StoreItem) => [
+      s.id,
+      s.name,
+      s.code,
+      s.branch?.name || '',
+      s.type,
+      s.domain || '',
+      s.phone || '',
+      s.email || '',
+      s.is_active ? 'Active' : 'Inactive',
+    ])
+    downloadCsv('company_stores', headers, rows)
+    toast.success(t('common.exportSuccess', 'Stores exported successfully.'))
+  }
+
   return (
     <div className="space-y-5">
       {!isTab && (
         <>
-          <Breadcrumb items={[{ label: 'Company' }, { label: 'Stores' }]} />
+          <Breadcrumb
+            items={[
+              { label: t('nav.companyManagement', 'Company Management'), path: '/company' },
+              { label: t('nav.stores', 'Stores') },
+            ]}
+          />
 
-          <PageHeader
-            icon={<Store size={24} />}
-            title="Stores"
-            subtitle="Manage POS outlets, online channels, and hybrid physical stores"
-            action={
-              <button
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+            <div className="space-y-1 min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+                {t('stores.title', 'Stores & Outlets')}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                {t('stores.subtitle', 'Manage POS retail outlets, online channels, and hybrid physical stores')}
+              </p>
+            </div>
+
+            <HeaderActionsGroup>
+              <ExportButton
+                onClick={handleExportCSV}
+                label={t('common.exportCsv', 'Export CSV')}
+              />
+              <AddButton
                 onClick={openCreateModal}
-                className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white
-                           bg-gradient-primary rounded-lg hover:opacity-90 transition-opacity shadow-sm"
-              >
-                <Plus size={16} />
-                Add Store
-              </button>
-            }
+                label={t('stores.addStore', 'Add Store')}
+              />
+            </HeaderActionsGroup>
+          </div>
+
+          <StoreStatsCards
+            stores={data?.data ?? []}
+            total={data?.pagination?.total ?? data?.total}
+            isLoading={isLoading}
           />
         </>
       )}
@@ -209,20 +256,16 @@ const StoresPage: React.FC<{ isTab?: boolean }> = ({ isTab }) => {
       <TableToolbar
         search={search}
         onSearchChange={(val) => { setSearch(val); setPage(1); }}
-        searchPlaceholder="Search stores..."
+        searchPlaceholder={t('stores.searchPlaceholder', 'Search stores...')}
         onReset={reset}
         onRefresh={() => qc.invalidateQueries({ queryKey: ['stores'] })}
         refreshLoading={isFetching}
         rightActions={
           isTab ? (
-            <button
+            <AddButton
               onClick={openCreateModal}
-              className="flex items-center gap-1.5 px-4 h-10 min-h-[40px] text-xs sm:text-[13px] font-semibold text-white
-                         bg-gradient-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer ml-auto"
-            >
-              <Plus size={15} />
-              Add Store
-            </button>
+              label={t('stores.addStore', 'Add Store')}
+            />
           ) : undefined
         }
       />

@@ -25,10 +25,11 @@ import StatusBadge from '@/components/common/StatusBadge'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
-import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
-import { TableToolbar } from '@/components/common'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { TableToolbar, AddButton, ExportButton, ImportButton, HeaderActionsGroup } from '@/components/common'
+import UnitStatsCards from './components/UnitStatsCards'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 
 interface Unit {
   id: number
@@ -71,24 +72,24 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
   const { t, i18n } = useTranslation(['products', 'common'])
   const qc = useQueryClient()
   const toast = useToast()
-  const { hasPermission } = useAuthStore()
+  const { hasPermission } = usePermission()
 
-  const canCreate = hasPermission(['unit.create', 'setting.create'])
-  const canUpdate = hasPermission(['unit.update', 'setting.update'])
-  const canDelete = hasPermission(['unit.delete', 'setting.delete'])
-  const canExport = hasPermission(['unit.export', 'unit.view', 'setting.view'])
-  const canImport = hasPermission(['unit.create', 'unit.import', 'setting.create'])
+  const canCreateUnit = hasPermission('unit.create')
+  const canUpdateUnit = hasPermission('unit.update')
+  const canDeleteUnit = hasPermission('unit.delete')
+  const canExportUnit = hasPermission('unit.export')
+  const canImportUnit = hasPermission('unit.import')
 
   // Open add modal only when triggerAdd changes to a positive number
   const prevTriggerRef = React.useRef(triggerAdd || 0)
   React.useEffect(() => {
     if (triggerAdd && triggerAdd > 0 && triggerAdd !== prevTriggerRef.current) {
-      if (canCreate) {
+      if (canCreateUnit) {
         openCreateModal()
       }
     }
     prevTriggerRef.current = triggerAdd || 0
-  }, [triggerAdd, canCreate])
+  }, [triggerAdd, canCreateUnit])
 
   const {
     page,
@@ -311,7 +312,7 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
   }
 
   const handleExport = () => {
-    if (!canExport) {
+    if (!canExportUnit) {
       toast.error('Permission denied')
       return
     }
@@ -331,46 +332,53 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
     <div className="space-y-5">
       {!isTab && (
         <>
-          <Breadcrumb items={[{ label: t('dashboard.title') || 'Dashboard', path: '/dashboard' }, { label: t('products.tabUnits') }]} />
+          <Breadcrumb
+            items={[
+              { label: t('nav.productManagement', 'Products'), path: '/products' },
+              { label: t('nav.units', 'Measurement Units') },
+            ]}
+          />
 
-          <PageHeader
-            icon={<Scale size={24} />}
-            title={t('products.tabUnits')}
-            subtitle={t('products.heroSubtitle')}
-            action={
-              <div className="flex items-center gap-2">
-                {canExport && (
-                  <button
-                    onClick={handleExport}
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    <Download size={15} />
-                    {t('products.exportCSV')}
-                  </button>
-                )}
+          {/* Hero Header */}
+          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+            <div className="space-y-1 min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+                {t('products.tabUnits', 'Measurement Units')}
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+                {t('units.subtitle', 'Define standard units of measure, packaging conversions, and precision rules.')}
+              </p>
+            </div>
 
-                {canImport && (
-                  <button
-                    onClick={() => setImportOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  >
-                    <Upload size={15} />
-                    {t('products.importCSV')}
-                  </button>
-                )}
+            <HeaderActionsGroup>
+              {canExportUnit && (
+                <ExportButton
+                  onClick={handleExport}
+                  label={t('products.exportCSV', 'Export CSV')}
+                />
+              )}
 
-                {canCreate && (
-                  <button
-                    onClick={openCreateModal}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white
-                               bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-sm cursor-pointer"
-                  >
-                    <Plus size={16} />
-                    {t('products.addUnit')}
-                  </button>
-                )}
-              </div>
-            }
+              {canImportUnit && (
+                <ImportButton
+                  onClick={() => setImportOpen(true)}
+                  label={t('products.importCSV', 'Import CSV')}
+                />
+              )}
+
+              {canCreateUnit && (
+                <AddButton
+                  onClick={openCreateModal}
+                  label={t('products.addUnit', 'Add Unit')}
+                />
+              )}
+            </HeaderActionsGroup>
+          </div>
+
+          {/* Stats Cards */}
+          <UnitStatsCards
+            units={units}
+            total={pagination.total}
+            isLoading={isLoading}
           />
         </>
       )}
@@ -383,7 +391,7 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
             <span>{selectedRows.length} {t('products.selectedCount')}</span>
           </div>
           <div className="flex items-center gap-2">
-            {canDelete && (
+            {canDeleteUnit && (
               <button
                 onClick={() => setBulkDeleteConfirmOpen(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-red-600 rounded-lg hover:bg-red-500 cursor-pointer"
@@ -535,8 +543,8 @@ const UnitsPage: React.FC<{ isTab?: boolean; triggerAdd?: number }> = ({ isTab, 
                     <td className="text-right pr-4">
                       <TableActionMenu
                         variant="inline"
-                        onEdit={canUpdate ? () => openEditModal(unit) : undefined}
-                        onDelete={canDelete ? () => setDeleteTarget(unit) : undefined}
+                        onEdit={canUpdateUnit ? () => openEditModal(unit) : undefined}
+                        onDelete={canDeleteUnit ? () => setDeleteTarget(unit) : undefined}
                       />
                     </td>
                   </tr>

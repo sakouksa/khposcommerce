@@ -14,8 +14,14 @@ import { usePageTab } from '@/hooks/usePageTab'
 import ResetButton from '@/components/shared/ResetButton'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import { TableToolbar } from '@/components/common'
+import {
+  TableToolbar,
+  HeaderActionsGroup,
+  AddButton,
+  ExportButton,
+} from '@/components/common'
 import { useTranslation } from 'react-i18next'
+import { useAuthStore } from '@/stores/authStore'
 
 import BranchesPage from './BranchesPage'
 import StoresPage from './StoresPage'
@@ -24,8 +30,8 @@ import { CompanyStatsCards } from './components/CompanyStatsCards'
 import { CompanyFilterDrawer } from './components/CompanyFilterDrawer'
 import { CompanyDetailDrawer } from './components/CompanyDetailDrawer'
 import { CompanyFormModal } from './components/CompanyFormModal'
-import { CompaniesTab } from './components/tabs/CompaniesTab'
-import { OrgStructureTab } from './components/tabs/OrgStructureTab'
+import { CompaniesTab } from './components/CompaniesTab'
+import { OrgStructureTab } from './components/OrgStructureTab'
 import type { TabType } from './types/company.types'
 
 interface CompanyPageProps {
@@ -36,13 +42,39 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ activeTab: initialTab }) => {
   const { t } = useTranslation()
   const toast = useToast()
   const qc = useQueryClient()
+  const { hasPermission } = useAuthStore()
+
+  const canViewCompany = hasPermission('company.view')
+  const canCreateCompany = hasPermission('company.create')
+  const canViewBranch = hasPermission('branch.view')
+  const canViewStore = hasPermission('store.view')
+  const canViewWarehouse = hasPermission('warehouse.view')
+
+  const availableTabs = useMemo(() => [
+    ...(canViewCompany ? [{ id: 'companies', label: 'Companies', icon: <Building2 size={15} /> }] : []),
+    ...(canViewBranch ? [{ id: 'branches', label: 'Branches', icon: <MapPin size={15} /> }] : []),
+    ...(canViewStore ? [{ id: 'stores', label: 'Stores', icon: <Store size={15} /> }] : []),
+    ...(canViewWarehouse ? [{ id: 'warehouses', label: 'Warehouses', icon: <Warehouse size={15} /> }] : []),
+    ...(canViewCompany ? [{ id: 'structures', label: 'Org Structure', icon: <Network size={15} /> }] : []),
+  ], [canViewCompany, canViewBranch, canViewStore, canViewWarehouse])
+
+  const defaultValidTab = useMemo<TabType>(() => {
+    if (initialTab) return initialTab
+    if (canViewCompany) return 'companies'
+    if (canViewBranch) return 'branches'
+    if (canViewWarehouse) return 'warehouses'
+    if (canViewStore) return 'stores'
+    return 'branches'
+  }, [initialTab, canViewCompany, canViewBranch, canViewWarehouse, canViewStore])
 
   const [storedTab, setStoredTab] = usePageTab<TabType>({
     storageKey: initialTab ? `company_tab_${initialTab}` : 'company_active_tab',
-    defaultTab: initialTab || 'companies',
+    defaultTab: defaultValidTab,
     validTabs: ['companies', 'branches', 'stores', 'warehouses', 'structures'],
   })
-  const currentTab = storedTab
+  const currentTab = (!canViewCompany && (storedTab === 'companies' || storedTab === 'structures'))
+    ? defaultValidTab
+    : storedTab
   const setActiveTab = (tab: TabType) => setStoredTab(tab)
 
   const {
@@ -117,28 +149,32 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ activeTab: initialTab }) => {
     queryKey: [currentTab, page, debouncedSearch, perPage],
     queryFn: () => companyService.getItemsByTab(currentTab, { page, search: debouncedSearch, per_page: perPage }),
     placeholderData: (prev) => prev,
-    enabled: currentTab === 'companies' || currentTab === 'structures',
+    enabled: canViewCompany && (currentTab === 'companies' || currentTab === 'structures'),
   })
 
   // Dropdowns
   const { data: companiesDropdown } = useQuery({
     queryKey: ['companies-dropdown'],
     queryFn: () => companyService.getCompanies({ per_page: 100 }).then(r => r.data),
+    enabled: canViewCompany,
   })
 
   const { data: branchesDropdown } = useQuery({
     queryKey: ['branches-dropdown'],
     queryFn: () => companyService.getBranches({ per_page: 100 }).then(r => r.data),
+    enabled: canViewBranch,
   })
 
   const { data: storesDropdown } = useQuery({
     queryKey: ['stores-dropdown'],
     queryFn: () => companyService.getStores({ per_page: 100 }).then(r => r.data),
+    enabled: canViewStore,
   })
 
   const { data: warehousesDropdown } = useQuery({
     queryKey: ['warehouses-dropdown'],
     queryFn: () => companyService.getWarehouses({ per_page: 100 }).then(r => r.data),
+    enabled: canViewWarehouse,
   })
 
   const recordsRaw: any[] = data?.data ?? []
@@ -376,36 +412,35 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ activeTab: initialTab }) => {
 
   return (
     <div className="space-y-5 print:p-0">
-      <Breadcrumb items={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Company Management' }]} />
+      <Breadcrumb
+        items={[
+          { label: t('nav.companyManagement', 'Company Management'), path: '/company' },
+          { label: t('company.title', 'Company Topology') },
+        ]}
+      />
 
       {/* Frameless Hero Header (Standardized) */}
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
         <div className="space-y-1 min-w-0 flex-1">
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
-            Company Management
+            {t('company.title', 'Company Management')}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
-            Manage companies, branches, retail stores, warehouses, and enterprise topology from one dashboard.
+            {t('company.subtitle', 'Manage companies, branches, retail stores, warehouses, and enterprise topology from one dashboard.')}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap w-full xl:w-auto xl:justify-end shrink-0">
-          <button
+        <HeaderActionsGroup>
+          <ExportButton
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-border/80 bg-card text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-2xs cursor-pointer"
-          >
-            <Download size={15} />
-            <span>Export CSV</span>
-          </button>
-          {currentTab === 'companies' && (
-            <button
+            label={t('common.exportCsv', 'Export CSV')}
+          />
+          {currentTab === 'companies' && canCreateCompany && (
+            <AddButton
               onClick={openCreateModal}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-all shadow-md cursor-pointer"
-            >
-              <Plus size={16} />
-              <span>Add Company</span>
-            </button>
+              label={t('company.addCompany', 'Add Company')}
+            />
           )}
-        </div>
+        </HeaderActionsGroup>
       </div>
 
       {/* KPI Cards */}
@@ -413,13 +448,7 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ activeTab: initialTab }) => {
 
       {/* Workspace Tabs */}
       <div className="flex border border-border/80 dark:border-slate-800 bg-card dark:bg-slate-900 rounded-2xl p-1 overflow-x-auto gap-1 shadow-xs w-full md:w-auto">
-        {[
-          { id: 'companies', label: 'Companies', icon: <Building2 size={15} /> },
-          { id: 'branches', label: 'Branches', icon: <MapPin size={15} /> },
-          { id: 'stores', label: 'Stores', icon: <Store size={15} /> },
-          { id: 'warehouses', label: 'Warehouses', icon: <Warehouse size={15} /> },
-          { id: 'structures', label: 'Org Structure', icon: <Network size={15} /> },
-        ].map((tabItem) => (
+        {availableTabs.map((tabItem) => (
           <button
             key={tabItem.id}
             onClick={() => setActiveTab(tabItem.id as TabType)}

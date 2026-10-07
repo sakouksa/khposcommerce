@@ -12,6 +12,7 @@ import TableActionMenu from '@/components/shared/TableActionMenu'
 import { Modal, TableToolbar } from '@/components/common'
 import { ModalFooter } from '@/components/common/ModalFooter'
 import { useTranslation } from 'react-i18next'
+import PaymentMethodsTab from '@/pages/finance/components/PaymentMethodsTab'
 
 interface PaymentMethod {
   id: number
@@ -201,88 +202,24 @@ const PaymentMethodsPage: React.FC<{ triggerAdd?: boolean; isTab?: boolean }> = 
         refreshLoading={isFetching}
       />
 
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <TableWrapper isFetching={isFetching}>
-          <table className="w-full data-table">
-            <thead>
-              <tr>
-                <th className="w-[25%] text-left py-4 px-5">{t('finance.method_name', t('common.name'))}</th>
-                <th className="w-[15%] text-left py-4 px-5">{t('finance.code_col', 'Code')}</th>
-                <th className="w-[15%] text-left py-4 px-5">{t('finance.type_col', 'Type')}</th>
-                <th className="w-[15%] text-left py-4 px-5">{t('finance.fee_col', 'Fees')}</th>
-                <th className="w-[15%] text-left py-4 px-5">{t('finance.channels_col', 'Channels')}</th>
-                <th className="w-[10%] text-left py-4 px-5">{t('finance.status_col', t('common.status'))}</th>
-                <th className="w-[100px] text-right py-4 px-5">{t('finance.actions_col', t('common.actions'))}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i}>
-                    <td><div className="skeleton h-4 w-28 rounded" /></td>
-                    <td><div className="skeleton h-4 w-12 rounded" /></td>
-                    <td><div className="skeleton h-4 w-16 rounded" /></td>
-                    <td><div className="skeleton h-4 w-20 rounded" /></td>
-                    <td><div className="skeleton h-4 w-24 rounded" /></td>
-                    <td><div className="skeleton h-4 w-16 rounded" /></td>
-                    <td><div className="skeleton h-4 w-12 rounded ml-auto" /></td>
-                  </tr>
-                ))
-              ) : (
-                methods.map((method) => (
-                  <tr key={method.id} className="hover:bg-muted/40 transition-colors">
-                    <td className="font-semibold text-foreground py-4 px-5">{method.name}</td>
-                    <td className="font-mono text-xs text-primary py-4 px-5 font-bold">{method.code}</td>
-                    <td className="font-medium text-xs capitalize text-muted-foreground py-4 px-5">
-                      {t(`finance.pm_type_${method.type || 'cash'}`, method.type?.replace('_', ' ') || 'cash')}
-                    </td>
-                    <td className="text-xs font-semibold py-4 px-5">
-                      {Number(method.fee_percent) === 0 && Number(method.fee_fixed) === 0 ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{t('finance.fee_free', 'Free')}</span>
-                      ) : (
-                        <span>
-                          {Number(method.fee_percent) > 0 ? `${Number(method.fee_percent)}%` : ''}
-                          {Number(method.fee_percent) > 0 && Number(method.fee_fixed) > 0 ? ' + ' : ''}
-                          {Number(method.fee_fixed) > 0 ? `$${Number(method.fee_fixed).toFixed(2)}` : ''}
-                        </span>
-                      )}
-                    </td>
-                    <td className="text-xs text-muted-foreground font-medium py-4 px-5">
-                      {method.available_pos && <span className="bg-blue-500/10 text-blue-600 px-2 py-0.5 rounded-md text-[10px] mr-1 font-bold">POS</span>}
-                      {method.available_online && <span className="bg-purple-500/10 text-purple-600 px-2 py-0.5 rounded-md text-[10px] font-bold">Online</span>}
-                    </td>
-                    <td className="py-4 px-5">
-                      <button
-                        onClick={() => toggleStatusMutation.mutate({ id: method.id, active: !method.is_active })}
-                        className={`text-xs font-semibold rounded-full px-2.5 py-0.5 border cursor-pointer transition-all hover:scale-105 ${
-                          method.is_active ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-rose-500/10 text-rose-600 border-rose-500/20'
-                        }`}
-                      >
-                        {method.is_active ? t('finance.active', t('common.active')) : t('finance.inactive', t('common.inactive'))}
-                      </button>
-                    </td>
-                    <td className="text-right py-4 px-5" onClick={(e) => e.stopPropagation()}>
-                      <TableActionMenu
-                        onEdit={() => openEditModal(method)}
-                        onDelete={() => setDeleteTarget(method)}
-                      />
-                    </td>
-                  </tr>
-                ))
-              )}
-              {!isLoading && methods.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="py-16 text-center">
-                    <CreditCard size={40} className="mx-auto mb-3 text-muted-foreground/30" />
-                    <p className="text-muted-foreground">{t('finance.no_data_payment_methods', 'No payment methods found.')}</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </TableWrapper>
-        <Pagination currentPage={pagination.current_page} lastPage={pagination.last_page} total={pagination.total} perPage={perPage} onPageChange={setPage} onPerPageChange={setPerPage} />
-      </div>
+      <PaymentMethodsTab
+        methods={methods}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        visibleColumns={{
+          pm_name: true,
+          pm_code: true,
+          pm_type: true,
+          pm_fee: true,
+          pm_channels: true,
+          pm_status: true,
+        }}
+        openEditDrawer={openEditModal}
+        handleDelete={(id) => setDeleteTarget(methods.find((m) => m.id === id) || null)}
+        toggleStatus={(method) => toggleStatusMutation.mutate({ id: method.id, active: !method.is_active })}
+      />
+      <Pagination currentPage={pagination.current_page} lastPage={pagination.last_page} total={pagination.total} perPage={perPage} onPageChange={setPage} onPerPageChange={setPerPage} />
+
 
       <Modal
         isOpen={modalOpen}

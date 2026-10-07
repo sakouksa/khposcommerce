@@ -3,6 +3,8 @@ import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import ToastContainer from '@/components/ui/ToastContainer'
 import ThemeSynchronizer from '@/components/shared/ThemeSynchronizer'
+import FaviconSynchronizer from '@/components/shared/FaviconSynchronizer'
+import TenantBranchCacheSynchronizer from '@/components/shared/TenantBranchCacheSynchronizer'
 import NetworkStatusListener from '@/components/shared/NetworkStatusListener'
 import MuiAppProvider from '@/components/shared/MuiAppProvider'
 import { ErrorBoundary } from '@/components/common'
@@ -25,6 +27,8 @@ const queryClient = new QueryClient({
 const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeSynchronizer />
+    <FaviconSynchronizer />
+    <TenantBranchCacheSynchronizer />
     <MuiAppProvider>
       <BrowserRouter>
         <div className="h-full">

@@ -1,8 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import React from 'react'
 import { MoreVertical, Edit2, Trash2, Eye, Printer } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
 export type TableActionVariant =
   | 'default'
@@ -49,7 +54,7 @@ export interface TableActionMenuProps {
   buttonSize?: 'sm' | 'md'
 }
 
-const TableActionMenu: React.FC<TableActionMenuProps> = ({
+export const TableActionMenu: React.FC<TableActionMenuProps> = ({
   items,
   onEdit,
   onDelete,
@@ -67,10 +72,6 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({
   buttonSize = 'md',
 }) => {
   const { t } = useTranslation(['common', 'buttons', 'inventory', 'purchases'])
-  const [isOpen, setIsOpen] = useState(false)
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const menuRef = useRef<HTMLDivElement>(null)
-  const [coords, setCoords] = useState<{ top?: number; bottom?: number; left?: number; right?: number }>({})
 
   const getViewText = () => {
     if (viewLabel) return viewLabel
@@ -112,63 +113,6 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({
   const resolvedDeleteLabel = getDeleteText()
   const resolvedViewLabel = getViewText()
   const resolvedPrintLabel = getPrintText()
-
-  const updatePosition = () => {
-    if (!buttonRef.current) return
-    const rect = buttonRef.current.getBoundingClientRect()
-    const spaceBelow = window.innerHeight - rect.bottom
-    const openUpward = spaceBelow < 180 && rect.top > spaceBelow
-
-    if (openUpward) {
-      setCoords({
-        bottom: window.innerHeight - rect.top + 4,
-        right: align === 'right' ? window.innerWidth - rect.right : undefined,
-        left: align === 'left' ? rect.left : undefined,
-      })
-    } else {
-      setCoords({
-        top: rect.bottom + 4,
-        right: align === 'right' ? window.innerWidth - rect.right : undefined,
-        left: align === 'left' ? rect.left : undefined,
-      })
-    }
-  }
-
-  const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!isOpen) {
-      updatePosition()
-    }
-    setIsOpen((prev) => !prev)
-  }
-
-  useEffect(() => {
-    if (!isOpen) return
-
-    const handleScrollOrResize = () => {
-      setIsOpen(false)
-    }
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    window.addEventListener('scroll', handleScrollOrResize, true)
-    window.addEventListener('resize', handleScrollOrResize)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-      window.removeEventListener('scroll', handleScrollOrResize, true)
-      window.removeEventListener('resize', handleScrollOrResize)
-    }
-  }, [isOpen])
 
   // Build items array if custom list not passed directly or merge quick props
   const finalItems: TableActionItem[] = [...(items || [])]
@@ -234,22 +178,22 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({
     const isWarning = itemVariant === 'warning'
     const isSuccess = itemVariant === 'success'
 
-    // Flatten-inspired modern styling: Crisp borders, soft tinted hovers, shadow-2xs
+    // Modern clean enterprise styling
     let colorClasses =
-      'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:border-cyan-400 dark:hover:border-cyan-700 hover:text-cyan-700 dark:hover:text-cyan-300 hover:bg-cyan-50/70 dark:hover:bg-cyan-950/40'
+      'border-border/80 bg-background hover:bg-accent hover:text-accent-foreground text-muted-foreground'
 
     if (isDanger) {
       colorClasses =
-        'border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 hover:border-rose-300 dark:hover:border-rose-700'
+        'border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:border-destructive/50'
     } else if (isWarning) {
       colorClasses =
-        'border-amber-200 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50 hover:border-amber-300 dark:hover:border-amber-700'
+        'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 hover:border-amber-500/50'
     } else if (isSuccess) {
       colorClasses =
-        'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:border-emerald-300 dark:hover:border-emerald-700'
+        'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50'
     } else if (itemVariant === 'primary' || itemVariant === 'info') {
       colorClasses =
-        'border-cyan-200 dark:border-cyan-900/60 bg-cyan-50/80 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/50 hover:border-cyan-300 dark:hover:border-cyan-700'
+        'border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/50'
     }
 
     const sizeClasses =
@@ -267,7 +211,11 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({
           e.stopPropagation()
           item.onClick()
         }}
-        className={`inline-flex items-center justify-center border transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none ${sizeClasses} ${colorClasses}`}
+        className={cn(
+          'inline-flex items-center justify-center border transition-all shadow-2xs active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none',
+          sizeClasses,
+          colorClasses
+        )}
       >
         {React.isValidElement(item.icon) ? (
           item.icon
@@ -282,7 +230,7 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({
   if (variant === 'inline') {
     return (
       <div
-        className={`inline-flex items-center justify-end gap-1.5 ${className}`}
+        className={cn('inline-flex items-center justify-end gap-1.5', className)}
         onClick={(e) => e.stopPropagation()}
       >
         {visibleItems.map((item, idx) => renderInlineButton(item, idx))}
@@ -296,91 +244,62 @@ const TableActionMenu: React.FC<TableActionMenuProps> = ({
 
   return (
     <div
-      className={`inline-flex items-center justify-end gap-1.5 text-left ${className}`}
+      className={cn('inline-flex items-center justify-end gap-1.5 text-left', className)}
       onClick={(e) => e.stopPropagation()}
     >
       {/* If hybrid, render the primary items directly inline */}
       {inlineItems.map((item, idx) => renderInlineButton(item, idx))}
 
-      {/* Render 3-dots trigger button if there are items for the dropdown */}
+      {/* Render 3-dots trigger button via shadcn DropdownMenu */}
       {dropdownItems.length > 0 && (
-        <div className="relative inline-block">
-          <button
-            ref={buttonRef}
-            type="button"
-            onClick={handleToggle}
-            className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-all shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-500/20 active:scale-95"
-            aria-label="Actions menu"
-            title={t('common.actions', 'More Actions')}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg border border-border/80 bg-background hover:bg-accent text-muted-foreground hover:text-foreground flex items-center justify-center transition-all shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/40 active:scale-95"
+              aria-label="Actions menu"
+              title={t('common.actions', 'More Actions')}
+            >
+              <MoreVertical size={triggerSize} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align={align === 'left' ? 'start' : 'end'}
+            className="w-48 p-1.5 space-y-0.5"
+            onClick={(e) => e.stopPropagation()}
           >
-            <MoreVertical size={triggerSize} />
-          </button>
+            {dropdownItems.map((item, idx) => {
+              const Icon = item.icon as any
+              const itemVariant = resolveItemVariant(item)
+              const isDanger = itemVariant === 'danger'
 
-          {isOpen &&
-            createPortal(
-              <AnimatePresence>
-                <motion.div
-                  ref={menuRef}
-                  initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                  transition={{ duration: 0.12, ease: 'easeOut' }}
-                  style={{
-                    position: 'fixed',
-                    top: coords.top !== undefined ? `${coords.top}px` : 'auto',
-                    bottom: coords.bottom !== undefined ? `${coords.bottom}px` : 'auto',
-                    left: coords.left !== undefined ? `${coords.left}px` : 'auto',
-                    right: coords.right !== undefined ? `${coords.right}px` : 'auto',
-                    zIndex: 99999,
+              return (
+                <DropdownMenuItem
+                  key={idx}
+                  disabled={item.disabled}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    item.onClick()
                   }}
-                  className="min-w-[160px] w-max max-w-[260px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-xl p-1.5 space-y-0.5"
+                  className={cn(
+                    'flex items-center gap-2.5 px-2.5 py-1.5 text-xs font-semibold cursor-pointer rounded-lg',
+                    isDanger && 'text-destructive focus:bg-destructive/10 focus:text-destructive',
+                    itemVariant === 'success' && 'text-emerald-600 dark:text-emerald-400 focus:bg-emerald-500/10',
+                    itemVariant === 'warning' && 'text-amber-600 dark:text-amber-400 focus:bg-amber-500/10',
+                    (itemVariant === 'primary' || itemVariant === 'info') && 'text-primary focus:bg-primary/10'
+                  )}
                 >
-                  {dropdownItems.map((item, idx) => {
-                    const Icon = item.icon as any
-                    const itemVariant = resolveItemVariant(item)
-                    const isDanger = itemVariant === 'danger'
-
-                    let colorClasses = 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    if (isDanger) {
-                      colorClasses =
-                        'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'
-                    } else if (itemVariant === 'success') {
-                      colorClasses =
-                        'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
-                    } else if (itemVariant === 'warning') {
-                      colorClasses =
-                        'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40'
-                    } else if (itemVariant === 'primary' || itemVariant === 'info') {
-                      colorClasses =
-                        'text-cyan-700 dark:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/40'
-                    }
-
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        disabled={item.disabled}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setIsOpen(false)
-                          item.onClick()
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer text-left disabled:opacity-40 disabled:cursor-not-allowed ${colorClasses}`}
-                      >
-                        {React.isValidElement(item.icon) ? (
-                          item.icon
-                        ) : Icon ? (
-                          <Icon size={14} className="shrink-0" />
-                        ) : null}
-                        <span className="truncate">{item.label}</span>
-                      </button>
-                    )
-                  })}
-                </motion.div>
-              </AnimatePresence>,
-              document.body
-            )}
-        </div>
+                  {React.isValidElement(item.icon) ? (
+                    item.icon
+                  ) : Icon ? (
+                    <Icon size={14} className="shrink-0" />
+                  ) : null}
+                  <span className="truncate">{item.label}</span>
+                </DropdownMenuItem>
+              )
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
     </div>
   )

@@ -9,7 +9,7 @@ import { companyService } from '@/services/companyService'
 import { customerService } from '@/services/customerService'
 import { financeService } from '@/services/financeService'
 import { productService } from '@/services/productService'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 import { DatePicker } from '@/components/common'
 
 export interface SalesFilterState {

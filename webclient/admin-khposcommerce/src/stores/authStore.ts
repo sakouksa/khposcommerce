@@ -23,6 +23,18 @@ export interface UserBranch {
   address?: string | null
 }
 
+export interface AccessibleBranch {
+  id: number
+  company_id?: number
+  name: string
+  code?: string
+  is_main?: boolean
+  is_active?: boolean
+  phone?: string | null
+  address?: string | null
+  city?: string | null
+}
+
 export interface UserEmployee {
   id: number
   employee_number: string
@@ -36,6 +48,11 @@ export interface User {
   email: string
   phone?: string | null
   avatar?: string | null
+  company_id?: number
+  branch_id?: number
+  active_branch_id?: number | null
+  active_company_id?: number | null
+  accessible_branches?: AccessibleBranch[]
   roles: string[]
   permissions: string[]
   company?: UserCompany | null
@@ -44,32 +61,41 @@ export interface User {
 }
 
 interface AuthState {
-  user:         User | null
-  token:        string | null
-  accessToken:  string | null
-  refreshToken: string | null
-  isLoggedIn:   boolean
-  darkMode:     boolean
-  setAuth:      (user: User, accessToken: string, refreshToken?: string | null) => void
-  setTokens:    (accessToken: string, refreshToken?: string | null) => void
-  updateUser:   (user: Partial<User>) => void
-  logout:       () => void
-  toggleDark:   () => void
-  hasRole:      (role: string | string[]) => boolean
-  hasPermission:(permission: string | string[]) => boolean
-  hasAnyPermission: (permissions: string[]) => boolean
-  hasAllPermissions: (permissions: string[]) => boolean
+  user:               User | null
+  token:              string | null
+  accessToken:        string | null
+  refreshToken:       string | null
+  isLoggedIn:         boolean
+  darkMode:           boolean
+  activeCompanyId:    number | null
+  activeBranchId:     number | null
+  accessibleBranches: AccessibleBranch[]
+  setAuth:            (user: User, accessToken: string, refreshToken?: string | null) => void
+  setTokens:          (accessToken: string, refreshToken?: string | null) => void
+  updateUser:         (user: Partial<User>) => void
+  setActiveBranch:    (branchId: number) => void
+  setActiveCompany:   (companyId: number) => void
+  setAccessibleBranches: (branches: AccessibleBranch[]) => void
+  logout:             () => void
+  toggleDark:         () => void
+  hasRole:            (role: string | string[]) => boolean
+  hasPermission:      (permission: string | string[]) => boolean
+  hasAnyPermission:   (permissions: string[]) => boolean
+  hasAllPermissions:  (permissions: string[]) => boolean
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      user:         null,
-      token:        null,
-      accessToken:  null,
-      refreshToken: null,
-      isLoggedIn:   false,
-      darkMode:     false,
+      user:               null,
+      token:              null,
+      accessToken:        null,
+      refreshToken:       null,
+      isLoggedIn:         false,
+      darkMode:           false,
+      activeCompanyId:    null,
+      activeBranchId:     null,
+      accessibleBranches: [],
 
       setAuth: (user, accessToken, refreshToken = null) => {
         const sanitizedUser: User = {
@@ -77,12 +103,29 @@ export const useAuthStore = create<AuthState>()(
           roles: Array.isArray(user?.roles) ? user.roles : [],
           permissions: Array.isArray(user?.permissions) ? user.permissions : [],
         }
+
+        const initialCompanyId = user?.active_company_id || user?.company_id || user?.company?.id || null
+        const initialBranchId = user?.active_branch_id || user?.branch_id || user?.branch?.id || null
+        const accessible = Array.isArray(user?.accessible_branches) && user.accessible_branches.length > 0
+          ? user.accessible_branches
+          : (user?.branch ? [{ id: user.branch.id, name: user.branch.name, is_main: true, is_active: true }] : [])
+
+        if (initialCompanyId) {
+          localStorage.setItem('khpos_active_company_id', String(initialCompanyId))
+        }
+        if (initialBranchId) {
+          localStorage.setItem('khpos_active_branch_id', String(initialBranchId))
+        }
+
         set({
           user: sanitizedUser,
           token: accessToken,
           accessToken,
           refreshToken: refreshToken || get().refreshToken,
           isLoggedIn: true,
+          activeCompanyId: initialCompanyId,
+          activeBranchId: initialBranchId,
+          accessibleBranches: accessible,
         })
       },
 
@@ -105,13 +148,47 @@ export const useAuthStore = create<AuthState>()(
         }))
       },
 
+      setActiveBranch: (branchId: number) => {
+        localStorage.setItem('khpos_active_branch_id', String(branchId))
+        const found = get().accessibleBranches.find(b => b.id === branchId)
+        set((state) => ({
+          activeBranchId: branchId,
+          user: state.user ? {
+            ...state.user,
+            branch_id: branchId,
+            branch: found ? { id: found.id, name: found.name, address: found.address } : state.user.branch,
+          } : null,
+        }))
+        // Dispatch custom window event so active pages or queries can reload seamlessly
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('khpos:branch-changed', { detail: { branchId } }))
+        }
+      },
+
+      setActiveCompany: (companyId: number) => {
+        localStorage.setItem('khpos_active_company_id', String(companyId))
+        set({ activeCompanyId: companyId })
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('khpos:company-changed', { detail: { companyId } }))
+        }
+      },
+
+      setAccessibleBranches: (branches: AccessibleBranch[]) => {
+        set({ accessibleBranches: branches })
+      },
+
       logout: () => {
+        localStorage.removeItem('khpos_active_company_id')
+        localStorage.removeItem('khpos_active_branch_id')
         set({
           user: null,
           token: null,
           accessToken: null,
           refreshToken: null,
           isLoggedIn: false,
+          activeCompanyId: null,
+          activeBranchId: null,
+          accessibleBranches: [],
         })
       },
 
@@ -180,12 +257,15 @@ export const useAuthStore = create<AuthState>()(
       name:    'enterprise-pos-auth',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        user:         state.user,
-        token:        state.token,
-        accessToken:  state.accessToken,
-        refreshToken: state.refreshToken,
-        isLoggedIn:   state.isLoggedIn,
-        darkMode:     state.darkMode,
+        user:               state.user,
+        token:              state.token,
+        accessToken:        state.accessToken,
+        refreshToken:       state.refreshToken,
+        isLoggedIn:         state.isLoggedIn,
+        darkMode:           state.darkMode,
+        activeCompanyId:    state.activeCompanyId,
+        activeBranchId:     state.activeBranchId,
+        accessibleBranches: state.accessibleBranches,
       }),
     }
   )

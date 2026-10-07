@@ -56,9 +56,9 @@ export interface TableToolbarProps {
   refreshLoading?: boolean
   /** Whether refresh button is disabled */
   refreshDisabled?: boolean
-  /** Tooltip/Title for refresh button */
-  refreshTitle?: string
-  /** Hide refresh button */
+  /** Explicitly show refresh button */
+  showRefreshButton?: boolean
+  /** Hide refresh button (defaults to true) */
   hideRefreshButton?: boolean
 
   /** Column definitions for column visibility settings */
@@ -78,10 +78,17 @@ export interface TableToolbarProps {
   prependLeftActions?: React.ReactNode
   /** Additional actions/components to render on the left side */
   leftActions?: React.ReactNode
+  /** Inline filters elements (e.g. Category, Supplier, Stock Level dropdowns) */
+  filters?: React.ReactNode
   /** Additional actions/components to render on the right side (e.g. view mode switcher, export, print) */
   rightActions?: React.ReactNode
   /** Children to render inside toolbar */
   children?: React.ReactNode
+
+  /** Variant for ColumnSettingsPopover ('button' | 'icon') */
+  columnSettingsVariant?: 'button' | 'icon'
+  /** Label for Manage Table button */
+  manageTableLabel?: string
 
   /** Custom root className */
   className?: string
@@ -93,6 +100,10 @@ export interface TableToolbarProps {
   activeFiltersCount?: number
   onResetFilters?: (e?: React.MouseEvent) => void
   customFilters?: React.ReactNode
+  /** Custom filter element or dropdown to display inline adjacent to search (alias for filters) */
+  filterContent?: React.ReactNode
+  /** Handler to open / toggle filter modal or drawer (alias for onFilterClick) */
+  onFilterToggle?: (e?: React.MouseEvent) => void
   isRefreshing?: boolean
   size?: 'sm' | 'md' | 'lg'
 }
@@ -112,6 +123,7 @@ export const TableToolbar: React.FC<TableToolbarProps> = ({
   hideSearch = false,
 
   onFilterClick,
+  onFilterToggle,
   isFilterActive = false,
   filterActiveCount,
   activeFiltersCount,
@@ -131,8 +143,8 @@ export const TableToolbar: React.FC<TableToolbarProps> = ({
   refreshLoading = false,
   isRefreshing = false,
   refreshDisabled = false,
-  refreshTitle,
-  hideRefreshButton = false,
+  showRefreshButton = false,
+  hideRefreshButton = true,
 
   columns,
   visibleColumns,
@@ -144,8 +156,13 @@ export const TableToolbar: React.FC<TableToolbarProps> = ({
   prependLeftActions,
   leftActions,
   customFilters,
+  filters,
+  filterContent,
   rightActions,
   children,
+
+  columnSettingsVariant = 'button',
+  manageTableLabel,
 
   className = '',
   leftClassName = '',
@@ -157,32 +174,36 @@ export const TableToolbar: React.FC<TableToolbarProps> = ({
   const effectiveSearch = search ?? searchValue
   const effectiveReset = onReset ?? onResetFilters
   const effectiveLeftActions = leftActions ?? customFilters
+  const effectiveFilters = filters ?? filterContent
+  const effectiveFilterClick = onFilterClick ?? onFilterToggle
   const effectiveActiveCount = filterActiveCount ?? activeFiltersCount
   const effectiveRefreshLoading = refreshLoading || Boolean(isRefreshing)
+  const isRefreshVisible = showRefreshButton || (!hideRefreshButton && onRefresh !== undefined)
 
   const showLeft =
     (!hideSearch && onSearchChange !== undefined && effectiveSearch !== undefined) ||
-    (!hideFilterButton && onFilterClick !== undefined) ||
+    (!hideFilterButton && effectiveFilterClick !== undefined) ||
     (!hideResetButton && effectiveReset !== undefined) ||
     Boolean(prependLeftActions) ||
-    Boolean(effectiveLeftActions)
+    Boolean(effectiveLeftActions) ||
+    Boolean(effectiveFilters)
 
   const showRight =
-    (!hideRefreshButton && onRefresh !== undefined) ||
+    (isRefreshVisible && onRefresh !== undefined) ||
     (!hideColumnSettings && columns && visibleColumns && onColumnChange) ||
     Boolean(rightActions)
 
   return (
     <div
-      className={`flex flex-col lg:flex-row gap-2.5 sm:gap-3 items-stretch lg:items-center justify-between bg-card p-3 sm:p-4 rounded-xl border border-border shadow-xs print:hidden transition-all duration-200 ${className}`}
+      className={`flex flex-col lg:flex-row gap-2.5 sm:gap-3 items-stretch lg:items-center justify-between bg-card dark:bg-slate-900/90 p-3 sm:p-4 rounded-xl border border-border dark:border-slate-800 shadow-xs print:hidden transition-all duration-200 ${className}`}
     >
-      {/* ─── LEFT REGION: Prepend Actions + Search + Filter + Reset + Custom Left Actions (Grouped Naturally) ─── */}
-      <div className={`flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0 flex-wrap sm:flex-nowrap ${leftClassName}`}>
+      {/* ─── LEFT REGION: Prepend Actions + Search + Inline Filters + Filter + Reset + Custom Left Actions (Grouped Naturally) ─── */}
+      <div className={`flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0 flex-wrap ${leftClassName}`}>
         {prependLeftActions}
 
         {/* Search Input: responsive width, paired with filter */}
         {!hideSearch && onSearchChange !== undefined && effectiveSearch !== undefined && (
-          <div className="w-full sm:w-72 md:w-80 lg:w-96 flex-1 sm:flex-initial min-w-0">
+          <div className={Boolean(effectiveFilters) ? 'w-full sm:w-64 md:w-72 shrink-0 min-w-0' : 'w-full sm:w-72 md:w-80 lg:w-96 flex-1 sm:flex-initial min-w-0'}>
             <SearchInput
               value={effectiveSearch}
               onChange={onSearchChange}
@@ -194,10 +215,13 @@ export const TableToolbar: React.FC<TableToolbarProps> = ({
           </div>
         )}
 
-        {/* Filter Button: placed directly adjacent to search */}
-        {!hideFilterButton && onFilterClick !== undefined && (
+        {/* Inline Filters (Shadcn style: Category ⌄, Supplier ⌄, Stock ⌄) */}
+        {effectiveFilters}
+
+        {/* Filter Button: placed directly adjacent to search (optional / drawer) */}
+        {!hideFilterButton && effectiveFilterClick !== undefined && (
           <FilterButton
-            onClick={onFilterClick}
+            onClick={effectiveFilterClick}
             isActive={isFilterActive}
             activeCount={effectiveActiveCount}
             label={filterLabel}
@@ -207,7 +231,7 @@ export const TableToolbar: React.FC<TableToolbarProps> = ({
         )}
 
         {/* Reset Button: placed right next to filter when active */}
-        {!hideResetButton && effectiveReset !== undefined && (
+        {!hideResetButton && effectiveReset !== undefined && isFilterActive && (
           <ResetButton
             onClick={effectiveReset}
             label={resetLabel}
@@ -222,19 +246,19 @@ export const TableToolbar: React.FC<TableToolbarProps> = ({
         {effectiveLeftActions}
       </div>
 
-      {/* ─── RIGHT REGION: View Switcher, Refresh & Column Settings (Table Utilities) ─── */}
+      {/* ─── RIGHT REGION: View Switcher, Refresh & Manage Table (Column Settings) ─── */}
       {showRight && (
         <div
-          className={`flex items-center gap-1.5 sm:gap-2 shrink-0 self-end lg:self-auto ${rightClassName}`}
+          className={`flex items-center gap-1.5 sm:gap-2 shrink-0 self-center lg:self-auto ${rightClassName}`}
         >
           {rightActions}
 
-          {!hideRefreshButton && onRefresh !== undefined && (
+          {isRefreshVisible && onRefresh !== undefined && (
             <RefreshButton
               onClick={onRefresh}
               loading={effectiveRefreshLoading}
               disabled={refreshDisabled}
-              title={refreshTitle || t('common.refresh', 'Refresh')}
+              title={t('common.refresh', 'Refresh')}
               size={size}
             />
           )}
@@ -249,6 +273,8 @@ export const TableToolbar: React.FC<TableToolbarProps> = ({
                 onChange={onColumnChange}
                 defaultVisibleColumns={defaultVisibleColumns}
                 title={columnSettingsTitle}
+                label={manageTableLabel}
+                variant={columnSettingsVariant}
                 size={size}
               />
             )}

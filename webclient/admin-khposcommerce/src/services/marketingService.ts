@@ -24,24 +24,61 @@ export const marketingService = {
   bulkDeleteBanners: (ids: number[]) =>
     api.post('/banners/bulk-delete', { ids }).then(r => r.data),
 
-  // Promotions
+  // Promotion Campaigns & Discount Rules Engine
+  getPromotionCampaigns: (params: Record<string, any> = {}) =>
+    api.get('/promotion-campaigns', { params }).then(r => r.data),
+
+  getPromotionCampaign: (id: number) =>
+    api.get(`/promotion-campaigns/${id}`).then(r => r.data.data),
+
+  createPromotionCampaign: (payload: any) =>
+    api.post('/promotion-campaigns', payload).then(r => r.data.data),
+
+  updatePromotionCampaign: (id: number, payload: any) =>
+    api.put(`/promotion-campaigns/${id}`, payload).then(r => r.data.data),
+
+  deletePromotionCampaign: (id: number) =>
+    api.delete(`/promotion-campaigns/${id}`).then(r => r.data),
+
+  getPromotionCampaignUsages: (id: number, params: Record<string, any> = {}) =>
+    api.get(`/promotion-campaigns/${id}/usages`, { params }).then(r => r.data.data || r.data),
+
+  // Central Pricing Engine API
+  calculatePricing: (payload: {
+    company_id?: number
+    branch_id?: number
+    channel?: 'pos' | 'web' | 'mobile'
+    customer_id?: number
+    items: Array<{ product_id: number; product_variant_id?: number; quantity: number; unit_price?: number }>
+    coupon_code?: string
+    tax_rate?: number
+  }) => api.post('/pricing/calculate', payload).then(r => r.data.data || r.data),
+
+  validatePricingCoupon: (payload: {
+    code: string
+    subtotal: number
+    customer_id?: number
+    branch_id?: number
+  }) => api.post('/pricing/validate-coupon', payload).then(r => r.data.data || r.data),
+
+  // Promotions (Legacy compatibility)
   getPromotions: (params: Record<string, any> = {}) =>
-    api.get('/promotions', { params }).then(r => r.data),
+    api.get('/promotion-campaigns', { params }).then(r => r.data),
 
   getPromotion: (id: number) =>
-    api.get(`/promotions/${id}`).then(r => r.data.data),
+    api.get(`/promotion-campaigns/${id}`).then(r => r.data.data),
 
   createPromotion: (payload: any) =>
-    api.post('/promotions', payload).then(r => r.data.data),
+    api.post('/promotion-campaigns', payload).then(r => r.data.data),
 
   updatePromotion: (id: number, payload: any) =>
-    api.put(`/promotions/${id}`, payload).then(r => r.data.data),
+    api.put(`/promotion-campaigns/${id}`, payload).then(r => r.data.data),
 
   deletePromotion: (id: number) =>
-    api.delete(`/promotions/${id}`).then(r => r.data),
+    api.delete(`/promotion-campaigns/${id}`).then(r => r.data),
 
   togglePromotionStatus: (id: number, is_active: boolean) =>
-    api.put(`/promotions/${id}`, { is_active }).then(r => r.data.data),
+    api.put(`/promotion-campaigns/${id}`, { is_active }).then(r => r.data.data),
 
   // Coupons
   getCoupons: (params: Record<string, any> = {}) =>

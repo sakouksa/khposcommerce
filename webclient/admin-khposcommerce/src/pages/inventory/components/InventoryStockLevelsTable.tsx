@@ -116,7 +116,7 @@ export const InventoryStockLevelsTable: React.FC<InventoryStockLevelsTableProps>
                 const qty = Number(item.quantity) || 0
                 const reserved = Number(item.reserved_quantity) || 0
                 const available = Number(item.available_quantity) || Math.max(0, qty - reserved)
-                const reorderPoint = Number(item.reorder_point || item.product?.reorder_point || 5)
+                const reorderPoint = Number(item.reorder_point || item.product?.low_stock_threshold || item.product?.reorder_point || 5)
                 const isOut = qty <= 0
                 const isLow = !isOut && qty <= reorderPoint
                 const imgSrc = item.product?.primary_image || item.product?.images?.[0]?.url || item.product?.images?.[0] || item.product?.image || item.image

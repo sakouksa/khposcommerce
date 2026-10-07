@@ -19,7 +19,7 @@ import EmptyState from '@/components/shared/EmptyState'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import TableActionMenu from '@/components/shared/TableActionMenu'
 import { FieldError, getFieldClass, TableToolbar, EnterpriseDatePicker } from '@/components/common'
-import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
 
 interface Expense {
   id:          number
@@ -44,12 +44,12 @@ const DEFAULT_CATEGORIES = [
 const ExpensesPage: React.FC = () => {
   const qc    = useQueryClient()
   const toast = useToast()
-  const { hasPermission } = useAuthStore()
+  const { hasPermission } = usePermission()
 
-  const canCreate = hasPermission('expense.create')
-  const canUpdate = hasPermission('expense.update')
-  const canDelete = hasPermission('expense.delete')
-  const canApprove = hasPermission(['expense.approve', 'expense.update'])
+  const canCreateExpense  = hasPermission('expense.create')
+  const canUpdateExpense  = hasPermission('expense.update')
+  const canDeleteExpense  = hasPermission('expense.delete')
+  const canApproveExpense = hasPermission('expense.approve')
 
     const {
     page,
@@ -209,7 +209,7 @@ const ExpensesPage: React.FC = () => {
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">Expenses</h1>
           <p className="text-xs sm:text-sm text-muted-foreground">{pagination.total} expenses total</p>
         </div>
-        {canCreate && (
+        {canCreateExpense && (
           <button
             onClick={openCreateModal}
             className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white
@@ -269,8 +269,8 @@ const ExpensesPage: React.FC = () => {
                       </td>
                       <td className="text-right" onClick={(e) => e.stopPropagation()}>
                         <TableActionMenu
-                          onEdit={canUpdate ? () => openEditModal(exp) : undefined}
-                          onDelete={canDelete ? () => setDeleteTarget(exp) : undefined}
+                          onEdit={canUpdateExpense ? () => openEditModal(exp) : undefined}
+                          onDelete={canDeleteExpense ? () => setDeleteTarget(exp) : undefined}
                         />
                       </td>
                     </tr>

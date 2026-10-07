@@ -15,7 +15,8 @@ import type { NotificationSettings } from './types/notification.types'
 import { useToast } from '@/hooks/useToast'
 import { sound } from '@/utils/sound'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import PageHeader from '@/components/common/PageHeader'
+import { HeaderActionsGroup } from '@/components/common'
+import { useThemeStore } from '@/stores/themeStore'
 
 interface EventSettingItem {
   id: string
@@ -82,6 +83,7 @@ const SimpleDropdown: React.FC<{
   onChange: (v: string) => void
   options: SimpleDropdownOption[]
 }> = ({ value, onChange, options }) => {
+  const { t } = useTranslation(['notification', 'common'])
   const [open, setOpen] = React.useState(false)
   const selected = options.find(o => o.value === value) || options[0]
   const ref = React.useRef<HTMLDivElement>(null)
@@ -101,7 +103,7 @@ const SimpleDropdown: React.FC<{
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-[12px] bg-muted/30 border border-border/60 hover:border-primary/40 hover:bg-muted/50 transition-all text-xs cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
       >
-        <span className="text-foreground font-medium truncate">{selected?.label}</span>
+        <span className="text-foreground font-medium truncate">{t(selected?.label || '', selected?.label)}</span>
         <ChevronDown className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>
@@ -122,7 +124,7 @@ const SimpleDropdown: React.FC<{
                   onClick={() => { onChange(opt.value); setOpen(false) }}
                   className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-left transition-colors cursor-pointer text-xs ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-muted/60 text-foreground'}`}
                 >
-                  <span className="truncate">{opt.label}</span>
+                  <span className="truncate">{t(opt.label, opt.label)}</span>
                   {isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
                 </button>
               )
@@ -192,6 +194,7 @@ const PRIORITY_OPTIONS = [
 
 // Custom Language Dropdown Component
 const LanguageDropdown: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => {
+  const { t } = useTranslation(['notification', 'common'])
   const [open, setOpen] = React.useState(false)
   const selected = LANGUAGE_OPTIONS.find(o => o.value === value) || LANGUAGE_OPTIONS[0]
   const ref = React.useRef<HTMLDivElement>(null)
@@ -219,7 +222,7 @@ const LanguageDropdown: React.FC<{ value: string; onChange: (v: string) => void 
             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
           />
           <div className="min-w-0 text-left">
-            <span className="font-semibold text-foreground text-[12px] block truncate leading-tight">{selected.name}</span>
+            <span className="font-semibold text-foreground text-[12px] block truncate leading-tight">{t(selected.name, selected.name)}</span>
             <span className="text-[10px] text-muted-foreground truncate leading-tight">{selected.native}</span>
           </div>
         </div>
@@ -252,10 +255,10 @@ const LanguageDropdown: React.FC<{ value: string; onChange: (v: string) => void 
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className={`font-semibold text-xs ${isActive ? 'text-primary' : 'text-foreground'}`}>{opt.name}</span>
+                      <span className={`font-semibold text-xs ${isActive ? 'text-primary' : 'text-foreground'}`}>{t(opt.name, opt.name)}</span>
                       <span className="text-[10px] text-muted-foreground">{opt.native}</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground/60">{opt.country}</span>
+                    <span className="text-[10px] text-muted-foreground/60">{t(opt.country, opt.country)}</span>
                   </div>
                   {isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
                 </button>
@@ -270,6 +273,7 @@ const LanguageDropdown: React.FC<{ value: string; onChange: (v: string) => void 
 
 // Custom Priority Dropdown Component
 const PriorityDropdown: React.FC<{ value: string; onChange: (v: string) => void }> = ({ value, onChange }) => {
+  const { t } = useTranslation(['notification', 'common'])
   const [open, setOpen] = React.useState(false)
   const selected = PRIORITY_OPTIONS.find(o => o.value === value) || PRIORITY_OPTIONS[2]
   const ref = React.useRef<HTMLDivElement>(null)
@@ -293,9 +297,9 @@ const PriorityDropdown: React.FC<{ value: string; onChange: (v: string) => void 
           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${selected.dot}`} />
           <div className="text-left min-w-0">
             <span className={`font-bold text-[12px] block leading-tight ${selected.labelColor}`}>
-              {selected.label}
+              {t(selected.label, selected.label)}
             </span>
-            <span className="text-[10px] text-muted-foreground truncate leading-tight block max-w-[140px]">{selected.desc}</span>
+            <span className="text-[10px] text-muted-foreground truncate leading-tight block max-w-[140px]">{t(selected.desc, selected.desc)}</span>
           </div>
         </div>
         <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
@@ -322,9 +326,9 @@ const PriorityDropdown: React.FC<{ value: string; onChange: (v: string) => void 
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${opt.dot}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className={`font-bold text-[11px] px-1.5 py-0.5 rounded border ${opt.badge}`}>{opt.label}</span>
+                      <span className={`font-bold text-[11px] px-1.5 py-0.5 rounded border ${opt.badge}`}>{t(opt.label, opt.label)}</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground/70">{opt.desc}</span>
+                    <span className="text-[10px] text-muted-foreground/70">{t(opt.desc, opt.desc)}</span>
                   </div>
                   {isActive && <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />}
                 </button>
@@ -339,7 +343,7 @@ const PriorityDropdown: React.FC<{ value: string; onChange: (v: string) => void 
 
 const NotificationSettingsPage: React.FC = () => {
 
-  const { t, i18n } = useTranslation()
+  const { t, i18n } = useTranslation(['notification', 'common'])
   const toast = useToast()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -449,10 +453,9 @@ const NotificationSettingsPage: React.FC = () => {
     }
   }
 
-  const handleLanguageChange = (lang: string) => {
+  const handleLanguageChange = async (lang: string) => {
     setGeneralSettings((prev) => ({ ...prev, language: lang }))
-    i18n.changeLanguage(lang)
-    localStorage.setItem('enterprise-pos-lang', lang)
+    await useThemeStore.getState().setLanguage(lang as 'en' | 'km')
     toast.success(t('Language Updated', 'System language updated!'))
   }
 
@@ -565,20 +568,38 @@ const NotificationSettingsPage: React.FC = () => {
   ]
 
   return (
-    <div className="space-y-6 pb-28 max-w-[1600px] mx-auto">
-      {/* 1. Breadcrumb: Dashboard > Notifications > Notification Settings */}
+    <div className="space-y-5 print:p-0 pb-28">
+      {/* 1. Breadcrumb: Notifications > Notification Settings */}
       <Breadcrumb
         items={[
-          { label: t('Notifications', 'Notifications'), path: '/notifications' },
-          { label: t('Notification Settings', 'Notification Settings') },
+          { label: t('nav.notifications', 'Notifications'), path: '/notifications' },
+          { label: t('nav.notificationSettings', 'Notification Settings') },
         ]}
       />
 
-      <PageHeader
-        icon={<Settings size={24} />}
-        title={t('Notification Settings', 'Notification Settings')}
-        subtitle={t('NotificationSettingsSubtitle', 'Configure dispatch channels, alert triggers, sound effects, and automated quiet hours')}
-      />
+      {/* 2. Hero Header */}
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
+        <div className="space-y-1 min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+            {t('nav.notificationSettings', 'Notification Settings')}
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
+            {t('NotificationSettingsSubtitle', 'Configure dispatch channels, alert triggers, sound effects, and automated quiet hours')}
+          </p>
+        </div>
+
+        <HeaderActionsGroup>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-primary rounded-xl hover:opacity-90 transition-opacity shadow-xs cursor-pointer disabled:opacity-60"
+          >
+            {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+            <span>{saving ? t('Saving...', 'Saving...') : t('Save Settings', 'Save Settings')}</span>
+          </button>
+        </HeaderActionsGroup>
+      </div>
 
       {/* 3. Top Summary Cards (4 Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -604,7 +625,7 @@ const NotificationSettingsPage: React.FC = () => {
             <span className={`text-base font-bold block ${channels.email ? 'text-emerald-600' : 'text-muted-foreground'}`}>
               {channels.email ? t('Enabled', 'Enabled') : t('Disabled', 'Disabled')}
             </span>
-            <span className="text-[11px] text-muted-foreground block">SMTP Gateway Active</span>
+            <span className="text-[11px] text-muted-foreground block">{t('SMTP Gateway Active', 'SMTP Gateway Active')}</span>
           </div>
           <div className={`p-3 rounded-[14px] ${channels.email ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
             <Mail className="w-5 h-5" />
@@ -618,7 +639,7 @@ const NotificationSettingsPage: React.FC = () => {
             <span className={`text-base font-bold block ${channels.push ? 'text-emerald-600' : 'text-muted-foreground'}`}>
               {channels.push ? t('Enabled', 'Enabled') : t('Disabled', 'Disabled')}
             </span>
-            <span className="text-[11px] text-muted-foreground block">FCM & Web Sockets</span>
+            <span className="text-[11px] text-muted-foreground block">{t('FCM & Web Sockets', 'FCM & Web Sockets')}</span>
           </div>
           <div className={`p-3 rounded-[14px] ${channels.push ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
             <Smartphone className="w-5 h-5" />
@@ -632,7 +653,7 @@ const NotificationSettingsPage: React.FC = () => {
             <span className={`text-base font-bold block ${channels.sms ? 'text-emerald-600' : 'text-muted-foreground'}`}>
               {channels.sms ? t('Enabled', 'Enabled') : t('Disabled', 'Disabled')}
             </span>
-            <span className="text-[11px] text-muted-foreground block">Twilio Cellular API</span>
+            <span className="text-[11px] text-muted-foreground block">{t('Twilio Cellular API', 'Twilio Cellular API')}</span>
           </div>
           <div className={`p-3 rounded-[14px] ${channels.sms ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
             <MessageSquare className="w-5 h-5" />
@@ -731,13 +752,13 @@ const NotificationSettingsPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {[
-                { key: 'email', title: 'Email', icon: Mail, desc: 'SMTP Transactional Emails' },
-                { key: 'push', title: 'Push Notification', icon: Smartphone, desc: 'Firebase FCM Push' },
-                { key: 'sms', title: 'SMS', icon: MessageSquare, desc: 'Twilio Cellular SMS' },
-                { key: 'telegram', title: 'Telegram', icon: Send, desc: 'Telegram Bot API' },
-                { key: 'whatsapp', title: 'WhatsApp', icon: Globe, desc: 'WhatsApp Business API' },
-                { key: 'slack', title: 'Slack', icon: MessageSquare, desc: 'Slack Webhook Bot' },
-                { key: 'teams', title: 'Microsoft Teams', icon: Server, desc: 'Teams Webhook Automation' },
+                { key: 'email', title: t('Email', 'Email'), icon: Mail, desc: t('SMTP Transactional Emails', 'SMTP Transactional Emails') },
+                { key: 'push', title: t('Push Notification', 'Push Notification'), icon: Smartphone, desc: t('Firebase FCM Push', 'Firebase FCM Push') },
+                { key: 'sms', title: t('SMS', 'SMS'), icon: MessageSquare, desc: t('Twilio Cellular SMS', 'Twilio Cellular SMS') },
+                { key: 'telegram', title: t('Telegram', 'Telegram'), icon: Send, desc: t('Telegram Bot API', 'Telegram Bot API') },
+                { key: 'whatsapp', title: t('WhatsApp', 'WhatsApp'), icon: Globe, desc: t('WhatsApp Business API', 'WhatsApp Business API') },
+                { key: 'slack', title: t('Slack', 'Slack'), icon: MessageSquare, desc: t('Slack Webhook Bot', 'Slack Webhook Bot') },
+                { key: 'teams', title: t('Microsoft Teams', 'Microsoft Teams'), icon: Server, desc: t('Teams Webhook Automation', 'Teams Webhook Automation') },
               ].map((ch) => {
                 const Icon = ch.icon
                 const isEnabled = Boolean((channels as any)[ch.key])
@@ -889,12 +910,12 @@ const NotificationSettingsPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {[
-                { key: 'daily_summary', title: t('Daily Summary', 'Daily Summary Digest'), desc: 'Receive morning email summary of yesterday operations' },
-                { key: 'weekly_report', title: t('Weekly Report', 'Weekly Executive Report'), desc: 'Weekly sales, inventory & financial analytics PDF' },
-                { key: 'monthly_report', title: t('Monthly Report', 'Monthly Finance Audit'), desc: 'End of month P&L statement & balance breakdown' },
-                { key: 'marketing_email', title: t('Marketing Email', 'Marketing & Product Updates'), desc: 'Platform feature announcements & promotional tips' },
-                { key: 'security_alert', title: t('Security Alert', 'Security & Login Alerts'), desc: 'Immediate email on new IP login or password change' },
-                { key: 'critical_alert', title: t('Critical Alert', 'Critical System Failure Alert'), desc: 'Urgent email when database or API service experiences outage' },
+                { key: 'daily_summary', title: t('Daily Summary', 'Daily Summary Digest'), desc: t('Daily Summary Desc', 'Receive morning email summary of yesterday operations') },
+                { key: 'weekly_report', title: t('Weekly Report', 'Weekly Executive Report'), desc: t('Weekly Report Desc', 'Weekly sales, inventory & financial analytics PDF') },
+                { key: 'monthly_report', title: t('Monthly Report', 'Monthly Finance Audit'), desc: t('Monthly Report Desc', 'End of month P&L statement & balance breakdown') },
+                { key: 'marketing_email', title: t('Marketing Email', 'Marketing & Product Updates'), desc: t('Marketing Email Desc', 'Platform feature announcements & promotional tips') },
+                { key: 'security_alert', title: t('Security Alert', 'Security & Login Alerts'), desc: t('Security Alert Desc', 'Immediate email on new IP login or password change') },
+                { key: 'critical_alert', title: t('Critical Alert', 'Critical System Failure Alert'), desc: t('Critical Alert Desc', 'Urgent email when database or API service experiences outage') },
               ].map((item) => (
                 <div
                   key={item.key}
@@ -924,7 +945,7 @@ const NotificationSettingsPage: React.FC = () => {
                 {t('Live Alert Preview', 'Live Alert Preview')}
               </span>
               <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                Real-time
+                {t('Real-time', 'Real-time')}
               </span>
             </div>
 
@@ -935,21 +956,21 @@ const NotificationSettingsPage: React.FC = () => {
                 onClick={() => setPreviewSample('low_stock')}
                 className={`py-1 text-[11px] font-semibold rounded-[8px] transition-colors ${previewSample === 'low_stock' ? 'bg-card text-foreground shadow-2xs font-bold' : 'text-muted-foreground'}`}
               >
-                Low Stock
+                {t('Low Stock', 'Low Stock')}
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewSample('new_order')}
                 className={`py-1 text-[11px] font-semibold rounded-[8px] transition-colors ${previewSample === 'new_order' ? 'bg-card text-foreground shadow-2xs font-bold' : 'text-muted-foreground'}`}
               >
-                New Order
+                {t('New Order', 'New Order')}
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewSample('security_alert')}
                 className={`py-1 text-[11px] font-semibold rounded-[8px] transition-colors ${previewSample === 'security_alert' ? 'bg-card text-foreground shadow-2xs font-bold' : 'text-muted-foreground'}`}
               >
-                Security
+                {t('Security', 'Security')}
               </button>
             </div>
 
@@ -973,15 +994,15 @@ const NotificationSettingsPage: React.FC = () => {
                         <div className="p-1 bg-amber-500/20 text-amber-600 rounded-md">
                           <AlertTriangle size={13} />
                         </div>
-                        <span className="text-[11px] font-bold text-foreground">Low Stock Warning</span>
+                        <span className="text-[11px] font-bold text-foreground">{t('Low Stock Warning', 'Low Stock Warning')}</span>
                       </div>
-                      <span className="text-[9px] text-muted-foreground">2 min ago</span>
+                      <span className="text-[9px] text-muted-foreground">{t('2 min ago', '2 min ago')}</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground line-clamp-2">
-                      Keyboard 87 remaining stock at <strong>Warehouse A</strong> dropped below threshold (5 units left).
+                      {t('Keyboard 87 remaining stock at', 'Keyboard 87 remaining stock at')} <strong>{t('Warehouse A', 'Warehouse A')}</strong> {t('dropped below threshold (5 units left).', 'dropped below threshold (5 units left).')}
                     </p>
                     <div className="flex items-center justify-between text-[9px] text-primary font-semibold pt-1 border-t border-border/40">
-                      <span>Restock Action</span>
+                      <span>{t('Restock Action', 'Restock Action')}</span>
                       <ChevronRight size={10} />
                     </div>
                   </motion.div>
@@ -1000,15 +1021,15 @@ const NotificationSettingsPage: React.FC = () => {
                         <div className="p-1 bg-emerald-500/20 text-emerald-600 rounded-md">
                           <ShoppingCart size={13} />
                         </div>
-                        <span className="text-[11px] font-bold text-foreground">New Order #ORD-9842</span>
+                        <span className="text-[11px] font-bold text-foreground">{t('New Order #ORD-9842', 'New Order #ORD-9842')}</span>
                       </div>
-                      <span className="text-[9px] text-muted-foreground">Just now</span>
+                      <span className="text-[9px] text-muted-foreground">{t('Just now', 'Just now')}</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground line-clamp-2">
-                      Received paid order from Customer <strong>Sokha Chan</strong> totaling <strong>$450.00</strong> via ABA PAY POS.
+                      {t('Received paid order from Customer', 'Received paid order from Customer')} <strong>{t('Sokha Chan', 'Sokha Chan')}</strong> {t('totaling', 'totaling')} <strong>$450.00</strong> {t('via ABA PAY POS.', 'via ABA PAY POS.')}
                     </p>
                     <div className="flex items-center justify-between text-[9px] text-primary font-semibold pt-1 border-t border-border/40">
-                      <span>View Order</span>
+                      <span>{t('View Order', 'View Order')}</span>
                       <ChevronRight size={10} />
                     </div>
                   </motion.div>
@@ -1027,15 +1048,15 @@ const NotificationSettingsPage: React.FC = () => {
                         <div className="p-1 bg-red-500/20 text-red-600 rounded-md">
                           <Shield size={13} />
                         </div>
-                        <span className="text-[11px] font-bold text-foreground">Security Alert: New IP</span>
+                        <span className="text-[11px] font-bold text-foreground">{t('Security Alert: New IP', 'Security Alert: New IP')}</span>
                       </div>
-                      <span className="text-[9px] text-muted-foreground">10 min ago</span>
+                      <span className="text-[9px] text-muted-foreground">{t('10 min ago', '10 min ago')}</span>
                     </div>
                     <p className="text-[10px] text-muted-foreground line-clamp-2">
-                      Successful Admin login detected from new IP Address <strong>192.168.1.105</strong> (Phnom Penh Branch).
+                      {t('Successful Admin login detected from new IP Address', 'Successful Admin login detected from new IP Address')} <strong>192.168.1.105</strong> {t('(Phnom Penh Branch).', '(Phnom Penh Branch).')}
                     </p>
                     <div className="flex items-center justify-between text-[9px] text-primary font-semibold pt-1 border-t border-border/40">
-                      <span>Verify Session</span>
+                      <span>{t('Verify Session', 'Verify Session')}</span>
                       <ChevronRight size={10} />
                     </div>
                   </motion.div>

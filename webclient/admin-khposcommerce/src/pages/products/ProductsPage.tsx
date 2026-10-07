@@ -1,20 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import React, { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { AnimatePresence } from 'framer-motion'
-import {
-  Package, Plus, Search, Filter, RefreshCw, Download, Upload, Settings, Trash2, X,
-  FolderTree, Sparkles, Scale, SlidersHorizontal, Receipt
-} from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { productService } from '@/services/productService'
 import { categoryService } from '@/services/categoryService'
 import { brandService } from '@/services/brandService'
 import { useToast } from '@/hooks/useToast'
 import Pagination from '@/components/shared/Pagination'
 import { useServerPagination } from '@/hooks/useServerPagination'
-import { usePageTab } from '@/hooks/usePageTab'
-import ResetButton from '@/components/shared/ResetButton'
-import WorkspaceTabs from '@/components/shared/WorkspaceTabs'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import {
@@ -23,17 +16,11 @@ import {
   ExportButton,
   ImportButton,
   TableToolbar,
+  InlineFilterSelect,
 } from '@/components/common'
 import { usePermission } from '@/hooks/usePermission'
 import { useTranslation } from 'react-i18next'
-import { useThemeStore } from '@/stores/themeStore'
 import { formatCurrency } from '@/utils/formatters'
-
-import CategoriesPage from '@/pages/categories/CategoriesPage'
-import BrandsPage from '@/pages/brands/BrandsPage'
-import UnitsPage from '@/pages/settings/UnitsPage'
-import AttributesPage from '@/pages/attributes/AttributesPage'
-import TaxesPage from '@/pages/products/TaxesPage'
 
 import { ProductStatsCards } from './components/ProductStatsCards'
 import { ProductFilterDrawer } from './components/ProductFilterDrawer'
@@ -42,14 +29,11 @@ import { ProductImportModal } from './components/ProductImportModal'
 import { ProductTableSection } from './components/ProductTableSection'
 import { ProductBarcodePrintModal } from './components/ProductBarcodePrintModal'
 import { QuickStockAdjustModal } from './components/QuickStockAdjustModal'
-import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
 import type { Product } from './types/productsPage.types'
 
 const ProductsPage: React.FC = () => {
-  const { language } = useThemeStore()
   const { t, i18n } = useTranslation(['products', 'common'])
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
   const qc = useQueryClient()
   const toast = useToast()
   const locale = i18n.language === 'km' ? 'km-KH' : 'en-US'
@@ -61,13 +45,10 @@ const ProductsPage: React.FC = () => {
   const canEdit = hasPermission('product.update')
   const canDelete = hasPermission('product.delete')
   const canExport = hasPermission('product.export')
+  const canImport = hasPermission('product.import')
   const canAdjust = hasPermission('stock_adjustment.adjust') || hasPermission('inventory.update')
 
-  const [activeWorkspaceTab, setActiveWorkspaceTab] = usePageTab<string>({
-    storageKey: 'products_active_tab',
-    defaultTab: 'products',
-    validTabs: ['products', 'categories', 'brands', 'units', 'attributes', 'taxes'],
-  })
+
 
   const {
     page,
@@ -106,12 +87,7 @@ const ProductsPage: React.FC = () => {
     name: ''
   })
 
-  // Sub-tab add triggers
-  const [categoryAddTrigger, setCategoryAddTrigger] = useState(0)
-  const [brandAddTrigger, setBrandAddTrigger] = useState(0)
-  const [unitAddTrigger, setUnitAddTrigger] = useState(0)
-  const [taxAddTrigger, setTaxAddTrigger] = useState(0)
-  const [attributeAddTrigger, setAttributeAddTrigger] = useState(0)
+
 
   const [importOpen, setImportOpen] = useState(false)
   const [importFile, setImportFile] = useState<File | null>(null)
@@ -122,10 +98,11 @@ const ProductsPage: React.FC = () => {
     name: true,
     sku: true,
     category: true,
-    price: true,
+    supplier: true,
     stock: true,
+    price: true,
     status: true,
-    rating: true,
+    rating: false,
   })
 
   // Queries
@@ -157,7 +134,6 @@ const ProductsPage: React.FC = () => {
       } as any : {})
     }),
     placeholderData: (prev) => prev,
-    enabled: activeWorkspaceTab === 'products',
   })
 
   const rawProducts: Product[] = data?.data ?? []
@@ -346,15 +322,6 @@ const ProductsPage: React.FC = () => {
     }
   }
 
-  const handleSubTabAddClick = () => {
-    if (activeWorkspaceTab === 'products') navigate('/products/create')
-    else if (activeWorkspaceTab === 'categories') setCategoryAddTrigger(prev => prev + 1)
-    else if (activeWorkspaceTab === 'brands') setBrandAddTrigger(prev => prev + 1)
-    else if (activeWorkspaceTab === 'units') setUnitAddTrigger(prev => prev + 1)
-    else if (activeWorkspaceTab === 'attributes') setAttributeAddTrigger(prev => prev + 1)
-    else if (activeWorkspaceTab === 'taxes') setTaxAddTrigger(prev => prev + 1)
-  }
-
   const resetAllFilters = () => {
     setStatusFilter('')
     setCategoryFilter('')
@@ -365,30 +332,14 @@ const ProductsPage: React.FC = () => {
     reset()
   }
 
-  const canAddInCurrentTab = useMemo(() => {
-    switch (activeWorkspaceTab) {
-      case 'products': return canCreate
-      case 'categories': return hasPermission('category.create')
-      case 'brands': return hasPermission('brand.create')
-      case 'units': return hasPermission('unit.create')
-      case 'attributes': return hasPermission('attribute.create')
-      case 'taxes': return hasPermission('tax.create')
-      default: return false
-    }
-  }, [activeWorkspaceTab, canCreate, hasPermission])
-
-  const accessibleWorkspaceTabs = useMemo(() => [
-    { id: 'products', label: t('tabProducts', 'All Products'), icon: Package },
-    ...(hasPermission('category.view') ? [{ id: 'categories', label: t('tabCategories', 'Categories'), icon: FolderTree }] : []),
-    ...(hasPermission('brand.view') ? [{ id: 'brands', label: t('tabBrands', 'Brands'), icon: Sparkles }] : []),
-    ...(hasPermission('unit.view') ? [{ id: 'units', label: t('tabUnits', 'Units'), icon: Scale }] : []),
-    ...(hasPermission('attribute.view') ? [{ id: 'attributes', label: t('tabAttributes', 'Attributes'), icon: SlidersHorizontal }] : []),
-    ...(hasPermission('tax.view') ? [{ id: 'taxes', label: t('tabTaxes', 'Tax Rates'), icon: Receipt }] : []),
-  ], [hasPermission, t])
-
   return (
     <div className="space-y-5 print:p-0">
-      <Breadcrumb items={[{ label: t('products', 'Products') }]} />
+      <Breadcrumb
+        items={[
+          { label: t('nav.productManagement', 'Products'), path: '/products' },
+          { label: t('nav.allProducts', 'All Products') },
+        ]}
+      />
 
       {/* Frameless Hero Header (Shopify Polaris Standard) */}
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
@@ -402,7 +353,7 @@ const ProductsPage: React.FC = () => {
         </div>
 
         <HeaderActionsGroup>
-          {canCreate && (
+          {canImport && (
             <ImportButton
               onClick={() => setImportOpen(true)}
               label={t('importCSV', 'Import CSV')}
@@ -418,66 +369,67 @@ const ProductsPage: React.FC = () => {
               }
             />
           )}
-          {canAddInCurrentTab && (
+          {canCreate && (
             <AddButton
-              onClick={handleSubTabAddClick}
-              label={
-                activeWorkspaceTab === 'products'
-                  ? t('addProduct', 'Add Product')
-                  : activeWorkspaceTab === 'categories'
-                  ? t('addCategory', 'Add Category')
-                  : activeWorkspaceTab === 'brands'
-                  ? t('addBrand', 'Add Brand')
-                  : activeWorkspaceTab === 'units'
-                  ? t('addUnit', 'Add Unit')
-                  : activeWorkspaceTab === 'attributes'
-                  ? t('addAttribute', 'Add Attribute')
-                  : t('addTaxRule', 'Add Tax Rule')
-              }
+              onClick={() => navigate('/products/create')}
+              label={t('addProduct', 'Add Product')}
             />
           )}
         </HeaderActionsGroup>
       </div>
 
-      {/* Workspace Tabs Navigation */}
-      <WorkspaceTabs
-        tabs={accessibleWorkspaceTabs}
-        activeTab={activeWorkspaceTab}
-        onChange={setActiveWorkspaceTab}
-      />
-
-      {/* KPI Overview Cards - Only on Main Products Catalog Tab */}
-      {activeWorkspaceTab === 'products' && (
-        <ProductStatsCards analytics={analytics} formatCurrency={formatMoney} />
-      )}
-
-      {/* Active Tab View */}
-      {activeWorkspaceTab === 'categories' ? (
-        <CategoriesPage isTab triggerAdd={categoryAddTrigger} />
-      ) : activeWorkspaceTab === 'brands' ? (
-        <BrandsPage isTab triggerAdd={brandAddTrigger} />
-      ) : activeWorkspaceTab === 'units' ? (
-        <UnitsPage isTab triggerAdd={unitAddTrigger} />
-      ) : activeWorkspaceTab === 'attributes' ? (
-        <AttributesPage isTab triggerAdd={attributeAddTrigger} />
-      ) : activeWorkspaceTab === 'taxes' ? (
-        <TaxesPage isTab triggerAdd={taxAddTrigger} />
-      ) : (
-        <>
-          {/* Global Standard Table Toolbar */}
+      {/* KPI Overview Cards */}
+      <ProductStatsCards analytics={analytics} formatCurrency={formatMoney} />
+          {/* Global Standard Table Toolbar with Shadcn Inline Filters & Manage Table */}
           <TableToolbar
             search={search}
             onSearchChange={(val) => { setSearch(val); setPage(1); }}
-            searchPlaceholder={t('searchPlaceholder', 'Search product name, SKU, or barcode...')}
-            onFilterClick={() => setFilterDrawerOpen(true)}
-            isFilterActive={Boolean(statusFilter || categoryFilter || brandFilter || stockLevelFilter || priceMinFilter || priceMaxFilter)}
+            searchPlaceholder={t('searchPlaceholder', 'Search products')}
+            hideFilterButton={true}
+            hideRefreshButton={true}
+            isFilterActive={Boolean(categoryFilter || brandFilter || stockLevelFilter || search)}
             onReset={resetAllFilters}
+            filters={
+              <>
+                <InlineFilterSelect
+                  label={t('colCategory', 'Category')}
+                  value={categoryFilter}
+                  onChange={(val) => { setCategoryFilter(val); setPage(1); }}
+                  allLabel={t('allCategories', 'All categories')}
+                  options={(categories || []).map((c: any) => ({
+                    label: c.name,
+                    value: c.id,
+                  }))}
+                />
+                <InlineFilterSelect
+                  label={t('colBrand', 'Brand')}
+                  value={brandFilter}
+                  onChange={(val) => { setBrandFilter(val); setPage(1); }}
+                  allLabel={t('allBrands', 'All brands')}
+                  options={(brands || []).map((b: any) => ({
+                    label: b.name,
+                    value: b.id,
+                  }))}
+                />
+                <InlineFilterSelect
+                  label={t('colStock', 'Stock level')}
+                  value={stockLevelFilter}
+                  onChange={(val) => { setStockLevelFilter(val); setPage(1); }}
+                  allLabel={t('allStockLevels', 'All stock levels')}
+                  options={[
+                    { label: t('stockHigh', 'High stock'), value: 'high' },
+                    { label: t('stockLow', 'Low stock'), value: 'low' },
+                    { label: t('stockOut', 'Out of stock'), value: 'out' },
+                  ]}
+                />
+              </>
+            }
             leftActions={
               selectedRows.length > 0 ? (
                 <button
                   type="button"
                   onClick={() => setBulkDeleteConfirmOpen(true)}
-                  className="inline-flex items-center gap-1.5 h-10 min-h-[40px] px-3.5 text-xs sm:text-[13px] font-semibold bg-rose-500/10 text-rose-600 rounded-xl border border-rose-500/20 hover:bg-rose-500/20 active:scale-[0.98] transition-all cursor-pointer shrink-0"
+                  className="inline-flex items-center gap-1.5 h-10 min-h-[40px] max-h-[40px] px-3.5 text-xs sm:text-[13px] font-semibold bg-rose-500/10 text-rose-600 rounded-lg border border-rose-500/20 hover:bg-rose-500/20 active:scale-[0.98] transition-all cursor-pointer shrink-0 box-border leading-normal"
                 >
                   <Trash2 size={14} />
                   <span>{t('products.deleteSelected', t('common.deleteSelected', 'Delete Selected'))} ({selectedRows.length})</span>
@@ -486,14 +438,14 @@ const ProductsPage: React.FC = () => {
             }
             onRefresh={() => qc.invalidateQueries({ queryKey: ['products'] })}
             refreshLoading={isFetching}
+            manageTableLabel={t('manageTable', 'Manage Table')}
             columns={[
-              { key: 'image', label: t('products.colPhoto', 'Image') },
-              { key: 'name', label: t('products.colName', 'Product Name') },
+              { key: 'name', label: t('products.colName', 'Product name') },
               { key: 'sku', label: t('products.sku', 'SKU') },
               { key: 'category', label: t('products.colCategory', 'Category') },
-              { key: 'price', label: t('products.colPrice', 'Price') },
-              { key: 'stock', label: t('products.colStock', 'Stock') },
-              { key: 'status', label: t('products.colStatus', 'Status') },
+              { key: 'supplier', label: t('colBrand', 'Brand') },
+              { key: 'stock', label: t('products.colStock', 'Current stock') },
+              { key: 'price', label: t('products.colPrice', 'Unit price') },
             ]}
             visibleColumns={visibleColumns}
             onColumnChange={setVisibleColumns}
@@ -556,7 +508,7 @@ const ProductsPage: React.FC = () => {
           <ProductDetailDrawer
             product={viewProduct}
             onClose={() => setViewProduct(null)}
-            onEdit={canEdit ? (p) => navigate(`/products/${p.id}/edit`) : undefined}
+            onEdit={(p) => { if (canEdit) navigate(`/products/${p.id}/edit`) }}
             onDuplicate={canCreate ? (p) => duplicateMutation.mutate(p) : undefined}
             onQuickStockAdjust={canAdjust ? (p) => setQuickAdjustProduct(p) : undefined}
             onPrintBarcode={(p) => setBarcodePrintProduct(p)}
@@ -615,8 +567,6 @@ const ProductsPage: React.FC = () => {
             onConfirm={() => bulkDeleteMutation.mutate(selectedRows)}
             onCancel={() => setBulkDeleteConfirmOpen(false)}
           />
-        </>
-      )}
     </div>
   )
 }

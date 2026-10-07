@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/useToast'
 import { sound } from '@/utils/sound'
 import { useServerPagination } from '@/hooks/useServerPagination'
 import { useThemeStore } from '@/stores/themeStore'
-import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
 import {
   Breadcrumb,
   TableToolbar,
@@ -25,6 +25,7 @@ import {
   UpdateOrderStatusModal,
   EnterpriseStatsCard,
   EnterpriseStatsGrid,
+  InlineFilterSelect,
 } from '@/components/common'
 import WorkspaceTabs, { type WorkspaceTabItem } from '@/components/shared/WorkspaceTabs'
 import { usePageTab } from '@/hooks/usePageTab'
@@ -45,14 +46,14 @@ const OrdersPage: React.FC = () => {
   const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { hasPermission } = useAuthStore()
+  const { hasPermission } = usePermission()
 
-  const canView = hasPermission('order.view')
-  const canCreate = hasPermission(['order.create', 'sale.create'])
-  const canUpdate = hasPermission(['order.update', 'order.manage'])
-  const canExport = hasPermission(['order.export', 'order.view'])
-  const canPrint = hasPermission(['order.view', 'sale.view'])
-  const canManageShipping = hasPermission(['shipping.view', 'shipment.view', 'order.manage', 'order.view'])
+  const canViewOrder = hasPermission('order.view')
+  const canCreateOrder = hasPermission('order.create')
+  const canUpdateOrder = hasPermission('order.update')
+  const canExportOrder = hasPermission('order.export')
+  const canPrintOrder = hasPermission('order.view')
+  const canManageShipping = hasPermission('shipment.view')
 
   const {
     page,
@@ -454,7 +455,7 @@ const OrdersPage: React.FC = () => {
           )}
 
           {/* Export CSV Button with Date Range */}
-          {canExport && (
+          {canExportOrder && (
             <ExportButton
               onExportRange={(range) => handleExport(range)}
               loading={isExporting}
@@ -464,7 +465,7 @@ const OrdersPage: React.FC = () => {
           )}
 
           {/* Add Order / POS Button */}
-          {canCreate && (
+          {canCreateOrder && (
             <AddButton
               onClick={() => navigate('/pos')}
               label={t('createOrder', 'Create Order')}
@@ -587,6 +588,39 @@ const OrdersPage: React.FC = () => {
         columns={columnOptions}
         visibleColumns={visibleColumns}
         onColumnChange={setVisibleColumns}
+        filters={
+          <>
+            <InlineFilterSelect
+              label={t('paymentStatus', 'Payment')}
+              value={paymentStatusFilter || ''}
+              onChange={(val) => {
+                setPaymentStatusFilter(val || undefined)
+                setPage(1)
+              }}
+              allLabel={t('allPaymentStatuses', 'All Payment Statuses')}
+              options={[
+                { label: t('paid', 'Paid'), value: 'paid' },
+                { label: t('unpaid', 'Unpaid'), value: 'unpaid' },
+                { label: t('partially_paid', 'Partially Paid'), value: 'partially_paid' },
+                { label: t('refunded', 'Refunded'), value: 'refunded' },
+              ]}
+            />
+            <InlineFilterSelect
+              label={t('fulfillmentStatus', 'Fulfillment')}
+              value={fulfillmentStatusFilter || ''}
+              onChange={(val) => {
+                setFulfillmentStatusFilter(val || undefined)
+                setPage(1)
+              }}
+              allLabel={t('allFulfillmentStatuses', 'All Fulfillment')}
+              options={[
+                { label: t('fulfilled', 'Fulfilled'), value: 'fulfilled' },
+                { label: t('unfulfilled', 'Unfulfilled'), value: 'unfulfilled' },
+                { label: t('partial', 'Partial'), value: 'partial' },
+              ]}
+            />
+          </>
+        }
       />
 
       {/* ── 5. ORDERS TABLE VIEW ────────────────────────────────────────────── */}
@@ -598,11 +632,11 @@ const OrdersPage: React.FC = () => {
         sortBy={sortBy}
         sortOrder={sortOrder}
         onSort={handleSort}
-        onView={canView ? (order) => navigate(`/orders/${order.id}`) : undefined}
-        onPrintReceipt={canPrint ? (order) => setReceiptModalOrder(order) : undefined}
-        onPrintWaybill={canPrint ? (order) => setWaybillOrder(order) : undefined}
-        onUpdateStatus={canUpdate ? (order) => handleOpenStatusDialog(order) : undefined}
-        onQuickStatusChange={canUpdate ? handleQuickStatusTransition : undefined}
+        onView={canViewOrder ? (order) => navigate(`/orders/${order.id}`) : undefined}
+        onPrintReceipt={canPrintOrder ? (order) => setReceiptModalOrder(order) : undefined}
+        onPrintWaybill={canPrintOrder ? (order) => setWaybillOrder(order) : undefined}
+        onUpdateStatus={canUpdateOrder ? (order) => handleOpenStatusDialog(order) : undefined}
+        onQuickStatusChange={canUpdateOrder ? handleQuickStatusTransition : undefined}
       />
 
       {/* ── 5. PAGINATION ────────────────────────────────────────────────────── */}

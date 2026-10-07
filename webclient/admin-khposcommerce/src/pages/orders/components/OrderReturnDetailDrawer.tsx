@@ -44,7 +44,7 @@ import type {
   ReturnFault,
   ConditionGrade,
   InventoryAction,
-} from '@/types/orderReturn.types'
+} from '../types'
 
 const KHR_RATE = 4100
 

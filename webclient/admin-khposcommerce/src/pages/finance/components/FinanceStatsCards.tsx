@@ -5,6 +5,7 @@ import {
   Receipt,
   Landmark,
   TrendingUp,
+  Clock,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -27,8 +28,17 @@ interface FinanceStatsCardsProps {
  * Normalizes any date input (ISO 8601, SQL datetime, or YYYY-MM-DD) into 'YYYY-MM-DD'
  * in Asia/Phnom_Penh timezone.
  */
-export const toLocalDateStr = (val: string | undefined | null): string => {
+export const toLocalDateStr = (val: string | Date | undefined | null): string => {
   if (!val) return ''
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return ''
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Phnom_Penh',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(val)
+  }
   const str = String(val).trim()
   if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
     return str
@@ -94,7 +104,11 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
   // ── Compute filtered KPIs ──────────────────────────────────────────────────
   // Prioritize backend SQL aggregation (analytics.timeframes) for 100% precision & zero truncation,
   // falling back to local Cambodia timezone filter if serverTf is not yet available.
-  const { grossSalesVal, expensesVal, salesCount, expensesCount, netProfitsVal } = useMemo(() => {
+  const { grossSalesVal, expensesVal, salesCount, expensesCount, netProfitsVal, pendingExpensesVal, pendingExpensesCount } = useMemo(() => {
+    const pendingList = allExpenses.filter((e: any) => e.status === 'pending')
+    const pendingVal = pendingList.reduce((acc: number, e: any) => acc + (parseFloat(e.amount ?? 0) || 0), 0)
+    const pendingCount = pendingList.length
+
     if (serverTf) {
       const gross = Number(serverTf.gross_sales ?? 0)
       const exp = Number(serverTf.expenses ?? 0)
@@ -108,6 +122,8 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
         salesCount: sCount,
         expensesCount: eCount,
         netProfitsVal: net,
+        pendingExpensesVal: pendingVal,
+        pendingExpensesCount: pendingCount,
       }
     }
 
@@ -149,6 +165,8 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
       salesCount: filteredSales.length,
       expensesCount: filteredExpenses.length,
       netProfitsVal: Math.max(0, gross - exp),
+      pendingExpensesVal: pendingVal,
+      pendingExpensesCount: pendingCount,
     }
   }, [serverTf, allSales, allExpenses, timeframe])
 
@@ -175,6 +193,8 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
   const avgOrderVal = salesCount > 0 ? grossSalesVal / salesCount : 0
   const profitMarginNum = grossSalesVal > 0 ? (netProfitsVal / grossSalesVal) * 100 : 0
   const opexRatioNum = grossSalesVal > 0 ? (expensesVal / grossSalesVal) * 100 : 0
+  const daysInPeriod = timeframe === 'today' ? 1 : timeframe === 'month' ? 30 : 30
+  const dailyAvgExpense = expensesVal > 0 ? (expensesVal / daysInPeriod) : 0
 
   const revenueMultiple = expensesVal > 0
     ? (grossSalesVal / expensesVal).toFixed(1)
@@ -202,20 +222,20 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
   return (
     <div className="space-y-4 print:hidden select-none">
       {/* ─── Compact Top Toolbar: Period Pills & Health ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/70 px-4 py-2.5 rounded-2xl shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card dark:bg-slate-900/90 border border-border/70 dark:border-slate-800 px-4 py-2.5 rounded-2xl shadow-xs">
         {/* Left: Health Status */}
         <div className="flex items-center gap-2.5">
           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${healthStatus.color}`}>
             <span className="w-1.5 h-1.5 rounded-full bg-current" />
             <span>{healthStatus.label}</span>
           </span>
-          <span className="text-xs text-muted-foreground hidden md:inline">
+          <span className="text-xs text-muted-foreground dark:text-slate-400 hidden md:inline">
             • {revenueMultiple}x {t('finance.inflow_vs_opex', 'Inflow vs OPEX')}
           </span>
         </div>
 
         {/* Right: Timeframe Segmented Control — Today | This Month | All Time */}
-        <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-xl border border-border/50 self-start sm:self-auto">
+        <div className="flex items-center gap-1 bg-muted/60 dark:bg-slate-800/80 p-1 rounded-xl border border-border/50 dark:border-slate-700/60 self-start sm:self-auto">
           {(
             [
               { id: 'today', label: t('finance.period_today', 'Today') },
@@ -230,14 +250,14 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
                 onClick={() => setTimeframe(item.id)}
                 className={`relative px-3 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer select-none ${
                   isActive
-                    ? 'text-foreground shadow-xs font-bold'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'text-foreground dark:text-white shadow-xs font-bold'
+                    : 'text-muted-foreground dark:text-slate-400 hover:text-foreground dark:hover:text-white'
                 }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="finance-timeframe-pill"
-                    className="absolute inset-0 bg-background rounded-lg border border-border/80 shadow-2xs"
+                    className="absolute inset-0 bg-background dark:bg-slate-700 rounded-lg border border-border/80 dark:border-slate-600 shadow-2xs"
                     transition={{ type: 'spring', bounce: 0.15, duration: 0.3 }}
                   />
                 )}
@@ -248,27 +268,9 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
         </div>
       </div>
 
-      {/* ─── 4 KPI Cards ─── */}
+      {/* ─── 4 Enterprise Focus KPI Cards for Operating Expenses ─── */}
       <EnterpriseStatsGrid columns={4}>
-        {/* Card 1: Gross Sales (filtered by period) */}
-        <EnterpriseStatsCard
-          title={t('finance.gross_sales_revenue', 'Gross Sales Revenue')}
-          value={grossSalesVal}
-          prefix="$"
-          decimals={2}
-          subtitle={
-            <span className="flex items-center gap-1">
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono">
-                +${avgOrderVal.toFixed(0)} avg
-              </span>{' '}
-              • {salesCount} {t('finance.sales', 'Sales')}
-            </span>
-          }
-          icon={TrendingUp}
-          variant="emerald"
-        />
-
-        {/* Card 2: Operating Expenses (filtered by period) */}
+        {/* Card 1: Operating Expenses (Primary Metric) */}
         <EnterpriseStatsCard
           title={t('finance.operating_expenses', 'Operating Expenses')}
           value={expensesVal}
@@ -277,37 +279,56 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
           valueClassName="text-rose-600 dark:text-rose-400"
           subtitle={
             <span className="flex items-center gap-1">
-              <span className="text-rose-600 dark:text-rose-400 font-bold font-mono">
-                {opexRatioNum.toFixed(1)}% OPEX
+              <span className="text-muted-foreground font-semibold">
+                ~ ៛ {Math.round(expensesVal * 4100).toLocaleString()}
               </span>{' '}
               • {expensesCount} {t('finance.records', 'Records')}
             </span>
           }
           icon={Receipt}
           variant="rose"
+        />
+
+        {/* Card 2: Pending Approvals */}
+        <EnterpriseStatsCard
+          title={t('finance.pending_approvals', 'Pending Approvals')}
+          value={pendingExpensesVal}
+          prefix="$"
+          decimals={2}
+          valueClassName={pendingExpensesCount > 0 ? "text-amber-600 dark:text-amber-400" : "text-foreground"}
+          subtitle={
+            <span className="flex items-center gap-1">
+              <span className={`font-semibold ${pendingExpensesCount > 0 ? 'text-amber-600 dark:text-amber-400 font-bold' : 'text-muted-foreground'}`}>
+                {pendingExpensesCount} {t('finance.records', 'Records')}
+              </span>{' '}
+              • {t('finance.pending_vouchers_sub', { count: pendingExpensesCount, defaultValue: 'Need Review' })}
+            </span>
+          }
+          icon={Clock}
+          variant="amber"
           delay={0.05}
         />
 
-        {/* Card 3: Net Profit (filtered by period) */}
+        {/* Card 3: Gross Sales Revenue & Margin */}
         <EnterpriseStatsCard
-          title={t('finance.net_profit_balance', 'Net Profit Balance')}
-          value={netProfitsVal}
+          title={t('finance.gross_sales_revenue', 'Gross Sales Revenue')}
+          value={grossSalesVal}
           prefix="$"
           decimals={2}
           subtitle={
             <span className="flex items-center gap-1">
-              <span className="text-blue-600 dark:text-blue-400 font-bold font-mono">
-                {netProfitsVal >= 0 ? '+' : ''}{profitMarginNum.toFixed(1)}% {t('finance.margin_label', 'Margin')}
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono">
+                +${avgOrderVal.toFixed(0)} {t('finance.avg_short', 'avg')}
               </span>{' '}
-              • {revenueMultiple}x OPEX
+              • {salesCount} {t('finance.sales', 'Sales')}
             </span>
           }
-          icon={Wallet}
-          variant="blue"
+          icon={TrendingUp}
+          variant="emerald"
           delay={0.1}
         />
 
-        {/* Card 4: Cash Till Reserves (always global — register balance doesn't change by period) */}
+        {/* Card 4: Cash Till Reserves */}
         <EnterpriseStatsCard
           title={t('finance.till_float_reserves', 'Cash Till Reserves')}
           value={cashReservesVal}
@@ -315,14 +336,14 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
           decimals={2}
           subtitle={
             <span className="flex items-center gap-1">
-              <span className="text-amber-600 dark:text-amber-400 font-bold">
+              <span className="text-blue-600 dark:text-blue-400 font-bold">
                 {openRegistersCount}/{registersCount} {t('finance.registers_open', 'Open')}
               </span>{' '}
               • {t('finance.pos_ready', 'POS Ready')}
             </span>
           }
           icon={Landmark}
-          variant="amber"
+          variant="blue"
           delay={0.15}
         />
       </EnterpriseStatsGrid>
@@ -330,24 +351,24 @@ export const FinanceStatsCards: React.FC<FinanceStatsCardsProps> = ({
       {/* ─── Secondary Mini Metric Strip ─── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <EnterpriseMiniStatsCard
-          label={t('finance.inflow_vs_opex', 'Inflow Multiple')}
-          value={`${revenueMultiple}x`}
-          valueColor="emerald"
+          label={t('finance.daily_avg_opex', 'Daily Avg OPEX')}
+          value={`$${dailyAvgExpense.toFixed(2)}`}
+          valueColor="rose"
         />
         <EnterpriseMiniStatsCard
           label={t('finance.opex_ratio', 'OPEX Ratio')}
           value={`${opexRatioNum.toFixed(1)}%`}
-          valueColor="rose"
+          valueColor={opexRatioNum > 50 ? 'rose' : 'emerald'}
         />
         <EnterpriseMiniStatsCard
-          label={t('finance.net_margin', 'Net Margin')}
-          value={`${profitMarginNum.toFixed(1)}%`}
-          valueColor="blue"
+          label={t('finance.net_profit_balance', 'Net Operating Profit')}
+          value={`$${netProfitsVal.toFixed(2)}`}
+          valueColor={netProfitsVal >= 0 ? 'emerald' : 'rose'}
         />
         <EnterpriseMiniStatsCard
           label={t('finance.pos_liquidity', 'Open Registers')}
           value={`${openRegistersCount} / ${registersCount}`}
-          valueColor="amber"
+          valueColor="blue"
         />
       </div>
     </div>

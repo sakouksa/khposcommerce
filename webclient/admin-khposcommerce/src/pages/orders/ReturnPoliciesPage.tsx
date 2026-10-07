@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { orderReturnService } from '@/services/orderReturnService'
 import { categoryService } from '@/services/categoryService'
-import type { ReturnPolicy } from '@/types/orderReturn.types'
+import type { ReturnPolicy } from './types'
 import { useToast } from '@/hooks/useToast'
 import { useAuthStore } from '@/stores/authStore'
 import { useThemeStore } from '@/stores/themeStore'

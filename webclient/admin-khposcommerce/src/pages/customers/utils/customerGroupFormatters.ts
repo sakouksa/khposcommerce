@@ -1,95 +1,147 @@
+import i18n from '@/lib/i18n'
+
 /**
  * Localizes customer group names and descriptions dynamically across 2 languages (Khmer & English)
- * on the client-side without altering database records.
+ * utilizing standard translation resources (locales/en/customers.json & locales/km/customers.json).
  */
 
-const KM_GROUP_NAMES: Record<string, string> = {
-  'general retail': 'លក់រាយទូទៅ',
-  'vip platinum': 'វីអាយភី ផ្លាទីនីម (VIP Platinum)',
-  'gold member': 'សមាជិកមាស (Gold Member)',
-  'silver member': 'សមាជិកប្រាក់ (Silver Member)',
-  'wholesale buyer': 'អ្នកទិញដុំ (Wholesale Buyer)',
-  'company partner': 'ដៃគូក្រុមហ៊ុន (Company Partner)',
-  'employee family': 'ក្រុមគ្រួសារបុគ្គលិក',
-  'distributor tier 1': 'អ្នកចែកចាយកម្រិត ១',
-  'distributor tier 2': 'អ្នកចែកចាយកម្រិត ២',
-  'dropshipper': 'អ្នកលក់បន្ត (Dropshipper)',
-  'general': 'ទូទៅ',
-  'vip': 'វីអាយភី (VIP)',
-  'wholesale': 'លក់ដុំ',
-}
+const toCleanKey = (str: string): string =>
+  str.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
 
-const KM_GROUP_DESCRIPTIONS: Record<string, string> = {
-  'group for general retail': 'ក្រុមសម្រាប់អតិថិជនលក់រាយទូទៅ',
-  'group for vip platinum': 'ក្រុមសម្រាប់អតិថិជន VIP ផ្លាទីនីម',
-  'group for gold member': 'ក្រុមសម្រាប់សមាជិកមាស',
-  'group for silver member': 'ក្រុមសម្រាប់សមាជិកប្រាក់',
-  'group for wholesale buyer': 'ក្រុមសម្រាប់អ្នកទិញដុំ',
-  'group for company partner': 'ក្រុមសម្រាប់ដៃគូក្រុមហ៊ុន',
-  'group for employee family': 'ក្រុមសម្រាប់គ្រួសារបុគ្គលិក',
-  'group for distributor tier 1': 'ក្រុមសម្រាប់អ្នកចែកចាយកម្រិត ១',
-  'group for distributor tier 2': 'ក្រុមសម្រាប់អ្នកចែកចាយកម្រិត ២',
-  'group for dropshipper': 'ក្រុមសម្រាប់អ្នកលក់បន្ត (Dropshipper)',
-  'regular retail customers': 'អតិថិជនលក់រាយទូទៅជាប្រចាំ',
-  'loyal vip customers': 'អតិថិជន VIP ស្មោះត្រង់',
-  'bulk buying customers': 'អតិថិជនទិញដុំបរិមាណច្រើន',
-}
-
+/**
+ * Resolve translated customer group display name using i18n locale resources
+ * Supports multiple call patterns:
+ * - getCustomerGroupDisplayName(name, t, languageCode)
+ * - getCustomerGroupDisplayName(name, languageCode)
+ * - getCustomerGroupDisplayName(name, t)
+ * - getCustomerGroupDisplayName(name)
+ */
 export const getCustomerGroupDisplayName = (
   name?: string,
-  t?: any,
+  tOrLang?: ((key: string, defaultVal?: string) => string) | string | any,
   languageCode?: string
 ): string => {
   if (!name) return ''
-  const lang = (languageCode || t?.language || (typeof t === 'function' ? t('common.currentLang', 'km') : 'km') || 'km').toLowerCase()
+
+  let tFn: ((key: string, defaultVal?: string) => string) | null = null
+  let lang = i18n.language || 'km'
+
+  if (typeof tOrLang === 'function') {
+    tFn = tOrLang
+    lang = (languageCode || tOrLang?.language || i18n.language || 'km').toLowerCase()
+  } else if (typeof tOrLang === 'string') {
+    lang = tOrLang.toLowerCase()
+  } else if (languageCode && typeof languageCode === 'string') {
+    lang = languageCode.toLowerCase()
+  }
+
   const isKhmer = lang.startsWith('km')
+  const cleanKey = toCleanKey(name)
 
-  if (!isKhmer) return name
-
-  const cleanKey = name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
-  if (t) {
-    const translated = t(`customers.groupNames.${cleanKey}`, '')
-    if (translated && translated !== `customers.groupNames.${cleanKey}` && translated !== '') {
-      return translated
+  const translate = (key: string, fallback?: string): string => {
+    if (typeof tFn === 'function') {
+      try {
+        const res = tFn(key, fallback || '')
+        if (res && res !== key && !res.includes('.')) return res
+      } catch {
+        // ignore
+      }
     }
+    try {
+      const res = i18n.t(key, { lng: isKhmer ? 'km' : 'en', defaultValue: fallback || '' })
+      if (res && res !== key && !res.includes('.')) return res
+    } catch {
+      // ignore
+    }
+    return ''
   }
 
-  const normalized = name.toLowerCase().trim()
-  if (KM_GROUP_NAMES[normalized]) {
-    return KM_GROUP_NAMES[normalized]
+  if (!isKhmer) {
+    // English mode: fetch from locales/en/customers.json
+    const enVal =
+      translate(`customers.groupNames.${cleanKey}`) ||
+      translate(`groupNames.${cleanKey}`)
+    return enVal || name
   }
 
-  return name
+  // Khmer mode: fetch from locales/km/customers.json
+  const kmVal =
+    translate(`customers.groupNames.${cleanKey}`) ||
+    translate(`groupNames.${cleanKey}`) ||
+    translate(`customers.${cleanKey}`) ||
+    translate(`customers.${name}`)
+
+  return kmVal || name
 }
 
+/**
+ * Resolve translated customer group display description using i18n locale resources
+ * Supports multiple call patterns:
+ * - getCustomerGroupDisplayDescription(description, groupName, t, languageCode)
+ * - getCustomerGroupDisplayDescription(description, groupName, languageCode)
+ * - getCustomerGroupDisplayDescription(description, groupName, t)
+ */
 export const getCustomerGroupDisplayDescription = (
   description?: string,
   groupName?: string,
-  t?: any,
+  tOrLang?: ((key: string, defaultVal?: string) => string) | string | any,
   languageCode?: string
 ): string => {
   if (!description) return '—'
-  const lang = (languageCode || t?.language || (typeof t === 'function' ? t('common.currentLang', 'km') : 'km') || 'km').toLowerCase()
+
+  let tFn: ((key: string, defaultVal?: string) => string) | null = null
+  let lang = i18n.language || 'km'
+
+  if (typeof tOrLang === 'function') {
+    tFn = tOrLang
+    lang = (languageCode || tOrLang?.language || i18n.language || 'km').toLowerCase()
+  } else if (typeof tOrLang === 'string') {
+    lang = tOrLang.toLowerCase()
+  } else if (languageCode && typeof languageCode === 'string') {
+    lang = languageCode.toLowerCase()
+  }
+
   const isKhmer = lang.startsWith('km')
+  const cleanKey = toCleanKey(description)
 
-  if (!isKhmer) return description
-
-  const cleanKey = description.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
-  if (t) {
-    const translated = t(`customers.groupDescriptions.${cleanKey}`, '')
-    if (translated && translated !== `customers.groupDescriptions.${cleanKey}` && translated !== '') {
-      return translated
+  const translate = (key: string, fallback?: string): string => {
+    if (typeof tFn === 'function') {
+      try {
+        const res = tFn(key, fallback || '')
+        if (res && res !== key && !res.includes('.')) return res
+      } catch {
+        // ignore
+      }
     }
+    try {
+      const res = i18n.t(key, { lng: isKhmer ? 'km' : 'en', defaultValue: fallback || '' })
+      if (res && res !== key && !res.includes('.')) return res
+    } catch {
+      // ignore
+    }
+    return ''
   }
 
-  const normalized = description.toLowerCase().trim()
-  if (KM_GROUP_DESCRIPTIONS[normalized]) {
-    return KM_GROUP_DESCRIPTIONS[normalized]
+  if (!isKhmer) {
+    // English mode: fetch from locales/en/customers.json
+    const enVal =
+      translate(`customers.groupDescriptions.${cleanKey}`) ||
+      translate(`groupDescriptions.${cleanKey}`)
+    return enVal || description
   }
 
-  if (normalized.startsWith('group for ') && groupName) {
-    const localizedGroupName = getCustomerGroupDisplayName(groupName, t, languageCode)
-    return `ក្រុមសម្រាប់${localizedGroupName}`
+  // Khmer mode: fetch from locales/km/customers.json
+  const kmVal =
+    translate(`customers.groupDescriptions.${cleanKey}`) ||
+    translate(`groupDescriptions.${cleanKey}`)
+
+  if (kmVal) return kmVal
+
+  // Dynamic fallback for "group for [Group Name]" -> "ក្រុមសម្រាប់[Group Name]"
+  if (description.toLowerCase().trim().startsWith('group for ') && groupName) {
+    const localizedGroupName = getCustomerGroupDisplayName(groupName, tFn ?? lang, lang)
+    const template = translate('customers.groupFor') || translate('groupFor') || 'ក្រុមសម្រាប់{{name}}'
+    return template.replace('{{name}}', localizedGroupName)
   }
 
   return description

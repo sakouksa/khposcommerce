@@ -6,7 +6,7 @@ import {
   AlertTriangle, Loader2, Filter, Download, Upload, Columns, Edit, Trash2,
   X, Layers, Tag, Percent, Calendar, Activity, Coins, TrendingUp,
   Settings, ChevronUp, ChevronDown, Printer, Warehouse, DollarSign, AlertCircle,
-  Building, Clock, CheckCircle2, ArrowUpRight, Sliders, Zap, ShieldCheck
+  Building, Clock, CheckCircle2, ArrowUpRight, Sliders, Zap, ShieldCheck, Send
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { inventoryService } from '@/services/inventoryService'
@@ -15,6 +15,8 @@ import { categoryService } from '@/services/categoryService'
 import { brandService } from '@/services/brandService'
 import { supplierService } from '@/services/supplierService'
 import { userService } from '@/services/userService'
+import notificationService from '@/services/notificationService'
+import { sound } from '@/utils/sound'
 import { useToast } from '@/hooks/useToast'
 import { useTranslation } from 'react-i18next'
 import Breadcrumb from '@/components/common/Breadcrumb'
@@ -25,9 +27,15 @@ import ResetButton from '@/components/shared/ResetButton'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import { ColumnSettingsPopover } from '@/components/shared/ColumnSettingsPopover'
 import { usePermission } from '@/hooks/usePermission'
+import { useThemeStore } from '@/stores/themeStore'
 
 // Modular Components
 import { InventoryOverviewCards } from './components/InventoryOverviewCards'
+import { StockMovementStatsCards } from './components/StockMovementStatsCards'
+import { StockTransferStatsCards } from './components/StockTransferStatsCards'
+import { StockAdjustmentStatsCards } from './components/StockAdjustmentStatsCards'
+import { StockOpnameStatsCards } from './components/StockOpnameStatsCards'
+import { StockAlertConfigModal, DEFAULT_STOCK_ALERT_CONFIG, type StockAlertConfig } from './components/StockAlertConfigModal'
 import { InventoryFilterDrawer } from './components/InventoryFilterDrawer'
 import { InventoryTabsNav } from './components/InventoryTabsNav'
 import { InventoryStockLevelsTable } from './components/InventoryStockLevelsTable'
@@ -66,28 +74,21 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
   const canDeleteOpname = hasPermission('stock_opname.delete')
 
   const [currentTab, setCurrentTab] = useState<string>(() => {
+    if (tab) return tab
     const urlTab = searchParams.get('tab')
     if (urlTab) return urlTab
-    if (tab && tab !== 'levels') return tab
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('inventory_active_tab')
-      if (saved && ['levels', 'movements', 'transfers', 'adjustments', 'opnames', 'dashboard'].includes(saved)) {
-        return saved
-      }
-    }
-    return tab || 'levels'
+    return 'levels'
   })
 
   useEffect(() => {
-    if (tab) {
+    if (tab && tab !== currentTab) {
       setCurrentTab(tab)
-      try {
-        localStorage.setItem('inventory_active_tab', tab)
-      } catch {}
+      reset()
+      setSelectedStatus('')
     }
   }, [tab])
 
-  const activeTab = currentTab
+  const activeTab = tab || currentTab || 'levels'
 
   const {
     page,
@@ -454,15 +455,62 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
     }
   })
 
-  // Dynamic Analytics Aggregation
+  // Stock alert configuration state
+  const [isAlertConfigOpen, setIsAlertConfigOpen] = useState(false)
+  const [alertConfig, setAlertConfig] = useState<StockAlertConfig>(() => {
+    try {
+      const saved = localStorage.getItem('pos_stock_alert_config')
+      if (saved) return { ...DEFAULT_STOCK_ALERT_CONFIG, ...JSON.parse(saved) }
+    } catch {}
+    return DEFAULT_STOCK_ALERT_CONFIG
+  })
+  const [sendingTelegramAlert, setSendingTelegramAlert] = useState(false)
+  const [highThreshold, setHighThreshold] = useState<number>(50)
+
+  const handleSaveAlertConfig = (updated: Partial<StockAlertConfig>) => {
+    const next = { ...alertConfig, ...updated }
+    setAlertConfig(next)
+    try {
+      localStorage.setItem('pos_stock_alert_config', JSON.stringify(next))
+    } catch {}
+    toast.success(t('alertConfigSaved', 'Alert configuration saved'))
+  }
+
+  const handleApplyThresholds = () => {
+    handleSaveAlertConfig({ defaultThreshold: alertConfig.defaultThreshold })
+    qc.invalidateQueries({ queryKey: ['inventory-levels'] })
+    qc.invalidateQueries({ queryKey: ['inventory-dashboard-stats'] })
+    toast.success(t('thresholdsApplied', 'Thresholds applied'))
+  }
+
+  // Dynamic Analytics Aggregation - Respecting each product's low_stock_threshold
   const analytics = useMemo(() => {
     const summary = statsData?.summary ?? {}
+    const items = stockLevels?.data || []
+
+    let calculatedLowStock = 0
+    let calculatedOutOfStock = 0
+    items.forEach((item: any) => {
+      const q = Number(item.quantity ?? item.current_stock ?? item.available_quantity ?? 0)
+      const threshold = Number(item.reorder_point || item.product?.low_stock_threshold || item.product?.reorder_point || alertConfig.defaultThreshold || 5)
+      if (q <= 0) {
+        calculatedOutOfStock++
+      } else if (q <= threshold) {
+        calculatedLowStock++
+      }
+    })
+
+    const finalLowStock = summary.low_stock ?? summary.low_stock_alert ?? calculatedLowStock
+    const finalOutOfStock = summary.out_of_stock ?? calculatedOutOfStock
+
     return {
       totalProducts: summary.total_products ?? stockLevels?.meta?.total ?? stockLevels?.total ?? 0,
       totalQty: summary.total_qty ?? 0,
       availableQty: summary.available_qty ?? 0,
       reservedQty: summary.reserved_qty ?? 0,
-      lowStock: summary.low_stock ?? summary.low_stock_alert ?? 0,
+      lowStock: finalLowStock,
+      outOfStock: finalOutOfStock,
+      overstock: summary.overstock ?? 0,
       inventoryValue: summary.inventory_value ?? summary.selling_value ?? 0,
       inventoryCost: summary.inventory_cost ?? 0,
       potentialProfit: summary.profit_potential ?? 0,
@@ -473,7 +521,92 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
       pendingTransfers: summary.pending_transfers ?? 2,
       opnameAccuracy: summary.opname_accuracy ?? 98.4,
     }
-  }, [statsData, stockLevels, warehouses])
+  }, [statsData, stockLevels, warehouses, alertConfig.defaultThreshold])
+
+  // Sync settings from server if available
+  useEffect(() => {
+    notificationService.getSettings()
+      .then((res: any) => {
+        if (res) {
+          setAlertConfig(prev => ({
+            ...prev,
+            telegramBotToken: res.telegram_bot_token ?? prev.telegramBotToken,
+            telegramChatId: res.telegram_chat_id ?? prev.telegramChatId,
+            defaultThreshold: res.stock_alert_threshold ? Number(res.stock_alert_threshold) : prev.defaultThreshold,
+            autoTelegramAlert: res.auto_telegram_stock_alert !== undefined ? Boolean(res.auto_telegram_stock_alert) : prev.autoTelegramAlert,
+          }))
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleSendTelegramAlert = async () => {
+    setSendingTelegramAlert(true)
+    sound.playClick()
+    try {
+      const items = (stockLevels?.data || [])
+        .filter((item: any) => {
+          const q = Number(item.quantity ?? item.current_stock ?? item.available_quantity ?? 0)
+          const threshold = Number(item.reorder_point || item.product?.low_stock_threshold || alertConfig.defaultThreshold || 5)
+          return q <= threshold
+        })
+        .slice(0, 10)
+        .map((item: any) => ({
+          name: item.product?.name || item.name || 'Product',
+          sku: item.product?.sku || item.sku || '',
+          quantity: Number(item.quantity ?? item.current_stock ?? item.available_quantity ?? 0),
+        }))
+
+      const currentWarehouseName = selectedWarehouse
+        ? warehouses.find((w: any) => String(w.id) === String(selectedWarehouse))?.name || 'Selected Warehouse'
+        : 'All Warehouses (ឃ្លាំងទាំងអស់)'
+
+      const res = await notificationService.sendStockAlert({
+        out_of_stock: analytics.outOfStock,
+        low_stock: analytics.lowStock,
+        warehouse_name: currentWarehouseName,
+        items,
+      })
+
+      if (alertConfig.soundAlert) sound.playSuccess()
+
+      if (res.mock) {
+        toast.info(t('telegram_alert_mock', 'Stock alert simulated (Mock Mode). Set Bot Token & Chat ID in Settings for live delivery.'))
+      } else {
+        toast.success(t('telegram_alert_success', 'Stock alert sent to Telegram successfully!'))
+      }
+    } catch (err: any) {
+      toast.error(err?.message || t('telegram_alert_error', 'Failed to send Telegram alert'))
+    } finally {
+      setSendingTelegramAlert(false)
+    }
+  }
+
+  // Automated notification on low stock
+  useEffect(() => {
+    if (!alertConfig.autoInAppNotification && !alertConfig.autoTelegramAlert) return
+    const totalUrgent = (analytics.outOfStock || 0) + (analytics.lowStock || 0)
+    if (totalUrgent > 0) {
+      const sessionKey = `stock_alert_notified_${totalUrgent}`
+      const hasNotified = sessionStorage.getItem(sessionKey)
+      if (!hasNotified) {
+        sessionStorage.setItem(sessionKey, 'true')
+        if (alertConfig.autoInAppNotification) {
+          toast.warning(t('stock_alert_notified', '⚠️ Stock Alert: Low stock items detected!'))
+        }
+        if (alertConfig.soundAlert) {
+          sound.playWarning()
+        }
+        if (alertConfig.autoTelegramAlert) {
+          notificationService.sendStockAlert({
+            out_of_stock: analytics.outOfStock,
+            low_stock: analytics.lowStock,
+            warehouse_name: 'All Warehouses (Auto-Detection)',
+          }).catch(() => {})
+        }
+      }
+    }
+  }, [analytics.outOfStock, analytics.lowStock, alertConfig.autoInAppNotification, alertConfig.autoTelegramAlert, alertConfig.soundAlert, t])
 
   const openCreateForm = (type: 'adjustment' | 'transfer' | 'opname') => {
     if (type === 'adjustment') navigate('/inventory/adjustments/create')
@@ -530,52 +663,100 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
     )
   }
 
+  // Metadata for each dedicated submenu page
+  const activeMeta = useMemo(() => {
+    switch (activeTab) {
+      case 'movements':
+        return {
+          title: t('submenu_movements_title', 'Stock Movements'),
+          subtitle: t('submenu_movements_subtitle', 'Comprehensive audit trail of stock in/out, sales, adjustments, and transfers.'),
+        }
+      case 'transfers':
+        return {
+          title: t('submenu_transfers_title', 'Stock Transfers'),
+          subtitle: t('submenu_transfers_subtitle', 'Manage and track inter-warehouse and inter-branch stock transfers.'),
+        }
+      case 'adjustments':
+        return {
+          title: t('submenu_adjustments_title', 'Stock Adjustments'),
+          subtitle: t('submenu_adjustments_subtitle', 'Record and approve stock adjustments for damages, shrinkage, or discrepancies.'),
+        }
+      case 'opnames':
+        return {
+          title: t('submenu_opnames_title', 'Stock Opnames (Audit)'),
+          subtitle: t('submenu_opnames_subtitle', 'Physical inventory audits, cycle counts, and stock variance reconciliations.'),
+        }
+      case 'dashboard':
+        return {
+          title: t('submenu_dashboard_title', 'Inventory Analytics & Dashboard'),
+          subtitle: t('submenu_dashboard_subtitle', 'Holistic metrics, warehouse capacity utilization, and inventory valuations.'),
+        }
+      case 'levels':
+      default:
+        return {
+          title: t('submenu_levels_title', 'Stock Levels & Alerts'),
+          subtitle: t('submenu_levels_subtitle', 'Monitor stock levels across warehouses, track low-stock items, and trigger automated alerts.'),
+        }
+    }
+  }, [activeTab, t])
+
   return (
     <div className="space-y-6">
       {/* Breadcrumb */}
       <div className="print:hidden">
-        <Breadcrumb items={[{ label: t('inventory', 'Inventory Management') }, { label: t(`tabs.${activeTab}`, 'Stock') }]} />
+        <Breadcrumb items={[{ label: t('inventory', 'Inventory Management'), path: '/inventory/stock' }, { label: activeMeta.title }]} />
       </div>
 
-      {/* Frameless Hero Header */}
+      {/* Hero Header for Active Submenu Page */}
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden">
         <div className="space-y-1 min-w-0 flex-1">
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
-            {t('inventoryOverview', 'Inventory & Stock Management')}
+            {activeMeta.title}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
-            {t('inventorySubtitle', 'Track stock levels across warehouses, real-time stock movements, transfers, adjustments, and stock opname audits.')}
+            {activeMeta.subtitle}
           </p>
         </div>
 
         <HeaderActionsGroup>
-          {canOpname && (
-            <ActionButton
+          {activeTab === 'levels' && (
+            <button
+              type="button"
+              onClick={handleSendTelegramAlert}
+              disabled={sendingTelegramAlert}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-sky-500 hover:bg-sky-600 text-white shadow-2xs transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+              title={t('telegram_alert_tooltip', 'Send stock alert to Telegram')}
+            >
+              <Send className="size-3.5" />
+              <span>
+                {sendingTelegramAlert
+                  ? t('telegram_alert_sending', 'Sending...')
+                  : t('telegram_alert_btn', 'Telegram Alert')}
+              </span>
+            </button>
+          )}
+          {activeTab === 'opnames' && canOpname && (
+            <AddButton
               onClick={() => openCreateForm('opname')}
-              icon={<CheckCircle2 size={15} className="text-emerald-500" />}
               label={t('create_opname', 'New Stock Opname')}
             />
           )}
-          {canTransfer && (
-            <ActionButton
+          {activeTab === 'transfers' && canTransfer && (
+            <AddButton
               onClick={() => openCreateForm('transfer')}
-              icon={<ArrowLeftRight size={15} className="text-blue-500" />}
-              label={t('newTransfer', 'Stock Transfer')}
+              label={t('newTransfer', 'New Stock Transfer')}
             />
           )}
-          {canAdjust && (
+          {activeTab === 'adjustments' && canAdjust && (
             <AddButton
               onClick={() => openCreateForm('adjustment')}
-              label={t('newAdjustment', 'Stock Adjustment')}
+              label={t('newAdjustment', 'New Stock Adjustment')}
             />
           )}
         </HeaderActionsGroup>
       </div>
 
-      {/* Tabs Navigation */}
-      <InventoryTabsNav activeTab={activeTab} onTabChange={handleTabChange} />
-
-      {/* KPI Overview Cards - Only on Main Stock Levels Tab */}
+      {/* ── KPI Stats Cards per Active Submenu ── */}
       {activeTab === 'levels' && (
         <InventoryOverviewCards
           analytics={analytics}
@@ -587,6 +768,40 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
               handleTabChange('levels')
             }
           }}
+          loading={loadingLevels || loadingStats}
+          threshold={alertConfig.defaultThreshold}
+        />
+      )}
+
+      {activeTab === 'movements' && (
+        <StockMovementStatsCards
+          movements={movementsData?.data ?? []}
+          total={movementsData?.pagination?.total ?? movementsData?.total}
+          isLoading={loadingMovements}
+        />
+      )}
+
+      {activeTab === 'transfers' && (
+        <StockTransferStatsCards
+          transfers={transfersData?.data ?? []}
+          total={transfersData?.pagination?.total ?? transfersData?.total}
+          isLoading={loadingTransfers}
+        />
+      )}
+
+      {activeTab === 'adjustments' && (
+        <StockAdjustmentStatsCards
+          adjustments={adjustmentsData?.data ?? []}
+          total={adjustmentsData?.pagination?.total ?? adjustmentsData?.total}
+          isLoading={loadingAdjustments}
+        />
+      )}
+
+      {activeTab === 'opnames' && (
+        <StockOpnameStatsCards
+          opnames={opnamesData?.data ?? []}
+          total={opnamesData?.pagination?.total ?? opnamesData?.total}
+          isLoading={loadingOpnames}
         />
       )}
 
@@ -804,6 +1019,14 @@ const InventoryPage: React.FC<{ tab?: string }> = ({ tab }) => {
         confirmText={t('common.delete', 'Delete')}
         cancelText={t('common.cancel', 'Cancel')}
         loading={deleteMutation.isPending}
+      />
+
+      {/* Stock Alert & Telegram Bot Configuration Modal */}
+      <StockAlertConfigModal
+        isOpen={isAlertConfigOpen}
+        onClose={() => setIsAlertConfigOpen(false)}
+        config={alertConfig}
+        onSaveConfig={handleSaveAlertConfig}
       />
     </div>
   )

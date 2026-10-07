@@ -1,7 +1,15 @@
-import React, { useEffect } from 'react'
-import { Modal, Form, Input, InputNumber, Button } from 'antd'
-import { Settings, Shield, Server, Link as LinkIcon, Key, Radio } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Settings, Server, Link as LinkIcon, Key, Radio } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/common/forms/Input'
+import { FieldLabel } from '@/components/common/forms/FormField'
 import type { ChannelCredentials } from '../types/notification.types'
 import { useToast } from '@/hooks/useToast'
 import { sound } from '@/utils/sound'
@@ -23,21 +31,23 @@ const ChannelConfigModal: React.FC<ChannelConfigModalProps> = ({
 }) => {
   const { t } = useTranslation()
   const toast = useToast()
-  const [form] = Form.useForm()
+  const [formData, setFormData] = useState<Record<string, any>>({})
 
   useEffect(() => {
     if (open) {
-      form.resetFields()
-      if (initialValues) {
-        form.setFieldsValue(initialValues)
-      }
+      setFormData(initialValues || {})
     }
-  }, [open, initialValues, form])
+  }, [open, initialValues])
 
   if (!channel) return null
 
-  const handleFinish = (values: any) => {
-    onSave(channel, values)
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSave(channel, formData as ChannelCredentials)
     sound.playSuccess()
     toast.success(`Configuration saved for channel: ${channel.toUpperCase()}`)
     onClose()
@@ -48,48 +58,107 @@ const ChannelConfigModal: React.FC<ChannelConfigModalProps> = ({
       case 'email':
         return (
           <>
-            <Form.Item label="SMTP Host" name="smtp_host" rules={[{ required: true }]}>
-              <Input prefix={<Server className="w-4 h-4 text-muted-foreground" />} placeholder="smtp.mailtrap.io" />
-            </Form.Item>
-            <Form.Item label="SMTP Port" name="smtp_port" rules={[{ required: true }]}>
-              <InputNumber className="w-full" placeholder="587" />
-            </Form.Item>
-            <Form.Item label="SMTP Username" name="smtp_user">
-              <Input placeholder="smtp_user" />
-            </Form.Item>
-            <Form.Item label="SMTP Password" name="smtp_pass">
-              <Input.Password placeholder="••••••••" />
-            </Form.Item>
+            <div className="space-y-1.5">
+              <FieldLabel label="SMTP Host" required />
+              <Input
+                icon={<Server className="w-4 h-4 text-muted-foreground" />}
+                placeholder="smtp.mailtrap.io"
+                value={formData.smtp_host || ''}
+                onChange={(e) => handleChange('smtp_host', e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <FieldLabel label="SMTP Port" required />
+              <Input
+                type="number"
+                placeholder="587"
+                value={formData.smtp_port || ''}
+                onChange={(e) => handleChange('smtp_port', Number(e.target.value))}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <FieldLabel label="SMTP Username" />
+              <Input
+                placeholder="smtp_user"
+                value={formData.smtp_user || ''}
+                onChange={(e) => handleChange('smtp_user', e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <FieldLabel label="SMTP Password" />
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={formData.smtp_pass || ''}
+                onChange={(e) => handleChange('smtp_pass', e.target.value)}
+              />
+            </div>
           </>
         )
       case 'telegram':
         return (
           <>
-            <Form.Item label="Telegram Bot Token" name="bot_token" rules={[{ required: true }]}>
-              <Input prefix={<Key className="w-4 h-4 text-muted-foreground" />} placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" />
-            </Form.Item>
-            <Form.Item label="Default Chat ID / Channel ID" name="chat_id" rules={[{ required: true }]}>
-              <Input prefix={<Radio className="w-4 h-4 text-muted-foreground" />} placeholder="-100123456789" />
-            </Form.Item>
+            <div className="space-y-1.5">
+              <FieldLabel label="Telegram Bot Token" required />
+              <Input
+                icon={<Key className="w-4 h-4 text-muted-foreground" />}
+                placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                value={formData.bot_token || ''}
+                onChange={(e) => handleChange('bot_token', e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <FieldLabel label="Default Chat ID / Channel ID" required />
+              <Input
+                icon={<Radio className="w-4 h-4 text-muted-foreground" />}
+                placeholder="-100123456789"
+                value={formData.chat_id || ''}
+                onChange={(e) => handleChange('chat_id', e.target.value)}
+                required
+              />
+            </div>
           </>
         )
       case 'sms':
         return (
           <>
-            <Form.Item label="SMS Provider API Key (Twilio / AWS SNS)" name="api_key" rules={[{ required: true }]}>
-              <Input prefix={<Key className="w-4 h-4 text-muted-foreground" />} placeholder="SK_twilio_secret_key" />
-            </Form.Item>
-            <Form.Item label="Sender Phone Number / Sender ID" name="sender_phone">
-              <Input placeholder="+18005550199" />
-            </Form.Item>
+            <div className="space-y-1.5">
+              <FieldLabel label="SMS Provider API Key (Twilio / AWS SNS)" required />
+              <Input
+                icon={<Key className="w-4 h-4 text-muted-foreground" />}
+                placeholder="SK_twilio_secret_key"
+                value={formData.api_key || ''}
+                onChange={(e) => handleChange('api_key', e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <FieldLabel label="Sender Phone Number / Sender ID" />
+              <Input
+                placeholder="+18005550199"
+                value={formData.sender_phone || ''}
+                onChange={(e) => handleChange('sender_phone', e.target.value)}
+              />
+            </div>
           </>
         )
       case 'push':
         return (
           <>
-            <Form.Item label="Firebase FCM Server Key / Web Push VAPID Key" name="api_key" rules={[{ required: true }]}>
-              <Input.Password prefix={<Key className="w-4 h-4 text-muted-foreground" />} placeholder="AAAA..." />
-            </Form.Item>
+            <div className="space-y-1.5">
+              <FieldLabel label="Firebase FCM Server Key / Web Push VAPID Key" required />
+              <Input
+                type="password"
+                icon={<Key className="w-4 h-4 text-muted-foreground" />}
+                placeholder="AAAA..."
+                value={formData.api_key || ''}
+                onChange={(e) => handleChange('api_key', e.target.value)}
+                required
+              />
+            </div>
           </>
         )
       case 'slack':
@@ -97,47 +166,70 @@ const ChannelConfigModal: React.FC<ChannelConfigModalProps> = ({
       case 'discord':
         return (
           <>
-            <Form.Item label={`${channel.toUpperCase()} Incoming Webhook URL`} name="webhook_url" rules={[{ required: true }]}>
-              <Input prefix={<LinkIcon className="w-4 h-4 text-muted-foreground" />} placeholder="https://hooks.slack.com/services/..." />
-            </Form.Item>
+            <div className="space-y-1.5">
+              <FieldLabel label={`${channel.toUpperCase()} Incoming Webhook URL`} required />
+              <Input
+                icon={<LinkIcon className="w-4 h-4 text-muted-foreground" />}
+                placeholder="https://hooks.slack.com/services/..."
+                value={formData.webhook_url || ''}
+                onChange={(e) => handleChange('webhook_url', e.target.value)}
+                required
+              />
+            </div>
           </>
         )
       default:
         return (
           <>
-            <Form.Item label="API Endpoint URL" name="webhook_url">
-              <Input prefix={<LinkIcon className="w-4 h-4 text-muted-foreground" />} placeholder="https://api.enterprise.com/webhook" />
-            </Form.Item>
-            <Form.Item label="Secret Key" name="api_key">
-              <Input.Password prefix={<Key className="w-4 h-4 text-muted-foreground" />} placeholder="secret_key" />
-            </Form.Item>
+            <div className="space-y-1.5">
+              <FieldLabel label="API Endpoint URL" />
+              <Input
+                icon={<LinkIcon className="w-4 h-4 text-muted-foreground" />}
+                placeholder="https://api.enterprise.com/webhook"
+                value={formData.webhook_url || ''}
+                onChange={(e) => handleChange('webhook_url', e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <FieldLabel label="Secret Key" />
+              <Input
+                type="password"
+                icon={<Key className="w-4 h-4 text-muted-foreground" />}
+                placeholder="secret_key"
+                value={formData.api_key || ''}
+                onChange={(e) => handleChange('api_key', e.target.value)}
+              />
+            </div>
           </>
         )
     }
   }
 
   return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      title={
-        <div className="flex items-center gap-2 text-foreground font-bold">
-          <Settings className="w-5 h-5 text-primary" />
-          <span className="capitalize">Configure {channel} Delivery Channel</span>
-        </div>
-      }
-    >
-      <Form form={form} layout="vertical" onFinish={handleFinish} className="pt-2">
-        {renderFields()}
-        <div className="flex justify-end gap-2 pt-4 border-t border-border/40">
-          <Button onClick={onClose}>{t('common.cancel', 'Cancel')}</Button>
-          <Button type="primary" htmlType="submit">
-            {t('notification.actions.save', 'Save Changes')}
-          </Button>
-        </div>
-      </Form>
-    </Modal>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="flex items-center gap-2 text-foreground font-bold">
+            <Settings className="w-5 h-5 text-primary" />
+            <DialogTitle className="capitalize">
+              Configure {channel} Delivery Channel
+            </DialogTitle>
+          </div>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {renderFields()}
+          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+            <Button type="submit" variant="default">
+              {t('notification.actions.save', 'Save Changes')}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
 

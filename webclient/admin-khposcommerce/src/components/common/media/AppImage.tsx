@@ -10,6 +10,8 @@ export interface AppImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageEle
   alt?: string
   className?: string
   containerClassName?: string
+  wrapperClassName?: string
+  rootClassName?: string
   aspectRatio?: 'square' | 'video' | 'portrait' | 'auto' | string
   objectFit?: 'cover' | 'contain' | 'fill' | 'scale-down'
   showSkeleton?: boolean
@@ -23,6 +25,8 @@ export const AppImage: React.FC<AppImageProps> = ({
   alt = 'Image',
   className = '',
   containerClassName = '',
+  wrapperClassName,
+  rootClassName,
   aspectRatio = 'auto',
   objectFit = 'cover',
   showSkeleton = true,
@@ -81,7 +85,7 @@ export const AppImage: React.FC<AppImageProps> = ({
     ? preview
     : preview
     ? {
-        mask: (
+        cover: (
           <div className="flex items-center gap-1.5 text-xs font-semibold text-white drop-shadow-md">
             <Eye size={15} />
             <span>Preview</span>
@@ -112,7 +116,7 @@ export const AppImage: React.FC<AppImageProps> = ({
             className={`w-full h-full ${fitClass} transition-opacity duration-300 ${
               loaded ? 'opacity-100' : 'opacity-0'
             } ${className}`}
-            wrapperClassName="w-full h-full flex items-center justify-center"
+            rootClassName={rootClassName || wrapperClassName || "w-full h-full flex items-center justify-center"}
             fallback={fallbackSrc || DEFAULT_FALLBACKS[fallbackType]}
           />
         ) : (

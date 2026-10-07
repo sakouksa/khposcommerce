@@ -289,11 +289,11 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                       src={receiptUrl}
                       alt="Receipt Preview"
                       className="max-h-56 object-contain rounded-lg w-full transition-transform hover:scale-[1.01]"
-                      wrapperClassName="w-full flex items-center justify-center cursor-pointer"
+                      rootClassName="w-full flex items-center justify-center cursor-pointer"
                       preview={{
                         visible: imagePreviewVisible,
                         onVisibleChange: (val) => setImagePreviewVisible(val),
-                        mask: (
+                        cover: (
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-white drop-shadow-md">
                             <Maximize2 size={15} />
                             <span>{t('finance.fullscreen_preview', 'Preview Fullscreen')}</span>
@@ -401,14 +401,14 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
                   target="_blank"
                   rel="noreferrer"
                   className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                  title="Open in new tab"
+                  title={t('common.openInNewTab', 'Open in new tab')}
                 >
                   <ExternalLink size={16} />
                 </a>
                 <button
                   onClick={() => setLightboxOpen(false)}
                   className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                  title="Close"
+                  title={t('common.close', 'Close')}
                 >
                   <X size={18} />
                 </button>
@@ -420,13 +420,13 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               {isPdf ? (
                 <iframe
                   src={receiptUrl}
-                  title="PDF Document"
+                  title={t('finance.pdf_doc_voucher', 'PDF Document')}
                   className="w-full h-[70vh] rounded-xl border border-border bg-white"
                 />
               ) : (
                 <AntImage
                   src={receiptUrl}
-                  alt="Receipt Attachment Preview"
+                  alt={t('finance.receipt_attachment', 'Receipt Attachment Preview')}
                   className="max-h-[75vh] max-w-full object-contain rounded-xl shadow-md"
                 />
               )}

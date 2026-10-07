@@ -5,7 +5,6 @@ import {
   StatsCard,
   StatsGrid,
 } from '@/components/common'
-import { useThemeStore } from '@/stores/themeStore'
 
 export interface ProductAnalyticsData {
   totalProducts: number
@@ -37,8 +36,7 @@ interface ProductStatsCardsProps {
 }
 
 export const ProductStatsCards: React.FC<ProductStatsCardsProps> = ({ analytics, formatCurrency }) => {
-  const { language } = useThemeStore()
-  const { t } = useTranslation(['products', 'common', 'inventory'])
+  const { t } = useTranslation('products')
 
   const totalProducts = analytics?.totalProducts || 0
   const activeProducts = analytics?.activeProducts || 0
@@ -57,7 +55,7 @@ export const ProductStatsCards: React.FC<ProductStatsCardsProps> = ({ analytics,
       <StatsGrid columns={4}>
         {/* Card 1: Total Products Catalog */}
         <StatsCard
-          title={t('products:totalProducts', language === 'km' ? 'ទំនិញក្នុងប្រព័ន្ធសរុប' : 'Total System Products')}
+          title={t('totalProducts', 'Total System Products')}
           value={totalProducts}
           useCounter={true}
           icon={Package}
@@ -66,26 +64,26 @@ export const ProductStatsCards: React.FC<ProductStatsCardsProps> = ({ analytics,
           subtitle={
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
               <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                {activeProducts} {language === 'km' ? 'សកម្ម' : 'Active'}
+                {activeProducts} {t('activeLabel', 'Active')}
               </span>
               <span>•</span>
               <span>
                 {outOfStock > 0 ? (
                   <span className="text-rose-500 dark:text-rose-400 font-semibold">
-                    {outOfStock} {language === 'km' ? 'អស់ពីស្តុក' : 'Out of Stock'}
+                    {outOfStock} {t('outOfStock', 'Out of Stock')}
                   </span>
                 ) : (
-                  <span>{language === 'km' ? 'ស្តុកគ្រប់គ្រាន់' : 'All in stock'}</span>
+                  <span>{t('allInStock', 'All in stock')}</span>
                 )}
               </span>
             </div>
           }
-          tooltip={language === 'km' ? 'ចំនួនទំនិញសរុបក្នុងប្រព័ន្ធ' : 'Total system products'}
+          tooltip={t('totalProductsTooltip', 'Total system products')}
         />
 
         {/* Card 2: Inventory Value & Profitability */}
         <StatsCard
-          title={t('products:inventoryValueHeader', language === 'km' ? 'តម្លៃស្តុកសរុប' : 'Total Inventory Value')}
+          title={t('inventoryValueHeader', 'Total Inventory Value')}
           value={sellingValue}
           prefix="$"
           decimals={2}
@@ -95,20 +93,20 @@ export const ProductStatsCards: React.FC<ProductStatsCardsProps> = ({ analytics,
           delay={0.1}
           subtitle={
             <div className="flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground mt-0.5">
-              <span>{language === 'km' ? 'ថ្លៃដើម:' : 'Cost:'}</span>
+              <span>{t('costLabel', 'Cost:')}</span>
               <span className="font-semibold text-foreground">{formatCurrency(costValue)}</span>
               <span>•</span>
               <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                +{formatCurrency(potentialProfit)} {language === 'km' ? 'ចំណេញ' : 'Profit'}
+                +{formatCurrency(potentialProfit)} {t('profitLabel', 'Profit')}
               </span>
             </div>
           }
-          tooltip={language === 'km' ? 'តម្លៃលក់សរុបនៃស្តុក និងប្រាក់ចំណេញរំពឹងទុក' : 'Total retail stock value & potential profit'}
+          tooltip={t('inventoryValueTooltip', 'Total retail stock value & potential profit')}
         />
 
         {/* Card 3: Sales Performance & Reach */}
         <StatsCard
-          title={t('products:productPerformance', language === 'km' ? 'ទំនិញលក់បានសរុប' : 'Total Units Sold')}
+          title={t('productPerformance', 'Total Units Sold')}
           value={bestSelling}
           useCounter={true}
           icon={Award}
@@ -121,20 +119,20 @@ export const ProductStatsCards: React.FC<ProductStatsCardsProps> = ({ analytics,
               </span>
               <span>•</span>
               <span>
-                {brandsCount} {language === 'km' ? 'ម៉ាក' : 'Brands'}
+                {brandsCount} {t('brands', 'Brands')}
               </span>
               <span>•</span>
               <span>
-                {variantsCount} {language === 'km' ? 'ជម្រើស' : 'Variants'}
+                {variantsCount} {t('variants', 'Variants')}
               </span>
             </div>
           }
-          tooltip={language === 'km' ? 'ចំនួនទំនិញដែលលក់ចេញ និងការវាយតម្លៃ' : 'Total units sold & catalog variety'}
+          tooltip={t('salesPerformanceTooltip', 'Total units sold & catalog variety')}
         />
 
         {/* Card 4: Stock Alerts & Restock */}
         <StatsCard
-          title={t('products:lowStock', language === 'km' ? 'ទំនិញជិតអស់ស្តុក' : 'Low Stock Warning')}
+          title={t('lowStock', 'Low Stock Warning')}
           value={lowStockProducts}
           useCounter={true}
           icon={Layers}
@@ -145,16 +143,16 @@ export const ProductStatsCards: React.FC<ProductStatsCardsProps> = ({ analytics,
               {lowStockProducts > 0 ? (
                 <span className="text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1.5">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                  {language === 'km' ? 'ត្រូវការបញ្ចូលស្តុកបន្ថែម' : 'Requires restock'}
+                  {t('stockRequiresRestock', 'Requires restock')}
                 </span>
               ) : (
                 <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                  ✓ {language === 'km' ? 'កម្រិតស្តុកមានស្ថិរភាព' : 'Optimal stock levels'}
+                  ✓ {t('stockOptimalLevels', 'Optimal stock levels')}
                 </span>
               )}
             </div>
           }
-          tooltip={language === 'km' ? 'ទំនិញដែលដល់កម្រិតដាស់តឿនស្តុកទាប' : 'Products reaching low stock threshold'}
+          tooltip={t('lowStockTooltip', 'Products reaching low stock threshold')}
         />
       </StatsGrid>
     </div>

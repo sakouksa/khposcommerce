@@ -17,7 +17,8 @@ import ResetButton from '@/components/shared/ResetButton'
 import WorkspaceTabs from '@/components/shared/WorkspaceTabs'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import { HeaderActionsGroup, AddButton, ExportButton, ImportButton, TableToolbar } from '@/components/common'
+import { HeaderActionsGroup, AddButton, ExportButton, ImportButton, TableToolbar, InlineFilterSelect } from '@/components/common'
+import { getCustomerGroupDisplayName } from './utils/customerGroupFormatters'
 import ColumnSettingsPopover from '@/components/shared/ColumnSettingsPopover'
 import BulkSelectionBanner from '@/components/shared/BulkSelectionBanner'
 import type { ImportResult } from '@/components/shared/CsvImportModal'
@@ -641,17 +642,40 @@ const CustomersPage: React.FC = () => {
             }
           />
 
-          {/* Global Standard Table Toolbar */}
+          {/* Global Standard Table Toolbar with Shadcn Inline Quick Filters */}
           <TableToolbar
             search={search}
             onSearchChange={(val) => { setSearch(val); setPage(1); }}
             searchPlaceholder={t('customers.searchPlaceholder', 'Search customer name, email, phone...')}
-            onFilterClick={() => setFilterDrawerOpen(true)}
+            hideFilterButton={true}
             isFilterActive={isFilterActive}
-            filterActiveCount={activeFilterCount}
             onReset={resetAllFilters}
             onRefresh={() => qc.invalidateQueries({ queryKey: ['customers'] })}
             refreshLoading={isFetching}
+            filters={
+              <>
+                <InlineFilterSelect
+                  label={t('customers.customerGroup', 'Group')}
+                  value={groupIdFilter}
+                  onChange={(val) => { setGroupIdFilter(val); setPage(1); }}
+                  allLabel={t('customers.allGroups', 'All groups')}
+                  options={(groups || []).map((g: any) => ({
+                    label: getCustomerGroupDisplayName(g.name, t, language),
+                    value: g.id,
+                  }))}
+                />
+                <InlineFilterSelect
+                  label={t('common.status', 'Status')}
+                  value={statusFilter === 'all' ? '' : statusFilter}
+                  onChange={(val) => { setStatusFilter(val || 'all'); setPage(1); }}
+                  allLabel={t('common.allStatus', 'All status')}
+                  options={[
+                    { label: t('common.active', 'Active'), value: 'active' },
+                    { label: t('common.inactive', 'Inactive'), value: 'inactive' },
+                  ]}
+                />
+              </>
+            }
             columns={[
               { key: 'name', label: t('customers.name', 'Customer Profile') },
               { key: 'email', label: t('customers.email', 'Email / Phone') },

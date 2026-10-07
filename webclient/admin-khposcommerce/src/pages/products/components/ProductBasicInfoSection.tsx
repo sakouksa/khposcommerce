@@ -1,7 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Sparkles, Tag, Box, Percent, Shield, Wand2, RefreshCw } from 'lucide-react'
-import { FormCard, FieldError, getFieldClass } from '@/components/common'
+import { FormCard, FieldError, getFieldClass, RichTextEditor } from '@/components/common'
 import type { ProductForm } from '../types/productForm.types'
 
 interface ProductBasicInfoSectionProps {
@@ -209,15 +209,20 @@ export const ProductBasicInfoSection: React.FC<ProductBasicInfoSectionProps> = (
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-foreground/90 mb-1">
-            {t('colDescription', 'Specifications & Detailed Description')}
-          </label>
-          <textarea
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-semibold text-foreground/90">
+              {t('colDescription', 'Specifications & Detailed Description')}
+            </label>
+            <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+              <Sparkles size={11} className="text-primary" />
+              <span>{t('richTextEditor', 'Rich Text Editor')}</span>
+            </span>
+          </div>
+          <RichTextEditor
             value={form.description ?? ''}
-            onChange={e => setField('description', e.target.value)}
-            rows={5}
-            placeholder={t('descPlaceholder', 'Detailed catalog specifications and features...')}
-            className="form-textarea w-full min-h-[120px] p-3 text-xs sm:text-[13px] rounded-xl border border-border/80 bg-background leading-relaxed focus:ring-2 focus:ring-primary/20 transition-all resize-y"
+            onChange={(val) => setField('description', val)}
+            placeholder={t('descPlaceholder', 'Detailed catalog specifications, features, and formatted overview...')}
+            minHeight="200px"
           />
         </div>
 

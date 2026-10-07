@@ -1,7 +1,6 @@
 import React from 'react'
 import SearchInput from '@/components/shared/SearchInput'
-import { ResetButton, RefreshButton } from '../buttons/GlobalActionButtons'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import React from 'react'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from './ModernSelect'
 
 interface FilterSelectProps {
   label?: string

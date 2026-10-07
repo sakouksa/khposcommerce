@@ -11,7 +11,6 @@ import {
   Copy,
   Check,
   Edit3,
-  Printer,
   Eye,
   ExternalLink,
   Sparkles,
@@ -19,6 +18,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Hash,
+  Share2,
 } from 'lucide-react'
 import {
   DetailDrawer,
@@ -30,7 +30,6 @@ import {
   StatusBadge,
   AppImage,
   ActionButton,
-  CancelButton,
 } from '@/components/common'
 import type { DetailDrawerTabItem } from '@/components/common'
 import { useToast } from '@/hooks/useToast'
@@ -39,7 +38,6 @@ import { formatDisplayDate } from '@/utils/formatters'
 
 export interface BlogDetailDrawerProps {
   isOpen: boolean
-  
   onClose: () => void
   blog: any | null
   onEdit?: (blog: any) => void
@@ -71,12 +69,12 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
     blog.blog_category?.name ||
     blog.category?.name ||
     blog.category_name ||
-    t('cms.general', 'General')
+    t('cms.general')
   const authorName =
     blog.author?.name ||
     blog.author_name ||
     blog.user?.name ||
-    t('cms.systemAdmin', 'System Admin')
+    t('cms.systemAdmin')
 
   // Cover Image
   const coverImage = blog.featured_image || blog.image || blog.image_url
@@ -121,12 +119,14 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
     const fullUrl = `${window.location.origin}/blog/${slug}`
     navigator.clipboard.writeText(fullUrl)
     setCopied(true)
-    toast.success(t('cms.linkCopied', 'Article link copied successfully!'))
+    toast.success(t('cms.linkCopied', 'បានចម្លងតំណភ្ជាប់ដោយជោគជ័យ!'))
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handlePrint = () => {
-    window.print()
+  const handleOpenStorefront = () => {
+    if (slug) {
+      window.open(`/blog/${slug}`, '_blank', 'noopener,noreferrer')
+    }
   }
 
   const handleEdit = () => {
@@ -138,17 +138,19 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
     }
   }
 
-  // Navigation Tabs
+  // Navigation Tabs with dynamic badges
   const tabs: DetailDrawerTabItem[] = [
     {
       key: 'content',
-      label: t('cms.articleBodyTab', 'Article Content'),
+      label: t('cms.articleBodyTab', 'ខ្លឹមសារអត្ថបទ'),
       icon: FileText,
+      badge: readingTimeMin ? `${readingTimeMin}m` : undefined,
     },
     {
       key: 'seo',
-      label: t('cms.seoPreviewTab', 'SEO & Search Preview'),
+      label: t('cms.seoPreviewTab', 'SEO & ការមើលជាមុន'),
       icon: Globe,
+      badge: isTitleOptimal && isDescOptimal ? '✓' : undefined,
     },
   ]
 
@@ -158,10 +160,12 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
       onClose={onClose}
       size="2xl"
     >
-      {/* ─── 1. Header ─── */}
+      {/* ─── 1. Header (ក្បាលទំព័រ - Global DetailDrawerHeader) ─── */}
       <DetailDrawerHeader
-        title={title || t('cms.blogDetail', 'Article Details')}
-        subtitle={slug ? `/${slug}` : undefined}
+        icon={<FileText size={18} />}
+        iconVariant="primary"
+        title={title || t('cms.blogDetail', 'ព័ត៌មានលម្អិតអំពីអត្ថបទ')}
+        subtitle={slug ? `${window.location.origin}/blog/${slug}` : undefined}
         badge={
           <div className="flex items-center gap-1.5 flex-wrap">
             <StatusBadge status={status} />
@@ -171,51 +175,39 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
           </div>
         }
         actions={
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {slug && (
-              <a
-                href={`/blog/${slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                title={t('cms.openStorefront', 'View on Storefront')}
-              >
-                <ExternalLink size={15} />
-              </a>
+              <ActionButton
+                variant="outline"
+                size="sm"
+                icon={<ExternalLink size={13} />}
+                label={t('cms.openStorefront', 'មើលផ្ទាល់')}
+                onClick={handleOpenStorefront}
+                className="hidden sm:inline-flex"
+                title={t('cms.openStorefront', 'បើកមើលលើគេហទំព័រ')}
+              />
             )}
-            <button
-              type="button"
+            <ActionButton
+              variant="outline"
+              size="sm"
+              icon={copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+              label={copied ? t('cms.copied', 'បានចម្លង!') : t('cms.copyLink', 'ចម្លង Link')}
               onClick={handleCopySlug}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-              title={t('cms.copyLink', 'Copy Link')}
-            >
-              {copied ? (
-                <Check size={15} className="text-emerald-500" />
-              ) : (
-                <Copy size={15} />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-              title={t('cms.printArticle', 'Print Article')}
-            >
-              <Printer size={15} />
-            </button>
+              title={t('cms.copyLink', 'ចម្លងតំណភ្ជាប់')}
+            />
           </div>
         }
         onClose={onClose}
       />
 
-      {/* ─── 2. Tab Navigation ─── */}
+      {/* ─── 2. Tab Navigation (ផ្ទាំងប្តូរមាតិកា) ─── */}
       <DetailDrawerTabNav
         tabs={tabs}
         activeTab={activeTab}
         onChange={(tabKey) => setActiveTab(tabKey)}
       />
 
-      {/* ─── 3. Scrollable Body ─── */}
+      {/* ─── 3. Scrollable Body (ខ្លឹមសារខាងក្នុង) ─── */}
       <DetailDrawerBody>
         {activeTab === 'content' && (
           <div className="space-y-6">
@@ -240,14 +232,13 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                     <span>
                       {t('cms.readingTimeMin', {
                         min: readingTimeMin,
-                        defaultValue: `~${readingTimeMin} min read`,
                       })}
                     </span>
                   </span>
                   {viewsCount > 0 && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-black/40 backdrop-blur-md text-white/90 border border-white/10">
                       <Eye size={11} />
-                      <span>{viewsCount.toLocaleString()} {t('cms.views', 'Views')}</span>
+                      <span>{viewsCount.toLocaleString()} {t('cms.views', 'ការចូលមើល')}</span>
                     </span>
                   )}
                 </div>
@@ -259,10 +250,10 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
 
             {/* Overview & Metadata Card */}
             <DetailDrawerCard
-              title={t('cms.articleOverview', 'Article Overview & Metadata')}
+              title={t('cms.articleOverview', 'ទិដ្ឋភាពទូទៅ & ទិន្នន័យអត្ថបទ')}
               icon={<Sparkles size={15} />}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* Author */}
                 <div className="p-3 rounded-xl bg-card border border-border/70 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -270,7 +261,7 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] text-muted-foreground font-medium">
-                      {t('cms.author', 'Author')}
+                      {t('cms.author', 'អ្នកនិពន្ធ')}
                     </p>
                     <p className="text-xs sm:text-sm font-bold text-foreground truncate">
                       {authorName}
@@ -285,7 +276,7 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] text-muted-foreground font-medium">
-                      {t('cms.publishedOn', 'Published On')}
+                      {t('cms.publishedOn', 'បានផ្សព្វផ្សាយនៅ')}
                     </p>
                     <p className="text-xs sm:text-sm font-bold text-foreground truncate">
                       {publishedAtFormatted || '-'}
@@ -293,39 +284,68 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                   </div>
                 </div>
 
-                {/* Word Count & Read Time */}
+                {/* Category */}
                 <div className="p-3 rounded-xl bg-card border border-border/70 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
-                    <Clock size={16} />
+                    <TagIcon size={16} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] text-muted-foreground font-medium">
-                      {t('cms.wordCount', 'Word Count')}
+                      {t('cms.category', 'ប្រភេទ')}
                     </p>
-                    <p className="text-xs sm:text-sm font-bold text-foreground font-mono truncate">
-                      {t('cms.wordCountUnit', { count: wordCount, defaultValue: `${wordCount} words` })}
+                    <p className="text-xs sm:text-sm font-bold text-foreground truncate">
+                      {categoryName}
                     </p>
                   </div>
                 </div>
 
-                {/* Slug URL & Copy Button */}
+                {/* Views Engagement */}
+                <div className="p-3 rounded-xl bg-card border border-border/70 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Eye size={16} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] text-muted-foreground font-medium">
+                      {t('cms.cardTotalViews', 'ការចូលមើលសរុប')}
+                    </p>
+                    <p className="text-xs sm:text-sm font-bold text-foreground truncate">
+                      {viewsCount.toLocaleString()} {t('cms.views', 'ដង')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Reading Time & Words */}
+                <div className="p-3 rounded-xl bg-card border border-border/70 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                    <Clock size={16} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] text-muted-foreground font-medium">
+                      {t('cms.readingTime', 'រយៈពេលអាន')}
+                    </p>
+                    <p className="text-xs sm:text-sm font-bold text-foreground truncate">
+                      {t('cms.readingTimeMin', { min: readingTimeMin })} ({t('cms.wordCountUnit', { count: wordCount })})
+                    </p>
+                  </div>
+                </div>
+
+                {/* Slug URL with Global Copy ActionButton */}
                 <div className="p-3 rounded-xl bg-card border border-border/70 flex items-center justify-between gap-2 group">
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] text-muted-foreground font-medium">
-                      {t('cms.slugUrl', 'Slug URL')}
+                      {t('cms.slugUrl', 'តំណភ្ជាប់ Slug')}
                     </p>
                     <p className="text-xs sm:text-sm font-bold font-mono text-foreground truncate" title={`/${slug}`}>
                       /{slug}
                     </p>
                   </div>
-                  <button
-                    type="button"
+                  <ActionButton
+                    variant="outline"
+                    size="sm"
+                    icon={copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                    label={copied ? t('cms.copied', 'បានចម្លង') : t('cms.copyLink', 'ចម្លង')}
                     onClick={handleCopySlug}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0 cursor-pointer"
-                    title={t('cms.copyLink', 'Copy Link')}
-                  >
-                    {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                  </button>
+                  />
                 </div>
               </div>
 
@@ -334,12 +354,12 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                 <div className="pt-3 border-t border-border/50 flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1 shrink-0">
                     <Hash size={13} />
-                    <span>{t('cms.articleTags', 'Tags')}:</span>
+                    <span>{t('cms.articleTags', 'ស្លាកមាតិកា')}:</span>
                   </span>
                   {tags.map((tg, idx) => (
                     <span
                       key={idx}
-                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-medium bg-muted text-foreground border border-border/60"
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-medium bg-muted text-foreground border border-border/60 hover:bg-muted/80 transition-colors"
                     >
                       #{tg}
                     </span>
@@ -353,7 +373,7 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
               <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border-l-4 border-amber-500 text-foreground text-sm font-medium leading-relaxed shadow-2xs">
                 <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                   <Sparkles size={13} />
-                  <span>{t('cms.articleExcerpt', 'Article Excerpt')}</span>
+                  <span>{t('cms.articleExcerpt', 'សង្ខេបអត្ថបទ')}</span>
                 </p>
                 <blockquote className="italic text-foreground/90 leading-relaxed font-serif">
                   "{excerpt}"
@@ -363,8 +383,13 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
 
             {/* Full Article Rich Body */}
             <DetailDrawerCard
-              title={t('cms.articleBody', 'Full Article Body')}
+              title={t('cms.articleBody', 'ខ្លឹមសារអត្ថបទពេញលេញ')}
               icon={<FileText size={15} />}
+              badge={
+                <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/60">
+                  {t('cms.wordCountUnit', { count: wordCount })}
+                </span>
+              }
               bodyClassName="pt-2"
             >
               {content ? (
@@ -376,7 +401,7 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                 <div className="py-12 text-center text-muted-foreground text-sm">
                   <FileText size={36} className="mx-auto mb-2 opacity-40" />
                   <p className="font-medium">
-                    {t('cms.noContent', 'No content available yet.')}
+                    {t('cms.noContent', 'មិនទាន់មានមាតិកានៅឡើយទេ។')}
                   </p>
                 </div>
               )}
@@ -389,11 +414,11 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
           <div className="space-y-6">
             {/* Google SERP Simulator Card */}
             <DetailDrawerCard
-              title={t('cms.googlePreview', 'Google Search Result Snippet')}
+              title={t('cms.googlePreview', 'ទម្រង់បង្ហាញលើ Google Search')}
               icon={<Globe size={15} />}
               badge={
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                  {t('cms.serpSimulator', 'SERP Simulator')}
+                  {t('cms.serpSimulator', 'គំរូ SERP Simulator')}
                 </span>
               }
             >
@@ -403,10 +428,13 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                     <Globe size={11} />
                   </div>
                   <span className="truncate">
-                    https://optapos.com &gt; blog &gt; {slug}
+                    {window.location.host} &gt; blog &gt; {slug}
                   </span>
                 </div>
-                <h3 className="text-base sm:text-lg font-medium text-[#1a0dab] dark:text-[#8ab4f8] hover:underline cursor-pointer leading-snug line-clamp-1">
+                <h3
+                  onClick={handleOpenStorefront}
+                  className="text-base sm:text-lg font-medium text-[#1a0dab] dark:text-[#8ab4f8] hover:underline cursor-pointer leading-snug line-clamp-1"
+                >
                   {metaTitle}
                 </h3>
                 <p className="text-xs sm:text-sm text-[#4d5156] dark:text-[#bdc1c6] line-clamp-2 leading-normal">
@@ -417,7 +445,7 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
 
             {/* SEO Health & Quality Diagnostics */}
             <DetailDrawerCard
-              title={t('cms.seoQuality', 'SEO Health & Quality')}
+              title={t('cms.seoQuality', 'គុណភាព & សុខភាព SEO')}
               icon={<ShieldCheck size={15} />}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -425,7 +453,7 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                 <div className="p-4 rounded-xl bg-card border border-border/70 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                      {t('cms.metaTitle', 'SEO Meta Title')}
+                      {t('cms.metaTitle', 'ចំណងជើង Meta Title')}
                     </p>
                     <span
                       className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${
@@ -443,10 +471,10 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                       )}
                       <span>
                         {isTitleOptimal
-                          ? t('cms.optimal', 'Optimal')
+                          ? t('cms.optimal', 'ល្អប្រសើរ')
                           : metaTitleLength < 45
-                          ? t('cms.tooShort', 'Too Short')
-                          : t('cms.tooLong', 'Too Long')}
+                          ? t('cms.tooShort', 'ខ្លីពេក')
+                          : t('cms.tooLong', 'វែងពេក')}
                       </span>
                     </span>
                   </div>
@@ -457,7 +485,6 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                     {t('cms.recommendedCharRange', {
                       count: metaTitleLength,
                       range: '50-60',
-                      defaultValue: `${metaTitleLength} characters (Recommended: 50-60)`,
                     })}
                   </p>
                 </div>
@@ -484,10 +511,10 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                       )}
                       <span>
                         {isDescOptimal
-                          ? t('cms.optimal', 'Optimal')
+                          ? t('cms.optimal', 'ល្អប្រសើរ')
                           : metaDescLength < 120
-                          ? t('cms.tooShort', 'Too Short')
-                          : t('cms.tooLong', 'Too Long')}
+                          ? t('cms.tooShort', 'ខ្លីពេក')
+                          : t('cms.tooLong', 'វែងពេក')}
                       </span>
                     </span>
                   </div>
@@ -498,65 +525,72 @@ export const BlogDetailDrawer: React.FC<BlogDetailDrawerProps> = ({
                     {t('cms.recommendedCharRange', {
                       count: metaDescLength,
                       range: '120-160',
-                      defaultValue: `${metaDescLength} characters (Recommended: 120-160)`,
                     })}
                   </p>
                 </div>
               </div>
 
               {/* Public Canonical URL */}
-              <div className="p-3.5 rounded-xl bg-muted/40 border border-border/60 flex items-center justify-between gap-3 text-xs">
+              <div className="p-3.5 rounded-xl bg-muted/40 border border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] text-muted-foreground font-semibold">
-                    {t('cms.publicUrl', 'Public Article URL')}
+                    {t('cms.publicUrl', 'តំណភ្ជាប់អត្ថបទសាធារណៈ')}
                   </p>
                   <p className="text-xs font-mono font-bold text-foreground truncate mt-0.5">
-                    https://optapos.com/blog/{slug}
+                    {window.location.origin}/blog/{slug}
                   </p>
                 </div>
-                <ActionButton
-                  size="sm"
-                  variant="outline"
-                  icon={copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
-                  label={copied ? t('cms.copied', 'Copied!') : t('cms.copyLink', 'Copy Link')}
-                  onClick={handleCopySlug}
-                />
+                <div className="flex items-center gap-2 shrink-0">
+                  <ActionButton
+                    size="sm"
+                    variant="outline"
+                    icon={<ExternalLink size={13} />}
+                    label={t('cms.openStorefront', 'មើលផ្ទាល់')}
+                    onClick={handleOpenStorefront}
+                  />
+                  <ActionButton
+                    size="sm"
+                    variant="outline"
+                    icon={copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
+                    label={copied ? t('cms.copied', 'បានចម្លង') : t('cms.copyLink', 'ចម្លងតំណភ្ជាប់')}
+                    onClick={handleCopySlug}
+                  />
+                </div>
               </div>
             </DetailDrawerCard>
           </div>
         )}
       </DetailDrawerBody>
 
-      {/* ─── 4. Action Footer ─── */}
+      {/* ─── 4. Action Footer (បាតទំព័រ - Global ActionButton) ─── */}
       <DetailDrawerFooter
-        onClose={onClose}
-        closeLabel={t('common.close', 'Close')}
         leftActions={
-          <div className="flex items-center gap-2">
-            <ActionButton
-              variant="outline"
-              size="sm"
-              icon={copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-              label={copied ? t('cms.copied', 'Copied!') : t('cms.copyLink', 'Copy Link')}
-              onClick={handleCopySlug}
-            />
-            <ActionButton
-              variant="outline"
-              size="sm"
-              icon={<Printer size={14} />}
-              label={t('cms.printArticle', 'Print Article')}
-              onClick={handlePrint}
-            />
-          </div>
+          <ActionButton
+            variant="outline"
+            size="md"
+            label={t('common.close', 'បិទ')}
+            onClick={onClose}
+          />
         }
         rightActions={
-          <ActionButton
-            variant="primary"
-            size="sm"
-            icon={<Edit3 size={14} />}
-            label={t('cms.editArticle', 'Edit Article')}
-            onClick={handleEdit}
-          />
+          <div className="flex items-center gap-2">
+            {slug && (
+              <ActionButton
+                variant="outline"
+                size="md"
+                icon={<ExternalLink size={14} />}
+                label={t('cms.openStorefront', 'មើលលើវេបសាយ')}
+                onClick={handleOpenStorefront}
+              />
+            )}
+            <ActionButton
+              variant="primary"
+              size="md"
+              icon={<Edit3 size={15} strokeWidth={2.5} />}
+              label={t('cms.editArticle', 'កែសម្រួលអត្ថបទ')}
+              onClick={handleEdit}
+            />
+          </div>
         }
       />
     </DetailDrawer>

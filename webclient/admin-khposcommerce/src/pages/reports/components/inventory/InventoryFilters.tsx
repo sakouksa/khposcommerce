@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
   Calendar, Warehouse, Building2, Tag, Layers, RefreshCw, Filter, RotateCcw
 } from 'lucide-react'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 import { DatePicker } from '@/components/common'
 
 export interface InventoryFilterState {

@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <defs>
+    <linearGradient id="catBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#EDF2F7" />
+    </linearGradient>
+    <linearGradient id="catFolderBack" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+    <linearGradient id="catFolderFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+    <linearGradient id="catAccentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#4F46E5" />
+    </linearGradient>
+    <filter id="catDrop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.10" />
+    </filter>
+  </defs>
+
+  <!-- Card Background -->
+  <rect width="400" height="400" rx="32" fill="url(#catBg)" />
+  <rect x="1" y="1" width="398" height="398" rx="31" stroke="#E2E8F0" stroke-width="2" />
+
+  <!-- Ground Shadow -->
+  <ellipse cx="200" cy="310" rx="105" ry="22" fill="#0F172A" fill-opacity="0.06" />
+
+  <!-- Category Graphic: 3D Layered Folder & Grid -->
+  <g filter="url(#catDrop)">
+    <!-- Main Folder Backing -->
+    <path d="M120 155 C120 144, 128 136, 139 136 L175 136 C182 136, 188 140, 192 145 L202 158 C206 163, 212 166, 219 166 L261 166 C272 166, 280 174, 280 185 L280 260 C280 271, 272 280, 261 280 L139 280 C128 280, 120 271, 120 260 Z" fill="url(#catFolderBack)" />
+
+    <!-- Sheet 1 (Back document inside folder) -->
+    <rect x="142" y="160" width="116" height="70" rx="8" fill="#F1F5F9" opacity="0.9" />
+    <line x1="156" y1="178" x2="210" y2="178" stroke="#CBD5E1" stroke-width="4" stroke-linecap="round" />
+    <line x1="156" y1="192" x2="230" y2="192" stroke="#CBD5E1" stroke-width="4" stroke-linecap="round" />
+
+    <!-- Sheet 2 (Front Grid Tile Preview) -->
+    <rect x="154" y="172" width="116" height="75" rx="8" fill="#FFFFFF" />
+    <!-- 4 App/Category Grid Squares -->
+    <rect x="168" y="186" width="18" height="18" rx="5" fill="url(#catAccentGrad)" />
+    <rect x="194" y="186" width="18" height="18" rx="5" fill="#E2E8F0" />
+    <rect x="168" y="212" width="18" height="18" rx="5" fill="#E2E8F0" />
+    <rect x="194" y="212" width="18" height="18" rx="5" fill="#CBD5E1" />
+    <line x1="222" y1="195" x2="256" y2="195" stroke="#94A3B8" stroke-width="4" stroke-linecap="round" />
+    <line x1="222" y1="221" x2="248" y2="221" stroke="#CBD5E1" stroke-width="4" stroke-linecap="round" />
+
+    <!-- Main Folder Front Lip -->
+    <path d="M120 205 C120 196, 126 188, 135 186 L265 186 C274 188, 280 196, 280 205 L280 260 C280 271, 272 280, 261 280 L139 280 C128 280, 120 271, 120 260 Z" fill="url(#catFolderFront)" />
+
+    <!-- Folder Front Highlight -->
+    <path d="M136 188 L264 188" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round" />
+
+    <!-- Category Floating Badge (Bottom Right) -->
+    <circle cx="256" cy="256" r="28" fill="#FFFFFF" />
+    <circle cx="256" cy="256" r="26" fill="url(#catAccentGrad)" />
+    <!-- 2x2 Grid Icon inside Badge -->
+    <rect x="245" y="245" width="9" height="9" rx="2.5" fill="#FFFFFF" />
+    <rect x="258" y="245" width="9" height="9" rx="2.5" fill="#FFFFFF" fill-opacity="0.75" />
+    <rect x="245" y="258" width="9" height="9" rx="2.5" fill="#FFFFFF" fill-opacity="0.75" />
+    <rect x="258" y="258" width="9" height="9" rx="2.5" fill="#FFFFFF" />
+  </g>
+</svg>

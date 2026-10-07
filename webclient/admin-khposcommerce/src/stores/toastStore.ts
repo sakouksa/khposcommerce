@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type ToastType = 'success' | 'error' | 'warning' | 'info'
+export type ToastType = 'success' | 'error' | 'warning' | 'info' | 'loading'
 
 export interface ToastAction {
   label: string
@@ -47,7 +47,7 @@ export const useToastStore = create<ToastState>((set) => ({
     if (typeof typeOrOptions === 'string') {
       const type = typeOrOptions
       const message = maybeMessage || ''
-      const duration = maybeDuration ?? (type === 'error' ? 5000 : 4000)
+      const duration = maybeDuration !== undefined ? maybeDuration : (type === 'loading' ? 0 : (type === 'error' ? 5000 : 4000))
       const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
       newToast = {
         id,
@@ -62,7 +62,7 @@ export const useToastStore = create<ToastState>((set) => ({
       const opts = typeOrOptions
       const type = opts.type || 'info'
       const id = opts.id || `toast_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
-      const duration = opts.duration ?? (type === 'error' ? 6000 : 4000)
+      const duration = opts.duration !== undefined ? opts.duration : (type === 'loading' ? 0 : (type === 'error' ? 6000 : 4000))
       newToast = {
         ...opts,
         id,

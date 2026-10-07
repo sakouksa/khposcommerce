@@ -43,3 +43,8 @@ export type { CustomerGroupModalProps, CustomerGroup, CustomerGroupFormData } fr
 
 export { default as UpdateOrderStatusModal } from './UpdateOrderStatusModal'
 export type { UpdateOrderStatusModalProps } from './UpdateOrderStatusModal'
+
+export { default as FilterDrawerShell, FilterSection, FilterField } from '@/components/shared/FilterDrawerShell'
+export type { FilterDrawerShellProps } from '@/components/shared/FilterDrawerShell'
+
+

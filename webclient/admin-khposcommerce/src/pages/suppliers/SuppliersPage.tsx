@@ -23,7 +23,7 @@ import Breadcrumb from '@/components/common/Breadcrumb'
 import StatusBadge from '@/components/common/StatusBadge'
 import ColumnSettingsPopover from '@/components/shared/ColumnSettingsPopover'
 import BulkSelectionBanner from '@/components/shared/BulkSelectionBanner'
-import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
 import {
   HeaderActionsGroup,
   AddButton,
@@ -34,6 +34,7 @@ import {
   EmptyState,
   TableToolbar,
   SupplierLogo,
+  InlineFilterSelect,
 } from '@/components/common'
 import { downloadCsv } from '@/utils/export'
 
@@ -47,14 +48,14 @@ const SuppliersPage: React.FC = () => {
   const navigate = useNavigate()
   const qc    = useQueryClient()
   const toast = useToast()
-  const { hasPermission } = useAuthStore()
+  const { hasPermission } = usePermission()
 
-  const canCreate = hasPermission('supplier.create')
-  const canUpdate = hasPermission('supplier.update')
-  const canDelete = hasPermission('supplier.delete')
-  const canExport = hasPermission(['supplier.export', 'supplier.view'])
-  const canView = hasPermission('supplier.view')
-  const canCreatePO = hasPermission('purchase.create')
+  const canCreateSupplier = hasPermission('supplier.create')
+  const canUpdateSupplier = hasPermission('supplier.update')
+  const canDeleteSupplier = hasPermission('supplier.delete')
+  const canExportSupplier = hasPermission('supplier.export')
+  const canViewSupplier   = hasPermission('supplier.view')
+  const canCreatePO       = hasPermission('purchase.create')
 
   const {
     page,
@@ -263,7 +264,7 @@ const SuppliersPage: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="print:hidden space-y-2">
-        <Breadcrumb items={[{ label: t('nav.purchaseManagement', 'Purchase Management') }, { label: t('nav.suppliers', 'Suppliers') }]} />
+        <Breadcrumb items={[{ label: t('nav.purchaseManagement', 'Purchase Management'), path: '/purchases' }, { label: t('nav.suppliers', 'Suppliers') }]} />
 
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 py-1">
           <div className="space-y-1 min-w-0 flex-1">
@@ -275,13 +276,13 @@ const SuppliersPage: React.FC = () => {
             </p>
           </div>
           <HeaderActionsGroup>
-            {canExport && (
+            {canExportSupplier && (
               <ExportButton
                 onClick={handleExportCSV}
                 label={t('common.exportCsv', 'Export CSV')}
               />
             )}
-            {canCreate && (
+            {canCreateSupplier && (
               <AddButton
                 onClick={() => navigate('/suppliers/create')}
                 label={t('suppliers.addSupplier', 'Add Supplier')}
@@ -299,7 +300,7 @@ const SuppliersPage: React.FC = () => {
       />
 
       {/* Bulk Selection Action Banner */}
-      {canDelete && (
+      {canDeleteSupplier && (
         <BulkSelectionBanner
           selectedCount={selectedRows.length}
           onClear={() => setSelectedRows([])}
@@ -308,17 +309,28 @@ const SuppliersPage: React.FC = () => {
         />
       )}
 
-      {/* Global Standard Table Toolbar */}
+      {/* Global Standard Table Toolbar with Shadcn Inline Quick Filters */}
       <TableToolbar
         search={search}
         onSearchChange={(val) => { setSearch(val); setPage(1); }}
         searchPlaceholder={t('suppliers.searchPlaceholder', 'Search Supplier Name, Code, Phone, Email, Company...')}
-        onFilterClick={() => setFilterDrawerOpen(true)}
-        isFilterActive={Boolean(statusFilter || countryFilter || cityFilter || createdByFilter)}
-        filterActiveCount={[statusFilter, countryFilter, cityFilter, createdByFilter].filter(Boolean).length}
+        hideFilterButton={true}
+        isFilterActive={Boolean(statusFilter)}
         onReset={handleResetFilters}
         onRefresh={() => refetch()}
         refreshLoading={isFetching}
+        filters={
+          <InlineFilterSelect
+            label={t('suppliers.tableStatus', 'Status')}
+            value={statusFilter}
+            onChange={(val) => { setStatusFilter(val); setPage(1); }}
+            allLabel={t('common.allStatus', 'All status')}
+            options={[
+              { label: t('common.active', 'Active'), value: 'active' },
+              { label: t('common.inactive', 'Inactive'), value: 'inactive' },
+            ]}
+          />
+        }
         columns={[
           { key: 'name', label: t('suppliers.tableSupplier', 'Supplier') },
           { key: 'code', label: t('suppliers.tableCode', 'Code') },
@@ -529,11 +541,11 @@ const SuppliersPage: React.FC = () => {
                     <tr
                       key={supplier.id}
                       className={`hover:bg-muted/40 dark:hover:bg-muted/20 transition-colors group ${
-                        canView ? 'cursor-pointer' : ''
+                        canViewSupplier ? 'cursor-pointer' : ''
                       } ${
                         isSelected ? 'bg-primary/10 dark:bg-primary/15' : ''
                       }`}
-                      onClick={canView ? () => navigate(`/suppliers/${supplier.id}`) : undefined}
+                      onClick={canViewSupplier ? () => navigate(`/suppliers/${supplier.id}`) : undefined}
                     >
                       <td className="w-10 px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                         <input
@@ -683,9 +695,9 @@ const SuppliersPage: React.FC = () => {
                               variant: 'success',
                             },
                           ] : undefined}
-                          onView={canView ? () => navigate(`/suppliers/${supplier.id}`) : undefined}
-                          onEdit={canUpdate ? () => navigate(`/suppliers/${supplier.id}/edit`) : undefined}
-                          onDelete={canDelete ? () => setDeleteTarget(supplier) : undefined}
+                          onView={canViewSupplier ? () => navigate(`/suppliers/${supplier.id}`) : undefined}
+                          onEdit={canUpdateSupplier ? () => navigate(`/suppliers/${supplier.id}/edit`) : undefined}
+                          onDelete={canDeleteSupplier ? () => setDeleteTarget(supplier) : undefined}
                         />
                       </td>
                     </tr>

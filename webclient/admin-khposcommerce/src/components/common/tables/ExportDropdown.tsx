@@ -129,7 +129,7 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
     },
     secondary: {
       button:
-        'border border-border/70 bg-muted/70 hover:bg-muted text-foreground shadow-2xs hover:shadow-xs',
+        'border border-border/70 dark:border-slate-700/80 bg-muted/70 dark:bg-slate-800/80 hover:bg-muted dark:hover:bg-slate-700 text-foreground dark:text-slate-200 shadow-2xs hover:shadow-xs',
       iconClass: 'text-emerald-600 dark:text-emerald-400',
     },
   }
@@ -167,20 +167,20 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
         <div
           className={`absolute ${
             align === 'right' ? 'right-0' : 'left-0'
-          } top-full mt-1.5 w-56 rounded-2xl bg-card text-foreground border border-border shadow-xl p-1.5 z-50 animate-in fade-in zoom-in-95`}
+          } top-full mt-1.5 w-56 rounded-2xl bg-card dark:bg-slate-900 text-foreground dark:text-slate-100 border border-border dark:border-slate-700/80 shadow-xl dark:shadow-slate-950/60 p-1.5 z-50 animate-in fade-in zoom-in-95`}
         >
           {exportOptions.map((opt) => (
             <button
               key={opt.key}
               type="button"
               onClick={() => handleSelect(opt.key)}
-              className="w-full flex flex-col items-start px-3 py-2 text-xs rounded-xl hover:bg-muted text-foreground transition-colors cursor-pointer text-left group"
+              className="w-full flex flex-col items-start px-3 py-2 text-xs rounded-xl hover:bg-muted dark:hover:bg-slate-800 text-foreground dark:text-slate-200 transition-colors cursor-pointer text-left group"
             >
-              <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
+              <div className="font-semibold text-foreground dark:text-slate-100 group-hover:text-primary dark:group-hover:text-primary transition-colors">
                 {opt.label}
               </div>
               {opt.description && (
-                <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                <div className="text-[10px] text-muted-foreground dark:text-slate-400 leading-tight mt-0.5">
                   {opt.description}
                 </div>
               )}

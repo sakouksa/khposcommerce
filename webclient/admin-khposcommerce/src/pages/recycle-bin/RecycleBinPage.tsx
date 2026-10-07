@@ -21,7 +21,7 @@ import SearchInput from '@/components/shared/SearchInput'
 import ResetButton from '@/components/shared/ResetButton'
 import ConfirmDialog from '@/components/shared/ConfirmDialog'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import { CloseButton, CancelButton, TableToolbar, EnterpriseDatePicker } from '@/components/common'
+import { CloseButton, CancelButton, TableToolbar, EnterpriseDatePicker, HeaderActionsGroup, ExportButton } from '@/components/common'
 import { useTranslation } from 'react-i18next'
 import { useThemeStore } from '@/stores/themeStore'
 import { downloadCsv } from '@/utils/export'
@@ -502,52 +502,44 @@ const RecycleBinPage: React.FC = () => {
       {/* ── 1. BREADCRUMB ─────────────────────────────────────────────────── */}
       <Breadcrumb
         items={[
-          { label: 'System Management' },
-          { label: 'Recycle Bin' },
+          { label: t('nav.systemManagement', 'Activity & Logs'), path: '/recycle-bin' },
+          { label: t('nav.recycleBin', 'Recycle Bin') },
         ]}
       />
 
       {/* ── 2. FRAMELESS HERO HEADER ────────────────────────────────────────── */}
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 py-1 print:hidden relative overflow-hidden group">
-        {/* Top Accent Stripe */}
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to via-amber-500 to-primary opacity-90" />
-
         <div className="space-y-1 min-w-0 flex-1 z-10">
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-mono">
               System Data Lifecycle & Recovery
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground break-words">
-            Recycle Bin Management
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground break-words">
+            {t('recycleBin.title', 'Recycle Bin Management')}
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-3xl leading-relaxed">
-            Manage deleted records, restore important data, permanently remove unnecessary information, monitor storage impact, and maintain system data lifecycle across the Enterprise platform.
+            {t('recycleBin.subtitle', 'Manage deleted records, restore important data, permanently remove unnecessary information, monitor storage impact, and maintain system data lifecycle across the Enterprise platform.')}
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap w-full xl:w-auto xl:justify-end shrink-0 z-10">
-          {/* Export CSV Button */}
-          <button
+        <HeaderActionsGroup>
+          <ExportButton
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl border border-border bg-card text-foreground hover:bg-muted/80 transition-all shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer"
-          >
-            <Download size={15} className="text-primary" />
-            <span>Export CSV</span>
-          </button>
-
-          {/* Empty Trash Button */}
+            label={t('common.exportCsv', 'Export CSV')}
+          />
           <button
+            type="button"
             onClick={() => {
               sound.playClick()
               setEmptyTrashConfirm(true)
             }}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-extrabold text-white bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 hover:from-rose-600 hover:to-red-700 rounded-xl transition-all shadow-md hover:shadow-lg hover:shadow-rose-500/20 active:scale-95 cursor-pointer border border-rose-400/30"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 hover:from-rose-600 hover:to-red-700 rounded-xl transition-all shadow-md hover:shadow-lg hover:shadow-rose-500/20 active:scale-95 cursor-pointer border border-rose-400/30"
           >
-            <Trash2 size={16} />
+            <Trash2 size={15} />
             <span>Empty Trash</span>
           </button>
-        </div>
+        </HeaderActionsGroup>
       </div>
 
       {/* ── 3. TOP 4 LARGE KPI CARDS ────────────────────────────────────────── */}

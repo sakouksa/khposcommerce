@@ -496,7 +496,7 @@ export const ProductDetailDrawer: React.FC<ProductDetailDrawerProps> = ({
                           src={allImages[selectedImageIndex]}
                           alt={product?.name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          wrapperClassName="w-full h-full flex items-center justify-center cursor-pointer"
+                          rootClassName="w-full h-full flex items-center justify-center cursor-pointer"
                           fallback={DEFAULT_PRODUCT_IMAGE}
                           preview={{
                             mask: (
@@ -771,9 +771,16 @@ export const ProductDetailDrawer: React.FC<ProductDetailDrawerProps> = ({
                         {product.short_description}
                       </p>
                     )}
-                    <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line p-3 rounded-xl bg-muted/30 border border-border/50">
-                      {product.description}
-                    </p>
+                    {/<[a-z][\s\S]*>/i.test(product.description) ? (
+                      <div
+                        className="text-xs text-foreground/90 leading-relaxed p-3 rounded-xl bg-muted/30 border border-border/50 prose prose-xs dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4"
+                        dangerouslySetInnerHTML={{ __html: product.description }}
+                      />
+                    ) : (
+                      <p className="text-xs text-foreground/90 leading-relaxed whitespace-pre-line p-3 rounded-xl bg-muted/30 border border-border/50">
+                        {product.description}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -840,7 +847,7 @@ export const ProductDetailDrawer: React.FC<ProductDetailDrawerProps> = ({
                                   src={getAbsoluteImageUrl(v.image)}
                                   alt={v.name}
                                   className="w-full h-full object-cover"
-                                  wrapperClassName="w-full h-full flex items-center justify-center cursor-pointer"
+                                  rootClassName="w-full h-full flex items-center justify-center cursor-pointer"
                                   preview={{
                                     mask: (
                                       <div className="flex items-center justify-center w-full h-full bg-black/40 text-white">

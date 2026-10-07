@@ -7,6 +7,7 @@
     "opnames": "Stock Audits (Opname)",
     "dashboard": "Analytics & Reports"
   },
+  "inventory": "Inventory Management",
   "totalItems": "Total SKUs",
   "inventoryOverview": "Enterprise Inventory & Stock Management",
   "inventorySubtitle": "Track warehouse multi-location levels, real-time stock movements, transfers, adjustments, and cycle counting audits.",
@@ -808,5 +809,125 @@
     "Oct": "Oct",
     "Nov": "Nov",
     "Dec": "Dec"
-  }
+  },
+  "stock_alert_cards": {
+    "total_items": "Total Items",
+    "all_catalog": "All catalog products",
+    "out_of_stock": "Out of Stock",
+    "immediate_reorder": "Immediate reorder needed",
+    "no_out_of_stock": "No items out of stock",
+    "low_stock": "Low Stock",
+    "qty_under_threshold": "Quantity ≤ {{threshold}} units",
+    "stock_healthy": "Stock healthy",
+    "in_stock": "In Stock",
+    "normal_levels": "Normal stock levels",
+    "high_stock": "High Stock",
+    "optimal_capacity": "Optimal capacity",
+    "filter_all": "All",
+    "filter_out_of_stock": "Out of Stock",
+    "filter_low_stock": "Low Stock",
+    "filter_in_stock": "In Stock",
+    "filter_high_stock": "High Stock",
+    "refresh": "Refresh"
+  },
+  "submenus": {
+    "levels": {
+      "title": "Stock Levels & Alerts",
+      "subtitle": "Monitor stock levels across warehouses, track low-stock items, and trigger automated alerts."
+    },
+    "movements": {
+      "title": "Stock Movements",
+      "subtitle": "Comprehensive audit trail of stock in/out, sales, adjustments, and transfers."
+    },
+    "transfers": {
+      "title": "Stock Transfers",
+      "subtitle": "Manage and track inter-warehouse and inter-branch stock transfers."
+    },
+    "adjustments": {
+      "title": "Stock Adjustments",
+      "subtitle": "Record and approve stock adjustments for damages, shrinkage, or discrepancies."
+    },
+    "opnames": {
+      "title": "Stock Opnames (Audit)",
+      "subtitle": "Physical inventory audits, cycle counts, and stock variance reconciliations."
+    },
+    "dashboard": {
+      "title": "Inventory Analytics & Dashboard",
+      "subtitle": "Holistic metrics, warehouse capacity utilization, and inventory valuations."
+    }
+  },
+  "telegram_alert": {
+    "button": "Telegram Alert",
+    "sending": "Sending...",
+    "tooltip": "Send stock alert to Telegram",
+    "success": "Stock alert sent to Telegram successfully",
+    "error": "Failed to send Telegram alert"
+  },
+  "alertConfigSaved": "Alert configuration saved",
+  "thresholdsApplied": "Thresholds applied",
+  "stock_out_of_stock": "Out of Stock",
+  "stock_low_stock": "Low Stock",
+  "stock_in_stock": "In Stock",
+  "stock_high_stock": "High Stock",
+  "stock_all": "All",
+  "stock_total_items": "Total Items",
+  "stock_all_catalog": "All catalog products",
+  "stock_immediate_reorder": "Immediate reorder needed",
+  "stock_no_out_of_stock": "No items out of stock",
+  "stock_healthy": "Stock healthy",
+  "stock_normal_levels": "Normal stock levels",
+  "stock_optimal_capacity": "Optimal capacity",
+  "stock_refresh": "Refresh",
+  "telegram_alert_btn": "Telegram Alert",
+  "telegram_alert_sending": "Sending...",
+  "telegram_alert_tooltip": "Send stock alert to Telegram",
+  "telegram_alert_success": "Stock alert sent to Telegram successfully!",
+  "telegram_alert_error": "Failed to send Telegram alert",
+  "telegram_alert_mock": "Stock alert simulated (Mock Mode). Set Bot Token & Chat ID in Settings for live delivery.",
+  "stock_alert_notified": "⚠️ Stock Alert: High urgency items detected in warehouse!",
+  "submenu_levels_title": "Stock Levels & Alerts",
+  "submenu_levels_subtitle": "Monitor stock levels across warehouses, track low-stock items, and trigger automated alerts.",
+  "submenu_movements_title": "Stock Movements",
+  "submenu_movements_subtitle": "Comprehensive audit trail of stock in/out, sales, adjustments, and transfers.",
+  "submenu_transfers_title": "Stock Transfers",
+  "submenu_transfers_subtitle": "Manage and track inter-warehouse and inter-branch stock transfers.",
+  "submenu_adjustments_title": "Stock Adjustments",
+  "submenu_adjustments_subtitle": "Record and approve stock adjustments for damages, shrinkage, or discrepancies.",
+  "submenu_opnames_title": "Stock Opnames (Audit)",
+  "submenu_opnames_subtitle": "Physical inventory audits, cycle counts, and stock variance reconciliations.",
+  "submenu_dashboard_title": "Inventory Analytics & Dashboard",
+  "submenu_dashboard_subtitle": "Holistic metrics, warehouse capacity utilization, and inventory valuations.",
+  "qty_under_threshold": "Quantity ≤ {{threshold}} units",
+  "modal_stock_alert_title": "Stock Alert & Telegram Bot Configuration",
+  "modal_stock_alert_subtitle": "Manage automated low-stock warnings and connect your custom Telegram Bot",
+  "telegram_bot_credentials": "Telegram Bot API Credentials",
+  "telegram_hide_guide": "Hide Guide",
+  "telegram_show_guide": "How to Setup Bot",
+  "telegram_guide_title": "📌 Quick Setup Instructions:",
+  "telegram_guide_step1": "1. Open Telegram, search @BotFather and send /newbot to obtain your Bot Token",
+  "telegram_guide_step2": "2. Search @userinfobot or add your Bot to a Group/Channel to get your Chat ID",
+  "telegram_guide_step3": "3. Paste your Token and Chat ID below, then click \"Test Telegram Alert\" to verify",
+  "telegram_bot_token": "Telegram Bot Token",
+  "telegram_chat_id": "Admin / Channel Chat ID",
+  "telegram_chat_id_hint": "Can be your personal user ID or group chat ID (e.g. -100xxxxxxxxxx) for team alerts",
+  "telegram_testing": "Testing...",
+  "telegram_test_btn": "Test Telegram Alert",
+  "telegram_test_success": "Test message sent to Telegram Bot successfully!",
+  "telegram_test_failed": "Failed to test Telegram Bot",
+  "telegram_test_simulated": "Telegram Bot test simulated! Please configure Chat ID to receive live messages",
+  "stock_alert_triggers": "Automated Stock Alert Triggers",
+  "low_stock_threshold_label": "Low Stock Alert Threshold (≤ Units)",
+  "low_stock_threshold_hint": "Products with stock at or below this number are flagged as Low Stock",
+  "auto_telegram_alert": "Auto Telegram Bot Alert",
+  "auto_telegram_alert_hint": "Automatically dispatch Telegram notifications when stock runs low or depletes",
+  "auto_inapp_alert": "In-App Stock Notification",
+  "auto_inapp_alert_hint": "Display banner or toast alerts inside the application when visiting inventory",
+  "sound_alert_label": "Stock Alert Sound Effect",
+  "sound_alert_hint": "Play an alert chime to notify staff when urgent low-stock items are detected",
+  "open_global_settings": "Open Global Settings",
+  "save_and_apply": "Save & Apply",
+  "saved_local_preferences": "Saved to local preferences",
+  "alert_config_saved_applied": "Alert configuration saved and applied successfully"
 }
+
+

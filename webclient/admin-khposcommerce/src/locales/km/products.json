@@ -1088,5 +1088,34 @@
     "attrNameRequired": "សូមបញ្ចូលឈ្មោះលក្ខណៈពិសេស",
     "taxNameRequired": "សូមបញ្ចូលឈ្មោះពន្ធ",
     "taxRateRequired": "សូមបញ្ចូលអត្រាពន្ធ"
-  }
+  },
+  "permanentDelete": "លុបចោលជាអចិន្ត្រៃយ៍",
+  "clickToUploadCSV": "ចុចដើម្បីជ្រើសរើសឯកសារ CSV",
+  "categoriesImportInstruction": "ទម្រង់ CSV: ឈ្មោះ, ប្រភេទមេ, ការពិពណ៌នា, លំដាប់",
+  "categories": {
+    "deleteTitle": "លុបប្រភេទទំនិញ",
+    "bulkDeleteTitle": "លុបប្រភេទទំនិញដែលបានជ្រើសរើស",
+    "confirmBulkDeleteMessage": "តើអ្នកពិតជាចង់លុបប្រភេទទំនិញ {{count}} ដែលបានជ្រើសរើស? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។"
+  },
+
+  "colSupplier": "អ្នកផ្គត់ផ្គង់",
+  "allSuppliers": "អ្នកផ្គត់ផ្គង់ទាំងអស់",
+  "stockHigh": "ស្តុកច្រើន",
+  "stockLow": "ស្តុកទាប",
+  "stockOut": "អស់",
+  "manageTable": "គ្រប់គ្រងតារាង",
+  "allInStock": "ស្តុកគ្រប់គ្រាន់",
+  "activeLabel": "សកម្ម",
+  "costLabel": "ថ្លៃដើម:",
+  "profitLabel": "ចំណេញ",
+  "retailLabel": "លក់រាយ",
+  "generalCategory": "ទូទៅ",
+  "noBrand": "គ្មានម៉ាក",
+  "printBarcode": "បោះពុម្ពស្លាក",
+  "stockRequiresRestock": "ត្រូវការបញ្ចូលស្តុកបន្ថែម",
+  "stockOptimalLevels": "កម្រិតស្តុកមានស្ថិរភាព",
+  "totalProductsTooltip": "ចំនួនទំនិញសរុបក្នុងប្រព័ន្ធ",
+  "inventoryValueTooltip": "តម្លៃលក់សរុបនៃស្តុក និងប្រាក់ចំណេញរំពឹងទុក",
+  "salesPerformanceTooltip": "ចំនួនទំនិញដែលលក់ចេញ និងការវាយតម្លៃ",
+  "lowStockTooltip": "ទំនិញដែលដល់កម្រិតដាស់តឿនស្តុកទាប"
 }

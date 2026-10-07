@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { supplierService } from '@/services/supplierService'
 import { companyService } from '@/services/companyService'
-import { ModernSelect } from '@/pages/pos/components/ModernSelect'
+import { ModernSelect } from '@/components/shared/ModernSelect'
 import { EnterpriseDatePicker } from '@/components/common/DatePicker'
 
 export interface PurchaseFilterState {

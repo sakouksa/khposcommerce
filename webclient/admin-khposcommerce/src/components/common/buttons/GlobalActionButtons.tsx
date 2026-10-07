@@ -1,6 +1,8 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Plus, Download, Upload, QrCode, Check, Loader2, X, RefreshCw, Filter, RotateCcw } from 'lucide-react'
+import { Plus, Download, Upload, QrCode, Check, Loader2, RefreshCw, Filter, RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import ExportDropdown, {
   type ExportDateRange,
   type ExportDropdownOption,
@@ -18,7 +20,7 @@ export interface HeaderActionsGroupProps {
 }
 
 export const HeaderActionsGroup: React.FC<HeaderActionsGroupProps> = ({ children, className = '' }) => (
-  <div className={`flex items-center flex-wrap gap-2 sm:gap-2.5 w-full xl:w-auto xl:justify-end shrink-0 ${className}`}>
+  <div className={cn('flex items-center flex-wrap gap-2 sm:gap-2.5 w-full xl:w-auto xl:justify-end shrink-0', className)}>
     {children}
   </div>
 )
@@ -52,24 +54,25 @@ export const AddButton: React.FC<AddButtonProps> = ({
   children,
 }) => {
   const content = children ?? label
-  const sizeClasses = {
-    sm: 'h-8 px-3 text-xs rounded-lg gap-1.5',
-    md: 'h-10 px-4 text-xs sm:text-[13px] rounded-xl gap-2',
-    lg: 'h-12 px-5 text-sm rounded-xl gap-2.5',
-  }
   const stringTitle = typeof title === 'string' ? title : typeof content === 'string' ? content : undefined
 
   return (
-    <button
+    <Button
       type={type}
-      onClick={onClick}
+      variant="default"
+      size={size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md'}
       disabled={disabled || loading}
       title={stringTitle}
-      className={`inline-flex items-center justify-center font-bold bg-primary hover:bg-primary/90 text-white shadow-xs hover:shadow active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses[size]} ${className}`}
+      onClick={onClick}
+      className={cn('font-semibold shadow-xs transition-all active:scale-[0.98] select-none', className)}
     >
-      {loading ? <Loader2 size={size === 'sm' ? 13 : 15} className="animate-spin" /> : icon || <Plus size={size === 'sm' ? 13 : 15} strokeWidth={2.5} />}
+      {loading ? (
+        <Loader2 className={cn('animate-spin', size === 'sm' ? 'size-3.5' : 'size-4')} />
+      ) : (
+        icon || <Plus className={cn(size === 'sm' ? 'size-3.5' : 'size-4')} strokeWidth={2.5} />
+      )}
       {content && <span>{content}</span>}
-    </button>
+    </Button>
   )
 }
 
@@ -104,37 +107,40 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   children,
 }) => {
   const content = children ?? label
-
-  const variantStyles: Record<string, string> = {
-    outline: 'border border-border/80 dark:border-slate-700 bg-card dark:bg-slate-800/80 hover:bg-muted/80 dark:hover:bg-slate-700 text-foreground dark:text-slate-200 shadow-2xs hover:shadow-xs',
-    secondary: 'bg-muted/70 hover:bg-muted dark:bg-slate-800 dark:hover:bg-slate-700 text-foreground border border-border/60 dark:border-slate-700 shadow-2xs',
-    soft: 'bg-primary/10 hover:bg-primary/15 text-primary border border-primary/20 shadow-2xs',
-    primary: 'bg-primary hover:bg-primary/90 text-white shadow-xs hover:shadow border border-primary',
-    emerald: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs hover:shadow border border-emerald-600',
-    success: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs hover:shadow border border-emerald-600',
-    danger: 'bg-rose-600 hover:bg-rose-500 text-white shadow-xs hover:shadow border border-rose-600',
-    warning: 'bg-amber-500 hover:bg-amber-600 text-white shadow-xs hover:shadow border border-amber-500',
-  }
-
-  const sizeClasses = {
-    sm: 'h-8 px-3 text-xs rounded-lg gap-1.5',
-    md: 'h-10 px-4 text-xs sm:text-[13px] rounded-xl gap-2',
-    lg: 'h-12 px-5 text-sm rounded-xl gap-2.5',
-  }
-
   const stringTitle = typeof title === 'string' ? title : typeof content === 'string' ? content : undefined
 
+  const variantMap: Record<string, any> = {
+    outline: 'outline',
+    secondary: 'secondary',
+    soft: 'soft',
+    primary: 'default',
+    emerald: 'emerald',
+    success: 'success',
+    danger: 'destructive',
+    warning: 'warning',
+  }
+
   return (
-    <button
+    <Button
       type={type}
-      onClick={onClick}
+      variant={variantMap[variant] || 'outline'}
+      size={size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md'}
       disabled={disabled || loading}
       title={stringTitle}
-      className={`inline-flex items-center justify-center font-bold transition-all duration-200 cursor-pointer select-none active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles[variant] || variantStyles.outline} ${sizeClasses[size]} ${className}`}
+      onClick={onClick}
+      className={cn(
+        'font-semibold transition-all active:scale-[0.98] select-none',
+        variant === 'outline' && 'border-border/80 dark:border-slate-700 bg-card dark:bg-slate-800/80 text-foreground dark:text-slate-100 hover:bg-muted/80 dark:hover:bg-slate-700',
+        className
+      )}
     >
-      {loading ? <Loader2 size={size === 'sm' ? 13 : 15} className="animate-spin" /> : icon}
+      {loading ? (
+        <Loader2 className={cn('animate-spin', size === 'sm' ? 'size-3.5' : 'size-4')} />
+      ) : (
+        icon
+      )}
       {content && <span>{content}</span>}
-    </button>
+    </Button>
   )
 }
 
@@ -193,48 +199,32 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
     )
   }
 
-  const sizeClasses: Record<ExportDropdownSize, { button: string; icon: number }> = {
-    sm: { button: 'h-8 sm:h-9 px-3 text-xs rounded-lg sm:rounded-xl gap-1.5', icon: 14 },
-    md: { button: 'h-10 px-3.5 sm:px-4 text-xs sm:text-[13px] rounded-xl gap-2', icon: 15 },
-    lg: { button: 'h-12 px-5 text-sm rounded-xl gap-2.5', icon: 16 },
-  }
-
-  const variantStyles: Record<ExportDropdownVariant, { button: string; iconClass: string }> = {
-    outline: {
-      button:
-        'border border-border/80 dark:border-slate-700 bg-card dark:bg-slate-800/80 hover:bg-muted/80 dark:hover:bg-slate-700 text-foreground dark:text-slate-200 shadow-2xs hover:shadow-xs',
-      iconClass: 'text-emerald-600 dark:text-emerald-400',
-    },
-    emerald: {
-      button:
-        'border border-emerald-500/25 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-2xs hover:shadow-xs',
-      iconClass: 'text-emerald-600 dark:text-emerald-400',
-    },
-    secondary: {
-      button:
-        'border border-border/70 bg-muted/70 hover:bg-muted text-foreground shadow-2xs hover:shadow-xs',
-      iconClass: 'text-emerald-600 dark:text-emerald-400',
-    },
-  }
-
-  const currentSize = sizeClasses[size] || sizeClasses.md
-  const currentVariant = variantStyles[variant] || variantStyles.outline
+  const iconClass =
+    variant === 'emerald'
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : 'text-emerald-600 dark:text-emerald-400'
 
   return (
-    <button
+    <Button
       type="button"
-      onClick={onClick}
+      variant={variant === 'emerald' ? 'soft' : variant === 'secondary' ? 'secondary' : 'outline'}
+      size={size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md'}
       disabled={disabled || loading}
       title={title || displayLabel}
-      className={`inline-flex items-center justify-center font-semibold transition-all duration-200 cursor-pointer select-none active:scale-[0.98] shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ${currentSize.button} ${currentVariant.button} ${className}`}
+      onClick={onClick}
+      className={cn(
+        'font-semibold transition-all active:scale-[0.98] shrink-0 select-none shadow-2xs hover:shadow-xs',
+        'border border-border/80 dark:border-slate-700 bg-card dark:bg-slate-800/90 text-foreground dark:text-slate-100 hover:bg-muted/80 dark:hover:bg-slate-700',
+        className
+      )}
     >
       {loading ? (
-        <Loader2 size={currentSize.icon} className="animate-spin" />
+        <Loader2 className={cn('animate-spin', size === 'sm' ? 'size-3.5' : 'size-4')} />
       ) : (
-        icon || <Download size={currentSize.icon} className={currentVariant.iconClass} />
+        icon || <Download className={cn(size === 'sm' ? 'size-3.5' : 'size-4', iconClass)} />
       )}
       <span>{displayLabel}</span>
-    </button>
+    </Button>
   )
 }
 
@@ -265,29 +255,27 @@ export const ImportButton: React.FC<ImportButtonProps> = ({
   const { t } = useTranslation(['common'])
   const displayLabel = label || t('common.importCsv')
 
-  const sizeClasses: Record<ExportDropdownSize, { button: string; icon: number }> = {
-    sm: { button: 'h-8 sm:h-9 px-3 text-xs rounded-lg sm:rounded-xl gap-1.5', icon: 14 },
-    md: { button: 'h-10 px-3.5 sm:px-4 text-xs sm:text-[13px] rounded-xl gap-2', icon: 15 },
-    lg: { button: 'h-12 px-5 text-sm rounded-xl gap-2.5', icon: 16 },
-  }
-
-  const currentSize = sizeClasses[size] || sizeClasses.md
-
   return (
-    <button
+    <Button
       type="button"
-      onClick={onClick}
+      variant="outline"
+      size={size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md'}
       disabled={disabled || loading}
       title={title || displayLabel}
-      className={`inline-flex items-center justify-center font-semibold transition-all duration-200 cursor-pointer select-none active:scale-[0.98] shrink-0 border border-border/80 dark:border-slate-700 bg-card dark:bg-slate-800/80 hover:bg-muted/80 dark:hover:bg-slate-700 text-foreground dark:text-slate-200 shadow-2xs hover:shadow-xs disabled:opacity-50 disabled:cursor-not-allowed ${currentSize.button} ${className}`}
+      onClick={onClick}
+      className={cn(
+        'font-semibold transition-all active:scale-[0.98] shrink-0 select-none shadow-2xs hover:shadow-xs',
+        'border border-border/80 dark:border-slate-700 bg-card dark:bg-slate-800/90 text-foreground dark:text-slate-100 hover:bg-muted/80 dark:hover:bg-slate-700',
+        className
+      )}
     >
       {loading ? (
-        <Loader2 size={currentSize.icon} className="animate-spin" />
+        <Loader2 className={cn('animate-spin', size === 'sm' ? 'size-3.5' : 'size-4')} />
       ) : (
-        icon || <Upload size={currentSize.icon} className="text-blue-600 dark:text-blue-400" />
+        icon || <Upload className={cn(size === 'sm' ? 'size-3.5' : 'size-4', 'text-blue-600 dark:text-blue-400')} />
       )}
       <span>{displayLabel}</span>
-    </button>
+    </Button>
   )
 }
 
@@ -316,16 +304,21 @@ export const QrKioskButton: React.FC<QrKioskButtonProps> = ({
   const { t } = useTranslation(['employees', 'common'])
   const displayLabel = label || t('employees.launch_qr_kiosk', 'Company Entrance QR')
   return (
-    <button
+    <Button
       type="button"
-      onClick={onClick}
+      variant="outline"
+      size="md"
       disabled={disabled || loading}
       title={title || displayLabel}
-      className={`h-10 inline-flex items-center justify-center gap-2 px-3.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 border border-purple-500/20 text-xs sm:text-[13px] font-semibold shadow-2xs hover:shadow-xs active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      onClick={onClick}
+      className={cn(
+        'bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 border-purple-500/20 font-semibold active:scale-[0.98]',
+        className
+      )}
     >
-      {loading ? <Loader2 size={15} className="animate-spin" /> : icon || <QrCode size={15} />}
+      {loading ? <Loader2 className="size-4 animate-spin" /> : icon || <QrCode className="size-4" />}
       <span>{displayLabel}</span>
-    </button>
+    </Button>
   )
 }
 
@@ -356,15 +349,17 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
   const { t } = useTranslation(['common'])
   const displayLabel = label || (isEdit ? t('common.saveChanges', 'Save Changes') : t('common.save', 'Save'))
   return (
-    <button
+    <Button
       type={type}
-      onClick={onClick}
+      variant="default"
+      size="md"
       disabled={disabled || loading}
-      className={`h-10 inline-flex items-center justify-center gap-2 px-5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs sm:text-[13px] font-bold shadow-xs hover:shadow transition-all disabled:opacity-50 cursor-pointer active:scale-95 disabled:cursor-not-allowed ${className}`}
+      onClick={onClick}
+      className={cn('font-bold shadow-xs hover:shadow active:scale-95 transition-all', className)}
     >
-      {loading ? <Loader2 size={14} className="animate-spin" /> : icon || <Check size={14} strokeWidth={2.5} />}
+      {loading ? <Loader2 className="size-3.5 animate-spin" /> : icon || <Check className="size-3.5" strokeWidth={2.5} />}
       <span>{displayLabel}</span>
-    </button>
+    </Button>
   )
 }
 
@@ -388,15 +383,17 @@ export const CancelButton: React.FC<CancelButtonProps> = ({
 }) => {
   const { t } = useTranslation(['common'])
   return (
-    <button
+    <Button
       type="button"
-      onClick={onClick}
+      variant="secondary"
+      size="md"
       disabled={disabled}
-      className={`h-10 inline-flex items-center justify-center gap-1.5 px-4 rounded-xl border border-border/80 dark:border-slate-700 bg-muted/60 hover:bg-muted dark:bg-slate-800 dark:hover:bg-slate-700 text-xs sm:text-[13px] font-bold text-muted-foreground dark:text-slate-300 hover:text-foreground dark:hover:text-white transition-colors cursor-pointer active:scale-95 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      onClick={onClick}
+      className={cn('font-semibold active:scale-95 text-muted-foreground hover:text-foreground', className)}
     >
       {icon}
       <span>{label || t('common.cancel', 'Cancel')}</span>
-    </button>
+    </Button>
   )
 }
 
@@ -426,28 +423,27 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
   const displayLabel = label || t('common.filter', 'Filter')
   const hasActive = isActive || (activeCount !== undefined && activeCount > 0)
 
-  const heightClass =
-    size === 'sm'
-      ? 'h-8 min-h-[32px] px-2.5 text-xs'
-      : size === 'lg'
-      ? 'h-12 min-h-[48px] px-4 text-sm'
-      : 'h-10 min-h-[40px] px-3.5 text-xs sm:text-[13px]'
-
-  const radiusClass = size === 'sm' ? 'rounded-lg' : 'rounded-xl'
-  const iconSize = size === 'sm' ? 12 : size === 'lg' ? 16 : 14
-
   return (
-    <button
+    <Button
       type="button"
-      onClick={onClick}
+      variant={hasActive ? 'soft' : 'outline'}
+      size={size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md'}
       disabled={disabled}
-      className={`inline-flex items-center justify-center gap-1.5 ${heightClass} ${radiusClass} font-medium border transition-all duration-200 shadow-xs hover:shadow active:scale-[0.98] cursor-pointer select-none shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ${
+      onClick={onClick}
+      className={cn(
+        'font-medium transition-all active:scale-[0.98] select-none shrink-0 shadow-2xs',
         hasActive
-          ? 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/15'
-          : 'border-border/80 bg-background hover:bg-muted text-foreground'
-      } ${className}`}
+          ? 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/15 dark:bg-primary/20 dark:border-primary/50 dark:text-primary-foreground'
+          : 'border-border/80 dark:border-slate-700/80 bg-card dark:bg-slate-800/80 text-foreground dark:text-slate-200 hover:bg-muted/80 dark:hover:bg-slate-700 dark:hover:text-white',
+        className
+      )}
     >
-      <Filter size={iconSize} className={hasActive ? 'text-primary' : 'text-muted-foreground'} />
+      <Filter
+        className={cn(
+          size === 'sm' ? 'size-3' : size === 'lg' ? 'size-4' : 'size-3.5',
+          hasActive ? 'text-primary dark:text-primary-foreground' : 'text-muted-foreground dark:text-slate-400'
+        )}
+      />
       <span>{displayLabel}</span>
       {activeCount !== undefined && activeCount > 0 ? (
         <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-mono font-bold flex items-center justify-center shadow-2xs">
@@ -456,7 +452,7 @@ export const FilterButton: React.FC<FilterButtonProps> = ({
       ) : hasActive ? (
         <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
       ) : null}
-    </button>
+    </Button>
   )
 }
 
@@ -481,24 +477,28 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({
   size = 'md',
 }) => {
   const { t } = useTranslation(['common'])
-  const sizeClasses =
-    size === 'sm'
-      ? 'h-8 w-8 min-h-[32px] min-w-[32px] rounded-lg'
-      : size === 'lg'
-      ? 'h-12 w-12 min-h-[48px] min-w-[48px] rounded-xl'
-      : 'h-10 w-10 min-h-[40px] min-w-[40px] rounded-xl'
-  const iconSize = size === 'sm' ? 12 : size === 'lg' ? 16 : 14
 
   return (
-    <button
+    <Button
       type="button"
-      onClick={onClick}
+      variant="outline"
+      size={size === 'sm' ? 'icon-sm' : size === 'lg' ? 'lg' : 'icon'}
       disabled={disabled || loading}
       title={title || t('common.refresh', 'Refresh')}
-      className={`${sizeClasses} flex items-center justify-center text-muted-foreground hover:text-foreground border border-border/80 bg-background hover:bg-muted transition-all duration-200 shadow-xs hover:shadow active:scale-[0.98] cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      onClick={onClick}
+      className={cn(
+        'shrink-0 active:scale-[0.98] shadow-2xs',
+        'border-border/80 dark:border-slate-700/80 bg-card dark:bg-slate-800/80 text-muted-foreground dark:text-slate-300 hover:text-foreground dark:hover:text-white hover:bg-muted/80 dark:hover:bg-slate-700',
+        className
+      )}
     >
-      <RefreshCw size={iconSize} className={loading ? 'animate-spin' : ''} />
-    </button>
+      <RefreshCw
+        className={cn(
+          size === 'sm' ? 'size-3' : size === 'lg' ? 'size-4' : 'size-3.5',
+          loading && 'animate-spin'
+        )}
+      />
+    </Button>
   )
 }
 
@@ -531,43 +531,29 @@ export const ResetButton: React.FC<ResetButtonProps> = ({
       : label
     : t('common.reset', 'Reset')
 
-  const heightClass =
-    size === 'sm'
-      ? 'h-8 min-h-[32px] text-xs'
-      : size === 'lg'
-      ? 'h-12 min-h-[48px] text-sm'
-      : 'h-10 min-h-[40px] text-xs sm:text-[13px]'
-
-  const paddingClass = iconOnly
-    ? size === 'sm'
-      ? 'w-8 min-w-[32px] px-0'
-      : size === 'lg'
-      ? 'w-12 min-w-[48px] px-0'
-      : 'w-10 min-w-[40px] px-0'
-    : size === 'sm'
-    ? 'px-2.5'
-    : size === 'lg'
-    ? 'px-4'
-    : 'px-3.5'
-
-  const iconSize = size === 'sm' ? 12 : size === 'lg' ? 16 : 14
-  const radiusClass = size === 'sm' ? 'rounded-lg' : 'rounded-xl'
-
   return (
-    <button
+    <Button
       type="button"
-      onClick={onClick}
+      variant="outline"
+      size={iconOnly ? (size === 'sm' ? 'icon-sm' : 'icon') : size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'md'}
       disabled={disabled}
       title={title || displayLabel}
       aria-label={displayLabel}
-      className={`group inline-flex items-center justify-center gap-1.5 ${heightClass} ${paddingClass} ${radiusClass} font-medium text-foreground border border-border/80 bg-background hover:bg-muted transition-all duration-200 shadow-xs hover:shadow active:scale-[0.98] cursor-pointer select-none shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      onClick={onClick}
+      className={cn(
+        'group font-medium transition-all active:scale-[0.98] select-none shrink-0 shadow-2xs',
+        'border-border/80 dark:border-slate-700/80 bg-card dark:bg-slate-800/80 text-foreground dark:text-slate-200 hover:bg-muted/80 dark:hover:bg-slate-700 dark:hover:text-white',
+        className
+      )}
     >
       <RotateCcw
-        size={iconSize}
-        className="text-muted-foreground group-hover:text-foreground group-hover:-rotate-90 transition-transform duration-300 ease-out shrink-0"
+        className={cn(
+          'text-muted-foreground dark:text-slate-400 group-hover:text-foreground dark:group-hover:text-white group-hover:-rotate-90 transition-transform duration-300 ease-out shrink-0',
+          size === 'sm' ? 'size-3' : size === 'lg' ? 'size-4' : 'size-3.5'
+        )}
       />
       {!iconOnly && <span>{displayLabel}</span>}
-    </button>
+    </Button>
   )
 }
 
@@ -585,4 +571,3 @@ export default {
   RefreshButton,
   ResetButton,
 }
-

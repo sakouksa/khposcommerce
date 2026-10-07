@@ -883,20 +883,18 @@ const PurchasesPage: React.FC = () => {
   const breadcrumbItems = useMemo(() => {
     if (activeWorkspaceTab === 'create') {
       return [
-        { label: t('nav.purchaseManagement', 'Purchase Management') },
-        { label: t('nav.purchaseOrders', 'Purchase Orders'), path: '/purchases' },
+        { label: t('nav.purchaseManagement', 'Purchase Management'), path: '/purchases' },
         { label: t('purchases.createPO', 'Create Purchase Order') }
       ]
     }
     if (activeWorkspaceTab === 'edit') {
       return [
-        { label: t('nav.purchaseManagement', 'Purchase Management') },
-        { label: t('nav.purchaseOrders', 'Purchase Orders'), path: '/purchases' },
+        { label: t('nav.purchaseManagement', 'Purchase Management'), path: '/purchases' },
         { label: t('purchases.editPO', 'Edit Purchase Order') }
       ]
     }
     return [
-      { label: t('nav.purchaseManagement', 'Purchase Management') },
+      { label: t('nav.purchaseManagement', 'Purchase Management'), path: '/purchases' },
       { label: t('nav.purchaseOrders', 'Purchase Orders') }
     ]
   }, [activeWorkspaceTab, t])
@@ -1212,7 +1210,7 @@ const PurchasesPage: React.FC = () => {
                               <div className="flex items-center gap-2">
                                 {purchase.supplier?.name && (
                                   <SupplierLogo
-                                    logo={purchase.supplier?.logo}
+                                    logo={(purchase.supplier as any)?.logo}
                                     name={purchase.supplier?.name}
                                     size="xs"
                                     className="rounded-md"

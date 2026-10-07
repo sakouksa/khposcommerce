@@ -57,8 +57,17 @@ export const financeService = {
   getCashRegisters: (params: Record<string, any> = {}) =>
     api.get('/pos/cash-registers', { params }).then(r => r.data),
 
+  getCashRegister: (id: number) =>
+    api.get(`/pos/cash-registers/${id}`).then(r => r.data.data),
+
+  createCashRegister: (payload: any) =>
+    api.post('/pos/cash-registers', payload).then(r => r.data.data),
+
   updateCashRegister: (id: number, payload: any) =>
     api.put(`/pos/cash-registers/${id}`, payload).then(r => r.data.data),
+
+  deleteCashRegister: (id: number) =>
+    api.delete(`/pos/cash-registers/${id}`).then(r => r.data),
 
   closeCashRegister: (id: number, payload: any) =>
     api.put(`/pos/cash-registers/${id}`, payload).then(r => r.data.data),
@@ -67,8 +76,32 @@ export const financeService = {
   getCurrencies: (params: Record<string, any> = {}) =>
     api.get('/currencies', { params }).then(r => r.data),
 
+  getCurrency: (id: number) =>
+    api.get(`/currencies/${id}`).then(r => r.data.data),
+
+  createCurrency: (payload: any) =>
+    api.post('/currencies', payload).then(r => r.data.data),
+
+  updateCurrency: (id: number, payload: any) =>
+    api.put(`/currencies/${id}`, payload).then(r => r.data.data),
+
+  deleteCurrency: (id: number) =>
+    api.delete(`/currencies/${id}`).then(r => r.data),
+
   getTaxes: (params: Record<string, any> = {}) =>
     api.get('/taxes', { params }).then(r => r.data),
+
+  getTax: (id: number) =>
+    api.get(`/taxes/${id}`).then(r => r.data.data),
+
+  createTax: (payload: any) =>
+    api.post('/taxes', payload).then(r => r.data.data),
+
+  updateTax: (id: number, payload: any) =>
+    api.put(`/taxes/${id}`, payload).then(r => r.data.data),
+
+  deleteTax: (id: number) =>
+    api.delete(`/taxes/${id}`).then(r => r.data),
 
   // Generic dynamic tab CRUD (for unified FinancePage tabs)
   getItemsByTab: (tab: string, params: Record<string, any> = {}) =>

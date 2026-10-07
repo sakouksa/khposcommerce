@@ -21,10 +21,10 @@ import { ShippingFilterDrawer } from './components/ShippingFilterDrawer'
 import { ShippingFormDrawer } from './components/ShippingFormDrawer'
 import { ShippingImportModal } from './components/ShippingImportModal'
 
-import { ShipmentsTab } from './components/tabs/ShipmentsTab'
-import { ShippingMethodsTab } from './components/tabs/ShippingMethodsTab'
-import { ShippingZonesTab } from './components/tabs/ShippingZonesTab'
-import { ShippingRatesTab } from './components/tabs/ShippingRatesTab'
+import { ShipmentsTab } from './components/ShipmentsTab'
+import { ShippingMethodsTab } from './components/ShippingMethodsTab'
+import { ShippingZonesTab } from './components/ShippingZonesTab'
+import { ShippingRatesTab } from './components/ShippingRatesTab'
 import type { Tab } from './types/shipping.types'
 
 const ShippingPage: React.FC = () => {

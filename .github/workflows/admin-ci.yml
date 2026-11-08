@@ -1,0 +1,40 @@
+name: Admin Portal CI (React + Vite)
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'webclient/admin-khposcommerce/**'
+      - '.github/workflows/admin-ci.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'webclient/admin-khposcommerce/**'
+      - '.github/workflows/admin-ci.yml'
+
+jobs:
+  build-and-lint:
+    name: Admin Portal - Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x, 22.x]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: 'webclient/admin-khposcommerce/package-lock.json'
+
+      - name: Install Dependencies
+        working-directory: ./webclient/admin-khposcommerce
+        run: npm ci
+
+      - name: Type Check & Production Build
+        working-directory: ./webclient/admin-khposcommerce
+        run: npm run build

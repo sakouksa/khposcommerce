@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <defs>
+    <linearGradient id="prodBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#EDF2F7" />
+    </linearGradient>
+    <linearGradient id="boxTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#CBD5E1" />
+      <stop offset="100%" stop-color="#94A3B8" />
+    </linearGradient>
+    <linearGradient id="boxLeft" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8" />
+      <stop offset="100%" stop-color="#64748B" />
+    </linearGradient>
+    <linearGradient id="boxRight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+    <filter id="prodDrop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.10" />
+    </filter>
+  </defs>
+
+  <!-- Card Background -->
+  <rect width="400" height="400" rx="32" fill="url(#prodBg)" />
+  <rect x="1" y="1" width="398" height="398" rx="31" stroke="#E2E8F0" stroke-width="2" />
+
+  <!-- Ground Shadow -->
+  <ellipse cx="200" cy="300" rx="100" ry="24" fill="#0F172A" fill-opacity="0.06" />
+
+  <!-- 3D Package Isometric Box -->
+  <g filter="url(#prodDrop)">
+    <!-- Top Face -->
+    <path d="M200 120 L275 162 L200 204 L125 162 Z" fill="url(#boxTop)" />
+    <!-- Left Face -->
+    <path d="M125 162 L200 204 L200 274 L125 232 Z" fill="url(#boxLeft)" />
+    <!-- Right Face -->
+    <path d="M200 204 L275 162 L275 232 L200 274 Z" fill="url(#boxRight)" />
+    
+    <!-- Delicate Edge Accent Lines -->
+    <path d="M200 120 L275 162 L200 204 L125 162 Z" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="1.5" />
+    <line x1="200" y1="204" x2="200" y2="274" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="1.5" />
+  </g>
+</svg>

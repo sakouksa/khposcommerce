@@ -1,0 +1,20 @@
+{
+  "firstPage": "First page",
+  "lastPage": "Last page",
+  "nextPage": "Next page",
+  "pageOf": "Page {{current}} of {{total}}",
+  "prevPage": "Previous page",
+  "rowsPerPage": "Rows per page:",
+  "showing_of": "of",
+  "showing_prefix": "Showing",
+  "showing_records": "records",
+  "pagination.nextPage": "Next Page",
+  "pagination.showing_prefix": "Showing Prefix",
+  "pagination.firstPage": "First Page",
+  "pagination.lastPage": "Last Page",
+  "pagination.showing_records": "Showing Records",
+  "pagination.prevPage": "Prev Page",
+  "pagination.pageOf": "Page Of",
+  "pagination.showing_of": "Showing Of",
+  "pagination.rowsPerPage": "Rows Per Page"
+}

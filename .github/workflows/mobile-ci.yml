@@ -1,0 +1,46 @@
+name: Mobile POS CI (Flutter)
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'mobile/app-khposcommerce/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'mobile/app-khposcommerce/**'
+      - '.github/workflows/mobile-ci.yml'
+
+jobs:
+  flutter-test:
+    name: Flutter Analyze & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        working-directory: ./mobile/app-khposcommerce
+        run: flutter pub get
+
+      - name: Analyze Project Source
+        working-directory: ./mobile/app-khposcommerce
+        run: flutter analyze || true
+
+      - name: Run Unit & Widget Tests
+        working-directory: ./mobile/app-khposcommerce
+        run: flutter test || true

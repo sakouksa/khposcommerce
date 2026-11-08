@@ -9,14 +9,14 @@ npm install
 
 # 2. Backend API setup
 echo "🐘 Configuring Laravel API backend..."
-if [ -d "api/backend-khposcommerce" ]; then
-  cd api/backend-khposcommerce
+if [ -d "backend-khposcommerce" ]; then
+  cd backend-khposcommerce
   if [ ! -f .env ]; then
     cp .env.example .env
   fi
   composer install
   php artisan key:generate
-  cd ../..
+  cd ..
 fi
 
 # 3. Webclient setup

@@ -44,12 +44,12 @@ services:
   # ─── 3. Laravel 12 Backend API (PHP 8.3-FPM + Supervisor Queues/Cron) ─────────
   backend:
     build:
-      context: ./api/backend-khposcommerce
-      dockerfile: docker/Dockerfile.prod
+      context: ./backend-khposcommerce
+      dockerfile: docker/php/Dockerfile.prod
     container_name: enterprise_pos_backend_prod
     restart: unless-stopped
     env_file:
-      - ./api/backend-khposcommerce/.env.production
+      - ./backend-khposcommerce/.env.production
     volumes:
       - backend_storage:/var/www/storage
     networks:

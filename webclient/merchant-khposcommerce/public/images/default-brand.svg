@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <defs>
+    <linearGradient id="brandBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC" />
+      <stop offset="100%" stop-color="#EDF2F7" />
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#64748B" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <linearGradient id="emblemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#6D28D9" />
+    </linearGradient>
+    <linearGradient id="ribbonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA" />
+      <stop offset="100%" stop-color="#7C3AED" />
+    </linearGradient>
+    <linearGradient id="starGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#EAB308" />
+    </linearGradient>
+    <filter id="brandDrop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#0F172A" flood-opacity="0.10" />
+    </filter>
+  </defs>
+
+  <!-- Card Background -->
+  <rect width="400" height="400" rx="32" fill="url(#brandBg)" />
+  <rect x="1" y="1" width="398" height="398" rx="31" stroke="#E2E8F0" stroke-width="2" />
+
+  <!-- Ground Shadow -->
+  <ellipse cx="200" cy="310" rx="100" ry="22" fill="#0F172A" fill-opacity="0.06" />
+
+  <!-- Brand Emblem Graphic -->
+  <g filter="url(#brandDrop)">
+    <!-- Outer Modern Shield -->
+    <path d="M200 115 L265 142 C265 210, 235 255, 200 272 C165 255, 135 210, 135 142 Z" fill="url(#shieldGrad)" />
+    <!-- Shield Border Highlight -->
+    <path d="M200 115 L265 142 C265 210, 235 255, 200 272 C165 255, 135 210, 135 142 Z" stroke="#FFFFFF" stroke-opacity="0.3" stroke-width="2.5" />
+
+    <!-- Inner Shield Inset -->
+    <path d="M200 128 L252 149 C252 204, 228 241, 200 256 C172 241, 148 204, 148 149 Z" fill="#FFFFFF" fill-opacity="0.08" />
+
+    <!-- Central Trademark Seal Circle -->
+    <circle cx="200" cy="188" r="44" fill="url(#emblemGrad)" />
+    <circle cx="200" cy="188" r="42" stroke="#FFFFFF" stroke-opacity="0.4" stroke-width="1.5" />
+
+    <!-- Crown / Star Brand Icon -->
+    <path d="M182 202 L178 180 L188 186 L200 172 L212 186 L222 180 L218 202 Z" fill="url(#starGold)" />
+    <!-- Crown Base Line -->
+    <rect x="180" y="204" width="40" height="4" rx="2" fill="url(#starGold)" />
+
+    <!-- Floating Certified Ribbon / Tag Banner -->
+    <g>
+      <rect x="156" y="244" width="88" height="26" rx="13" fill="#FFFFFF" />
+      <rect x="158" y="246" width="84" height="22" rx="11" fill="url(#ribbonGrad)" />
+      <!-- Star in pill -->
+      <path d="M200 251 L202.2 255.4 L207 256.1 L203.5 259.5 L204.3 264.3 L200 262 L195.7 264.3 L196.5 259.5 L193 256.1 L197.8 255.4 Z" fill="#FFFFFF" />
+    </g>
+  </g>
+</svg>

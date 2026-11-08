@@ -15,7 +15,7 @@ An enterprise-grade, high-performance unified commerce platform designed for mul
 
 - 🏢 **Multi-Location Warehouse Inventory**: Real-time stock ledgers, atomic stock updates, inter-warehouse transfers, stock adjustments, and cycle count audits (Opname).
 - ⚡ **High-Speed Point of Sale (POS)**: Barcode scanning, customizable cash register shifts, split payments (Cash, ABA PayWay, Bakong KHQR, Cards), receipt printing, and offline tolerance.
-- 🌐 **5-Language Internationalization (i18n)**: Native support for **Khmer (`km`)**, **English (`en`)**, **Chinese (`zh`)**, **Thai (`th`)**, and **Vietnamese (`vi`)** across the entire UI.
+- 🌐 **Language**: Native support for **Khmer (`km`)**, **English (`en`)**.
 - 🎨 **Enterprise UI/UX Design**: Clean tabs, customizable column visibility, standardized filter drawers, and dark/light themes.
 - 🛒 **Customer E-Commerce Storefront**: Modern web storefront with catalog browsing, shopping cart, promotions, and order tracking.
 - 📱 **Mobile Flutter Application**: Mobile POS, camera barcode scanner, and Bluetooth thermal printer drivers.
@@ -26,80 +26,21 @@ An enterprise-grade, high-performance unified commerce platform designed for mul
 ## 🏛️ Monorepo Architecture Layout
 
 ```text
-khposcommerce/
-│
-├── 📁 webclient/
-│   │
-│   ├── 📁 admin-khposcommerce/
-│   │   └── # Admin Dashboard & Web POS
-│   │
-│   └── 📁 storefront-khposcommerce/
-│       └── # Customer E-Commerce Website
-│
-├── 📁 api/
-│   │
-│   └── 📁 backend-khposcommerce/
-│       ├── app/
-│       ├── bootstrap/
-│       ├── config/
-│       ├── database/
-│       ├── public/
-│       ├── resources/
-│       ├── routes/
-│       ├── storage/
-│       ├── tests/
-│       ├── .env
-│       └── artisan
-│
-├── 📁 mobile/
-│   │
-│   └── 📁 app-khposcommerce/
-│       ├── android/
-│       ├── ios/
-│       ├── lib/
-│       ├── test/
-│       ├── assets/
-│       └── pubspec.yaml
-│
-├── 📁 packages/
-│   │
-│   ├── 📁 ui/
-│   │   └── # Shared UI Components
-│   │
-│   ├── 📁 config/
-│   │   ├── eslint/
-│   │   ├── typescript/
-│   │   └── tailwind/
-│   │
-│   ├── 📁 types/
-│   │   └── # Shared TypeScript Types
-│   │
-│   ├── 📁 utils/
-│   │   └── # Shared Utilities
-│   │
-│   └── 📁 database/
-│       └── # Shared Database Schema / Types
-│
-├── 📁 infrastructure/
-│   │
-│   ├── 📁 docker/
-│   ├── 📁 nginx/
-│   ├── 📁 scripts/
-│   └── 📁 deployment/
-│
-├── 📁 docs/
-│   ├── architecture/
-│   ├── api/
-│   ├── database/
-│   ├── deployment/
-│   └── development/
-│
-├── 📄 docker-compose.yml
-├── 📄 package.json
-├── 📄 pnpm-workspace.yaml
-├── 📄 .gitignore
-├── 📄 .env.example
-└── 📄 README.md
+pos-ecommerce/
+├── 📁 backend-khposcommerce/       # Core RESTful API & Business Logic (Laravel)
+├── 📁 webclient/                   # Web Frontends (React / Vite + TypeScript)
+│   ├── 📁 merchant-khposcommerce/     # Back-Office Admin & Web POS Terminal
+│   ├── 📁 storefront-khposcommerce/# E-Commerce Storefront សម្រាប់អតិថិជនទិញទំនិញ
+│   └── 📁 control-khposcommerce/# Platform Management (Multi-tenant SaaS)
+├── 📁 app-khposcommerce/           # Mobile POS / Barcode Scanner / Bluetooth Printer (Flutter)
+├── 📁 packages/                    # Shared Packages រវាង Frontends
+│   ├── 📁 ui/                      # Shared Tailwind / UI Components (@khposcommerce/ui)
+│   └── 📁 types/                   # Shared TypeScript Interfaces / Enums (@khposcommerce/types)
+├── 📁 infrastructure/              # Nginx, Dockerfiles, Deployment scripts
+├── 📁 docs/                        # Architecture, Database Schema (ERD), API Docs
+├── 📄 docker-compose.yml           # Docker services (PHP, PostgreSQL, Redis, Nginx)
+├── 📄 package.json                 # Monorepo runner scripts (concurrently / pnpm)
+└── 📄 pnpm-workspace.yaml          # Monorepo workspaces configuration
 ```
 
 ---
@@ -113,12 +54,12 @@ khposcommerce/
 npm install
 
 # Setup Laravel Backend API
-cd api/backend-khposcommerce
+cd backend-khposcommerce
 composer install
 cp -n .env.example .env
 php artisan key:generate
 php artisan migrate --seed
-cd ../..
+cd ..
 ```
 
 Or run the automated setup script:

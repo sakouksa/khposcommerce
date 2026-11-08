@@ -1,0 +1,104 @@
+name: Core API CI (Laravel Backend)
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'api/backend-khposcommerce/**'
+      - '.github/workflows/api-ci.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'api/backend-khposcommerce/**'
+      - '.github/workflows/api-ci.yml'
+
+jobs:
+  laravel-tests:
+    name: PHP ${{ matrix.php }} - PostgreSQL 16
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3']
+        dependency-version: [prefer-stable]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: enterprise_pos_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP & Extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_pgsql, pgsql, bcmath, gd, redis, zip
+          coverage: none
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: php-${{ matrix.php }}-composer-${{ hashFiles('api/backend-khposcommerce/composer.lock') }}
+          restore-keys: |
+            php-${{ matrix.php }}-composer-
+
+      - name: Install Dependencies
+        working-directory: ./api/backend-khposcommerce
+        run: |
+          composer update --${{ matrix.dependency-version }} --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare Environment
+        working-directory: ./api/backend-khposcommerce
+        run: |
+          cp .env.example .env || true
+          php artisan key:generate --no-interaction
+
+      - name: Run Migrations
+        working-directory: ./api/backend-khposcommerce
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: enterprise_pos_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: password
+        run: |
+          php artisan migrate --force --no-interaction
+
+      - name: Execute Tests via PHPUnit
+        working-directory: ./api/backend-khposcommerce
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: enterprise_pos_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: password
+          CACHE_DRIVER: redis
+          QUEUE_CONNECTION: sync
+        run: |
+          php artisan test || vendor/bin/phpunit

@@ -1,0 +1,18 @@
+{
+  "noData": "No Data",
+  "noDataDesc": "There are no records to display, or adjust your search and filters.",
+  "noRecord": "No Record Found",
+  "noRecordDesc": "Create a new record or adjust filter criteria to get started.",
+  "noResults": "No Results Found",
+  "noResultsDesc": "Try adjusting your search query or removing filter parameters.",
+  "nothing": "Nothing Here",
+  "clearFilters": "Clear Filters",
+  "createNew": "Create New",
+  "resetSearch": "Reset Search",
+  "noInventoryDesc": "No inventory stock records found matching your filter criteria.",
+  "noMovementsDesc": "No stock movement logs found matching your filter criteria.",
+  "noTransfersDesc": "No stock transfer records found matching your filter criteria.",
+  "noAdjustmentsDesc": "No stock adjustment records found matching your filter criteria.",
+  "noOpnamesDesc": "No stock audit records found matching your filter criteria."
+}
+

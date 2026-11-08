@@ -1,0 +1,20 @@
+{
+  "firstPage": "ទំព័រដំបូង",
+  "lastPage": "ទំព័រចុងក្រោយ",
+  "nextPage": "ទំព័របន្ទាប់",
+  "pageOf": "ទំព័រ {{current}} នៃ {{total}}",
+  "prevPage": "ទំព័រមុន",
+  "rowsPerPage": "ជួរក្នុងមួយទំព័រ:",
+  "showing_of": "ដល់",
+  "showing_prefix": "បង្ហាញពី",
+  "showing_records": "នៃកំណត់ត្រាសរុប",
+  "pagination.nextPage": "Next Page",
+  "pagination.showing_prefix": "Showing Prefix",
+  "pagination.firstPage": "First Page",
+  "pagination.lastPage": "Last Page",
+  "pagination.showing_records": "Showing Records",
+  "pagination.prevPage": "Prev Page",
+  "pagination.pageOf": "Page Of",
+  "pagination.showing_of": "Showing Of",
+  "pagination.rowsPerPage": "Rows Per Page"
+}
